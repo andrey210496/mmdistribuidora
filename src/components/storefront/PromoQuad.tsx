@@ -29,15 +29,21 @@ const promos = [
     href: "/produtos",
     bg: "bg-[#f4e6d0]",
     btnClass: "bg-caramel text-white hover:bg-[#8a4a1c]",
-    image: "https://images.unsplash.com/photo-1623660053975-e30d6e2403da?w=800&q=85",
+    image: "https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=800&q=85",
     brands: ["Nutella", "Italac", "Piracanjuba", "Puratos", "Harald", "Sicao"],
   },
 ];
 
 export function PromoQuad() {
   return (
-    <section className="py-10 lg:py-14 bg-cream">
+    <section className="pt-4 pb-12 lg:pb-16 bg-cream">
       <div className="container-wide">
+        <div className="text-center mb-7">
+          <span className="eyebrow text-cocoa/60">Pra todo tipo de negócio</span>
+          <h2 className="font-display text-2xl lg:text-3xl font-bold text-cocoa mt-2">
+            Tudo que sua confeitaria precisa
+          </h2>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {promos.map((p) => (
             <Link

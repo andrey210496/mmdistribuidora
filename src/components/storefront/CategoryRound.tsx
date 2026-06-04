@@ -21,8 +21,14 @@ const cats = [
 
 export function CategoryRound() {
   return (
-    <section className="py-10 lg:py-12 bg-cream">
+    <section className="pt-10 lg:pt-12 pb-4 bg-cream">
       <div className="container-wide">
+        <div className="text-center mb-7">
+          <span className="eyebrow text-cocoa/60">Navegue por categoria</span>
+          <h2 className="font-display text-2xl lg:text-3xl font-bold text-cocoa mt-2">
+            O que você procura hoje?
+          </h2>
+        </div>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-6 lg:gap-4">
           {cats.map(({ label, href, color, Icon }) => (
             <Link
