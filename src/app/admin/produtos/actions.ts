@@ -24,6 +24,7 @@ const productFormSchema = z.object({
   sku: z.string().min(1).max(50),
   priceCents: z.number().int().positive(),
   compareAtPriceCents: z.number().int().positive().nullable().optional(),
+  clubPriceCents: z.number().int().positive().nullable().optional(),
   stock: z.number().int().nonnegative(),
   weightGrams: z.number().int().nonnegative(),
   active: z.boolean(),
@@ -52,6 +53,7 @@ function parseFormData(formData: FormData) {
   };
 
   const compareAt = parseMoney(formData.get("compareAtPrice"));
+  const clubPrice = parseMoney(formData.get("clubPrice"));
 
   return {
     name: String(formData.get("name") ?? "").trim(),
@@ -60,6 +62,7 @@ function parseFormData(formData: FormData) {
     sku: String(formData.get("sku") ?? "").trim().toUpperCase(),
     priceCents: parseMoney(formData.get("price")) ?? 0,
     compareAtPriceCents: compareAt && compareAt > 0 ? compareAt : null,
+    clubPriceCents: clubPrice && clubPrice > 0 ? clubPrice : null,
     stock: Number(formData.get("stock") ?? 0),
     weightGrams: Number(formData.get("weightGrams") ?? 0),
     active: formData.get("active") === "on",

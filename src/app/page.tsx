@@ -14,19 +14,15 @@ import { Newsletter } from "@/components/storefront/Newsletter";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [bestSellers, offers, news] = await Promise.all([
+  const [clubProducts, news] = await Promise.all([
+    // Vitrine do Clube — produtos com preço de membro (preço normal + clube)
     prisma.product.findMany({
-      where: { active: true, featured: true },
+      where: { active: true, clubPriceCents: { not: null } },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
-      take: 5,
-      orderBy: { createdAt: "asc" },
+      take: 10,
+      orderBy: { updatedAt: "desc" },
     }),
-    prisma.product.findMany({
-      where: { active: true, compareAtPriceCents: { not: null } },
-      include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
-      take: 5,
-      orderBy: { createdAt: "desc" },
-    }),
+    // Novidades — por data de cadastro
     prisma.product.findMany({
       where: { active: true },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
@@ -43,19 +39,13 @@ export default async function HomePage() {
       <PromoQuad />
       <BenefitsBar />
       <ProductShelf
-        title="Produtos em destaque"
-        subtitle="Os queridinhos dos nossos clientes"
-        href="/produtos"
-        products={bestSellers}
+        title="Ofertas do Clube"
+        subtitle="Preços exclusivos pra quem é membro — vire membro e economize"
+        href="/clube"
+        products={clubProducts}
+        ctaLabel="Conhecer o Clube"
       />
       <TestimonialsRef />
-      <ProductShelf
-        title="Ofertas da semana"
-        subtitle="Promoções imperdíveis por tempo limitado"
-        href="/produtos?ofertas=1"
-        products={offers}
-        bgClass="bg-pink-soft"
-      />
       <ClubBanner />
       <ProductShelf
         title="Acabou de chegar"

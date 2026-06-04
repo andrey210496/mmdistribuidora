@@ -38,6 +38,7 @@ export default async function EditarProdutoPage({
           sku: product.sku,
           priceCents: product.priceCents,
           compareAtPriceCents: product.compareAtPriceCents,
+          clubPriceCents: product.clubPriceCents,
           stock: product.stock,
           weightGrams: product.weightGrams,
           active: product.active,

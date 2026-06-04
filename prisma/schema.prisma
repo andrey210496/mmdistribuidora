@@ -103,6 +103,9 @@ model Product {
   sku                 String   @unique
   priceCents          Int
   compareAtPriceCents Int?
+  // Preço exclusivo para membros do Clube. Se preenchido, o produto entra
+  // na vitrine do Clube exibindo "preço normal" + "preço de membro".
+  clubPriceCents      Int?
   stock               Int      @default(0)
   weightGrams         Int      @default(0)
   active              Boolean  @default(true)
@@ -118,6 +121,7 @@ model Product {
   @@index([categoryId])
   @@index([slug])
   @@index([active])
+  @@index([clubPriceCents])
 }
 
 model ProductImage {

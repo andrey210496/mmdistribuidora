@@ -146,10 +146,12 @@ export default async function ProdutosPage({
                 {products.map((p) => (
                   <ProductCard
                     key={p.id}
+                    productId={p.id}
                     slug={p.slug}
                     name={p.name}
                     priceCents={p.priceCents}
                     compareAtPriceCents={p.compareAtPriceCents}
+                    clubPriceCents={p.clubPriceCents}
                     imageUrl={p.images[0]?.url}
                     outOfStock={p.stock <= 0}
                   />

@@ -11,7 +11,6 @@ import {
   Facebook,
   Crown,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { getCart } from "@/lib/cart";
 import { centsToBRL } from "@/lib/money";
@@ -88,66 +87,37 @@ export async function Header() {
           }}
         />
 
-        <div className="container-wide relative flex items-center justify-between gap-6 py-3 lg:py-3.5">
-          {/* Esquerda: Medalhão + Texto */}
-          <div className="flex items-center gap-3 lg:gap-4 min-w-0">
+        <div className="container-wide relative flex items-center justify-between gap-4 py-1.5">
+          {/* Esquerda: Medalhão + Texto (compacto, 1 linha) */}
+          <div className="flex items-center gap-2.5 min-w-0">
             {/* Medalhão dourado da coroa */}
             <div className="relative shrink-0">
-              <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] flex items-center justify-center shadow-[0_4px_20px_rgba(212,165,116,0.5)] ring-2 ring-[#d4a574]/40">
-                <Crown size={20} className="text-[#5a2b17]" fill="currentColor" strokeWidth={1.5} />
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] flex items-center justify-center shadow-[0_2px_10px_rgba(212,165,116,0.5)] ring-1 ring-[#d4a574]/40">
+                <Crown size={14} className="text-[#5a2b17]" fill="currentColor" strokeWidth={1.5} />
               </div>
-              <Sparkles
-                size={11}
-                className="absolute -top-0.5 -right-0.5 text-[#f4d8a8]"
-                fill="currentColor"
-                style={{ animation: "ping-soft 2s ease-in-out infinite" }}
-              />
             </div>
 
-            {/* Texto */}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.25em] text-[#d4a574]">
-                  Exclusivo · Clube Doce Encanto
-                </span>
-                <span className="hidden md:inline-block w-6 h-px bg-[#d4a574]/40" />
-                <span className="hidden md:inline text-[10px] uppercase tracking-widest text-cream/50 font-medium">
-                  Membros economizam mais
-                </span>
-              </div>
-              <div className="font-display font-bold text-cream leading-tight text-base lg:text-lg truncate">
-                Ganhe{" "}
-                <span className="bg-gradient-to-br from-[#f4d8a8] via-[#e6c089] to-[#a07640] bg-clip-text text-transparent">
-                  15% OFF
-                </span>{" "}
-                em todo catálogo + <span className="text-[#e6c089]">frete grátis</span>
-              </div>
+            {/* Texto numa linha só */}
+            <div className="min-w-0 flex items-center gap-2 text-cream truncate">
+              <span className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.18em] text-[#e6c089] shrink-0">
+                Clube Doce Encanto
+              </span>
+              <span className="hidden sm:inline-block w-4 h-px bg-[#d4a574]/40 shrink-0" />
+              <span className="hidden sm:inline text-[12px] lg:text-[13px] font-medium truncate">
+                Descontos exclusivos pra quem é membro
+              </span>
             </div>
           </div>
 
-          {/* Direita: CTA dourado sólido */}
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="hidden lg:inline-flex flex-col items-end leading-none">
-              <span className="text-[9px] uppercase tracking-widest text-cream/50 mb-0.5">
-                A partir de
-              </span>
-              <span className="text-cream font-bold">
-                R$ <span className="font-display text-base">19</span>
-                <span className="text-cream/70">,90</span>
-                <span className="text-[10px] text-cream/50 ml-1">/mês</span>
-              </span>
-            </span>
-
-            <span className="inline-flex items-center gap-2 bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] px-4 lg:px-6 py-2.5 rounded-full font-bold text-[11px] lg:text-[12px] uppercase tracking-[0.1em] shadow-[0_6px_20px_-4px_rgba(212,165,116,0.6)] group-hover:shadow-[0_10px_28px_-4px_rgba(212,165,116,0.8)] group-hover:-translate-y-0.5 transition-all">
-              <span className="hidden sm:inline">Quero meu desconto</span>
-              <span className="sm:hidden">Participar</span>
-              <ArrowRight
-                size={14}
-                strokeWidth={2.5}
-                className="group-hover:translate-x-0.5 transition-transform"
-              />
-            </span>
-          </div>
+          {/* Direita: CTA dourado compacto */}
+          <span className="inline-flex items-center gap-1.5 bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] px-4 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-[0.08em] shadow-[0_4px_14px_-4px_rgba(212,165,116,0.6)] group-hover:-translate-y-0.5 transition-all shrink-0">
+            Participar
+            <ArrowRight
+              size={13}
+              strokeWidth={2.5}
+              className="group-hover:translate-x-0.5 transition-transform"
+            />
+          </span>
         </div>
       </Link>
 
