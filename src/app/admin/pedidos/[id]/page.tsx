@@ -250,16 +250,20 @@ export default async function OrderDetailPage({
               Pagamento
             </h3>
             <div className="text-sm text-cocoa">
-              <div className="font-bold">{PAYMENT_METHOD_LABELS[order.paymentMethod]}</div>
+              <div className="font-bold">
+                {order.paymentMethod
+                  ? PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod
+                  : "Cartão ou PIX (Stripe)"}
+              </div>
               <div className={`text-xs font-bold mt-1 ${payMeta.color}`}>{payMeta.label}</div>
               {order.paidAt && (
                 <div className="text-xs text-cocoa/55 mt-1">
                   Pago em {order.paidAt.toLocaleString("pt-BR")}
                 </div>
               )}
-              {order.asaasPaymentId && (
-                <div className="text-xs text-cocoa/55 font-mono pt-2 border-t border-cocoa/10 mt-2">
-                  Asaas: {order.asaasPaymentId}
+              {order.stripePaymentIntentId && (
+                <div className="text-xs text-cocoa/55 font-mono pt-2 border-t border-cocoa/10 mt-2 break-all">
+                  Stripe: {order.stripePaymentIntentId}
                 </div>
               )}
             </div>

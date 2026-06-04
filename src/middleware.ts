@@ -18,9 +18,10 @@ function buildCsp(nonce: string): string {
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `font-src 'self' https://fonts.gstatic.com data:`,
     `img-src 'self' data: blob: https:`,
-    `connect-src 'self' https://api.asaas.com https://sandbox.asaas.com`,
+    `connect-src 'self' https://api.stripe.com`,
     `frame-ancestors 'none'`,
-    `form-action 'self'`,
+    // Permite o redirect do checkout para o Stripe
+    `form-action 'self' https://checkout.stripe.com`,
     `base-uri 'self'`,
     `object-src 'none'`,
     `upgrade-insecure-requests`,

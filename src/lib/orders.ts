@@ -93,7 +93,6 @@ export const ORDER_FLOW: OrderStatus[] = [
 export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   PIX: "PIX",
   CREDIT_CARD: "Cartão de crédito",
-  BOLETO: "Boleto",
 };
 
 export function nextStatusOf(s: OrderStatus): OrderStatus | null {

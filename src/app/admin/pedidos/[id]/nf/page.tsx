@@ -209,7 +209,7 @@ export default async function NfPage({
               <div className="text-[10pt]">
                 {order.paymentMethod === "PIX" && "PIX"}
                 {order.paymentMethod === "CREDIT_CARD" && "Cartão de crédito"}
-                {order.paymentMethod === "BOLETO" && "Boleto bancário"}
+                {!order.paymentMethod && "Cartão ou PIX (Stripe)"}
                 {order.paidAt && (
                   <div className="text-[8pt] text-cocoa/65 mt-1">
                     Pago em {order.paidAt.toLocaleString("pt-BR")}

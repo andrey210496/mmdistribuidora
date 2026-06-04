@@ -230,7 +230,7 @@ export function CartView({ cart }: { cart: CartSummary }) {
 
             <div className="flex items-center gap-2 text-xs text-cocoa/60 justify-center pt-2">
               <ShieldCheck size={13} className="text-olive" />
-              <span>Compra 100% segura · Pagamento Asaas</span>
+              <span>Compra 100% segura · Pagamento via Stripe</span>
             </div>
           </div>
         </div>

@@ -153,7 +153,6 @@ enum OrderStatus {
 enum PaymentMethod {
   PIX
   CREDIT_CARD
-  BOLETO
 }
 
 enum PaymentStatus {
@@ -190,12 +189,13 @@ model Order {
   customerCpfSnapshot   String?
   customerPhoneSnapshot String?
 
-  // Pagamento
-  paymentMethod   PaymentMethod
-  paymentStatus   PaymentStatus @default(PENDING)
-  asaasPaymentId  String?       @unique
-  asaasInvoiceUrl String?
-  paidAt          DateTime?
+  // Pagamento (via Stripe Checkout — método só é conhecido após o pagamento)
+  paymentMethod         PaymentMethod?
+  paymentStatus         PaymentStatus @default(PENDING)
+  stripeSessionId       String?       @unique
+  stripePaymentIntentId String?
+  paymentUrl            String?       @db.Text
+  paidAt                DateTime?
 
   // Token único para QR de separação (não usar id sequencial)
   pickToken String @unique @default(cuid())
@@ -340,14 +340,15 @@ model FinancialEntry {
 }
 
 // ============================================================
-// WEBHOOK ASAAS — idempotência
+// WEBHOOK (Stripe) — idempotência
 // ============================================================
-model AsaasWebhookEvent {
-  id          String   @id @default(cuid())
-  eventId     String   @unique // do payload Asaas
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String    @default("stripe")
+  eventId     String    @unique // id do evento no provedor
   eventType   String
   payload     Json
-  receivedAt  DateTime @default(now())
+  receivedAt  DateTime  @default(now())
   processedAt DateTime?
   error       String?
 

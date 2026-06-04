@@ -1,0 +1,113 @@
+import Stripe from "stripe";
+import { env } from "./env";
+
+// ============================================================
+// Cliente Stripe — apenas server-side.
+// Checkout hosted: o cliente é redirecionado para uma página segura
+// do Stripe. Dados de cartão NUNCA passam pelo nosso servidor.
+// Doc: https://docs.stripe.com/payments/checkout
+// ============================================================
+
+let _stripe: Stripe | null = null;
+
+function client(): Stripe {
+  if (!_stripe) {
+    if (!env.STRIPE_SECRET_KEY) {
+      throw new Error("STRIPE_SECRET_KEY não configurada");
+    }
+    _stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-02-24.acacia",
+      typescript: true,
+    });
+  }
+  return _stripe;
+}
+
+type CheckoutItem = {
+  name: string;
+  description?: string;
+  unitAmountCents: number;
+  quantity: number;
+};
+
+type CreateCheckoutInput = {
+  orderId: string;
+  orderNumber: string;
+  customerEmail: string;
+  items: CheckoutItem[];
+  shippingCents: number;
+  successUrl: string;
+  cancelUrl: string;
+};
+
+export const stripe = {
+  isConfigured(): boolean {
+    return Boolean(env.STRIPE_SECRET_KEY);
+  },
+
+  /**
+   * Cria uma sessão de Checkout hosted (cartão + PIX) e retorna a URL.
+   * Valores em centavos — Stripe usa a menor unidade da moeda (centavos BRL).
+   */
+  async createCheckoutSession(input: CreateCheckoutInput): Promise<{ id: string; url: string }> {
+    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = input.items.map((it) => ({
+      quantity: it.quantity,
+      price_data: {
+        currency: "brl",
+        unit_amount: it.unitAmountCents,
+        product_data: {
+          name: it.name,
+          ...(it.description ? { description: it.description.slice(0, 250) } : {}),
+        },
+      },
+    }));
+
+    // Frete como item separado (se houver)
+    if (input.shippingCents > 0) {
+      line_items.push({
+        quantity: 1,
+        price_data: {
+          currency: "brl",
+          unit_amount: input.shippingCents,
+          product_data: { name: "Frete" },
+        },
+      });
+    }
+
+    const session = await client().checkout.sessions.create({
+      mode: "payment",
+      // Cartão + PIX. PIX exige conta Stripe BR com o método ativado no painel.
+      payment_method_types: ["card", "pix"],
+      line_items,
+      customer_email: input.customerEmail,
+      client_reference_id: input.orderId,
+      metadata: {
+        orderId: input.orderId,
+        orderNumber: input.orderNumber,
+      },
+      success_url: input.successUrl,
+      cancel_url: input.cancelUrl,
+      locale: "pt-BR",
+    });
+
+    if (!session.url) {
+      throw new Error("Stripe não retornou URL de checkout");
+    }
+    return { id: session.id, url: session.url };
+  },
+
+  async getSession(sessionId: string) {
+    return client().checkout.sessions.retrieve(sessionId);
+  },
+
+  /**
+   * Valida e constrói o evento do webhook a partir do corpo bruto + assinatura.
+   * Lança erro se a assinatura não bater (proteção contra falsificação).
+   */
+  constructWebhookEvent(rawBody: string | Buffer, signature: string): Stripe.Event {
+    if (!env.STRIPE_WEBHOOK_SECRET) {
+      throw new Error("STRIPE_WEBHOOK_SECRET não configurada");
+    }
+    return client().webhooks.constructEvent(rawBody, signature, env.STRIPE_WEBHOOK_SECRET);
+  },
+};

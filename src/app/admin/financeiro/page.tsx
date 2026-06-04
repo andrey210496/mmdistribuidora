@@ -6,7 +6,7 @@ export default async function FinanceiroPage() {
   return (
     <ComingSoon
       title="Financeiro"
-      description="Conciliação Asaas, fluxo de caixa, contas a receber/pagar — Fase 4."
+      description="Conciliação Stripe, fluxo de caixa, contas a receber/pagar — Fase 4."
     />
   );
 }

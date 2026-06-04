@@ -9,9 +9,9 @@ import { checkoutSchema } from "@/lib/validations";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { logAudit } from "@/lib/audit";
-import { asaas } from "@/lib/asaas";
+import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
-import type { OrderStatus, PaymentMethod } from "@prisma/client";
+import type { OrderStatus } from "@prisma/client";
 
 export type CheckoutState = {
   ok?: boolean;
@@ -23,7 +23,7 @@ export type CheckoutState = {
 /**
  * Recebe os dados do formulário de checkout, valida tudo no servidor,
  * cria/atualiza Customer, cria Order com snapshot dos preços do banco
- * (NUNCA confia em valores enviados pelo cliente), e abre cobrança Asaas.
+ * (NUNCA confia em valores enviados pelo cliente), e abre o Stripe Checkout.
  */
 export async function submitCheckout(
   _prev: CheckoutState,
@@ -51,7 +51,6 @@ export async function submitCheckout(
     customerEmail: formData.get("customerEmail"),
     customerCpfCnpj: formData.get("customerCpfCnpj") || undefined,
     customerPhone: formData.get("customerPhone") || undefined,
-    paymentMethod: formData.get("paymentMethod"),
     shippingAddress: {
       zip: formData.get("zip"),
       street: formData.get("street"),
@@ -145,7 +144,8 @@ export async function submitCheckout(
       customerEmailSnapshot: data.customerEmail,
       customerCpfSnapshot: data.customerCpfCnpj,
       customerPhoneSnapshot: data.customerPhone,
-      paymentMethod: data.paymentMethod as PaymentMethod,
+      // paymentMethod fica null — o Stripe Checkout mostra cartão e PIX,
+      // e o método real é registrado quando o webhook confirma o pagamento.
       paymentStatus: "PENDING",
       items: { create: orderItemsData },
       statusHistory: {
@@ -158,57 +158,52 @@ export async function submitCheckout(
     action: "order.created",
     entityType: "Order",
     entityId: order.id,
-    afterJson: { orderNumber, totalCents, paymentMethod: data.paymentMethod },
+    afterJson: { orderNumber, totalCents },
     ip,
     userAgent,
   });
 
-  // Tenta criar cobrança no Asaas (se configurado)
-  if (asaas.isConfigured()) {
+  // Cria sessão de Checkout no Stripe (se configurado)
+  if (stripe.isConfigured()) {
     try {
-      const asaasCustomer = await asaas.createCustomer({
-        name: data.customerName,
-        email: data.customerEmail,
-        cpfCnpj: data.customerCpfCnpj,
-        phone: data.customerPhone,
-      });
-
-      const dueDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10);
-
-      const payment = await asaas.createPayment({
-        customer: asaasCustomer.id,
-        billingType: data.paymentMethod,
-        value: totalCents / 100,
-        dueDate,
-        description: `Pedido ${orderNumber} — Doce Encanto`,
-        externalReference: order.id,
+      const session = await stripe.createCheckoutSession({
+        orderId: order.id,
+        orderNumber,
+        customerEmail: data.customerEmail,
+        items: orderItemsData.map((i) => ({
+          name: i.productNameSnapshot,
+          description: `SKU ${i.productSkuSnapshot}`,
+          unitAmountCents: i.unitPriceCents,
+          quantity: i.quantity,
+        })),
+        shippingCents,
+        successUrl: `${env.APP_URL}/pedido/${orderNumber}?pago=1`,
+        cancelUrl: `${env.APP_URL}/pedido/${orderNumber}?cancelado=1`,
       });
 
       await prisma.order.update({
         where: { id: order.id },
         data: {
-          asaasPaymentId: payment.id,
-          asaasInvoiceUrl: payment.invoiceUrl,
+          stripeSessionId: session.id,
+          paymentUrl: session.url,
         },
       });
 
       await clearCart();
       revalidatePath("/", "layout");
 
-      // Redireciona para a URL de pagamento do Asaas
-      redirect(payment.invoiceUrl);
+      // Redireciona para a página de pagamento do Stripe
+      redirect(session.url);
     } catch (err: unknown) {
       // Se for um redirect do Next, propaga
       if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
 
-      console.error("[checkout] erro Asaas:", err);
+      console.error("[checkout] erro Stripe:", err);
       // Cai para fluxo de modo dev — pedido criado, pagamento manual
     }
   }
 
-  // Modo dev / Asaas indisponível: limpa carrinho e leva à página do pedido
+  // Modo dev / Stripe indisponível: limpa carrinho e leva à página do pedido
   await clearCart();
   revalidatePath("/", "layout");
   redirect(`/pedido/${order.orderNumber}`);

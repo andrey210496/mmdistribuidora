@@ -15,7 +15,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { DevPaymentSimulator } from "@/components/storefront/DevPaymentSimulator";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
-import { asaas } from "@/lib/asaas";
+import { stripe } from "@/lib/stripe";
 
 export const metadata = { title: "Detalhes do Pedido" };
 export const dynamic = "force-dynamic";
@@ -34,7 +34,6 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 const paymentMethodLabels: Record<string, string> = {
   PIX: "PIX",
   CREDIT_CARD: "Cartão de crédito",
-  BOLETO: "Boleto bancário",
 };
 
 export default async function OrderPage({
@@ -56,7 +55,7 @@ export default async function OrderPage({
 
   const status = statusLabels[order.status] ?? { label: order.status, color: "bg-cocoa/10 text-cocoa" };
   const isPending = order.paymentStatus === "PENDING";
-  const asaasReady = asaas.isConfigured() && order.asaasInvoiceUrl;
+  const stripeReady = stripe.isConfigured() && !!order.paymentUrl;
 
   return (
     <>
@@ -94,9 +93,9 @@ export default async function OrderPage({
                 </div>
               </div>
 
-              {asaasReady ? (
+              {stripeReady ? (
                 <Link
-                  href={order.asaasInvoiceUrl!}
+                  href={order.paymentUrl!}
                   target="_blank"
                   className="btn-pink"
                 >
@@ -110,7 +109,7 @@ export default async function OrderPage({
                     <div className="flex items-start gap-2">
                       <AlertTriangle size={16} className="text-yellow-700 shrink-0 mt-0.5" />
                       <div className="text-sm text-yellow-900">
-                        <strong>Modo desenvolvimento:</strong> credenciais Asaas não configuradas. Use o botão abaixo para simular o pagamento manualmente.
+                        <strong>Modo desenvolvimento:</strong> Stripe não configurado. Use o botão abaixo para simular o pagamento manualmente.
                       </div>
                     </div>
                   </div>
@@ -238,11 +237,13 @@ export default async function OrderPage({
                 <h2 className="font-display text-lg font-bold text-cocoa mb-3">Pagamento</h2>
                 <div className="flex items-center gap-2 text-sm text-cocoa">
                   <CreditCard size={16} className="text-rose-brand" />
-                  {paymentMethodLabels[order.paymentMethod] ?? order.paymentMethod}
+                  {order.paymentMethod
+                    ? paymentMethodLabels[order.paymentMethod] ?? order.paymentMethod
+                    : "Cartão ou PIX"}
                 </div>
                 <div className="text-xs text-cocoa/60 mt-1 flex items-center gap-1.5">
                   <ShieldCheck size={12} className="text-olive" />
-                  Processado de forma segura via Asaas
+                  Processado de forma segura via Stripe
                 </div>
               </div>
             </div>

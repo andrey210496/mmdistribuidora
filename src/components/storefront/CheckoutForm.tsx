@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { ShieldCheck, Lock } from "lucide-react";
+import { ShieldCheck, Lock, CreditCard, QrCode } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { submitCheckout, type CheckoutState } from "@/app/actions/checkout";
 import type { CartSummary } from "@/lib/cart";
@@ -164,40 +164,30 @@ export function CheckoutForm({ cart }: { cart: CartSummary }) {
           <h2 className="font-display text-xl font-bold text-cocoa mb-1">3. Pagamento</h2>
           <p className="text-sm text-cocoa/60 mb-5 flex items-center gap-1.5">
             <Lock size={13} className="text-olive" />
-            Processado de forma segura via Asaas
+            Pagamento processado de forma segura pelo Stripe
           </p>
 
-          <div className="space-y-3">
-            {[
-              { value: "PIX", label: "PIX", desc: "Aprovação imediata · 5% de desconto", badge: "Recomendado" },
-              { value: "CREDIT_CARD", label: "Cartão de crédito", desc: "Em até 6x sem juros", badge: undefined },
-              { value: "BOLETO", label: "Boleto bancário", desc: "Aprovação em até 2 dias úteis", badge: undefined },
-            ].map((opt, i) => (
-              <label
-                key={opt.value}
-                className="flex items-start gap-3 p-4 rounded-xl border border-cocoa/15 cursor-pointer hover:border-rose-brand has-[:checked]:border-rose-brand has-[:checked]:bg-rose-brand/5 transition"
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value={opt.value}
-                  required
-                  defaultChecked={i === 0}
-                  className="mt-1 accent-rose-brand"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-cocoa">{opt.label}</span>
-                    {opt.badge && (
-                      <span className="text-[10px] uppercase tracking-wider bg-olive/15 text-olive font-bold px-2 py-0.5 rounded-full">
-                        {opt.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-xs text-cocoa/60 mt-0.5">{opt.desc}</div>
-                </div>
-              </label>
-            ))}
+          <div className="rounded-xl border border-cocoa/15 bg-cream/40 p-5">
+            <p className="text-sm text-cocoa/80 mb-4">
+              Ao confirmar, você será levado para a página segura do Stripe,
+              onde poderá pagar com:
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center gap-2 bg-white border border-cocoa/10 rounded-lg px-3 py-2">
+                <CreditCard size={16} className="text-rose-brand" />
+                <span className="text-sm font-semibold text-cocoa">Cartão de crédito</span>
+                <span className="text-[10px] uppercase tracking-wider bg-cocoa/5 text-cocoa/60 font-bold px-2 py-0.5 rounded-full">
+                  até 6x
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-white border border-cocoa/10 rounded-lg px-3 py-2">
+                <QrCode size={16} className="text-olive" />
+                <span className="text-sm font-semibold text-cocoa">PIX</span>
+                <span className="text-[10px] uppercase tracking-wider bg-olive/15 text-olive font-bold px-2 py-0.5 rounded-full">
+                  na hora
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -269,7 +259,7 @@ export function CheckoutForm({ cart }: { cart: CartSummary }) {
 
           <div className="px-6 pb-6">
             <button type="submit" disabled={pending} className="btn-pink w-full">
-              {pending ? "Processando..." : "Confirmar e pagar"}
+              {pending ? "Processando..." : "Ir para o pagamento"}
             </button>
             <div className="flex items-center gap-2 text-xs text-cocoa/60 justify-center mt-3">
               <ShieldCheck size={13} className="text-olive" />

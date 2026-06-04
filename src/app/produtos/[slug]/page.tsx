@@ -177,7 +177,7 @@ export default async function ProdutoPage({
             <div className="grid grid-cols-2 gap-3 mb-8">
               {[
                 { Icon: Truck, label: "Envio em 24h", sub: "Vale do Paraíba e Litoral Norte" },
-                { Icon: ShieldCheck, label: "Compra segura", sub: "Pagamento Asaas" },
+                { Icon: ShieldCheck, label: "Compra segura", sub: "Pagamento via Stripe" },
                 { Icon: RotateCcw, label: "Troca fácil", sub: "Em até 7 dias" },
                 { Icon: Award, label: "Qualidade", sub: "Marcas premium" },
               ].map(({ Icon, label, sub }) => (

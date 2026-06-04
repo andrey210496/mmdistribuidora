@@ -9,7 +9,7 @@ import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 
 /**
- * Apenas em dev/sem-asaas. Marca pedido como pago manualmente.
+ * Apenas em dev/sem-Stripe. Marca pedido como pago manualmente.
  * Em PRODUÇÃO essa action não faz nada.
  */
 export async function simulatePayment(

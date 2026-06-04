@@ -58,7 +58,6 @@ export const checkoutSchema = z.object({
   customerCpfCnpj: cpfCnpjSchema.optional(),
   customerPhone: z.string().max(30).optional(),
   shippingAddress: addressSchema,
-  paymentMethod: z.enum(["PIX", "CREDIT_CARD", "BOLETO"]),
   items: z.array(checkoutItemSchema).min(1).max(50),
 });
 

@@ -6,7 +6,7 @@ export default async function ConfigPage() {
   return (
     <ComingSoon
       title="Configurações"
-      description="Credenciais Asaas, NFe, taxas de frete, dados da loja, gestão de usuários e auditoria — Fase 5."
+      description="Credenciais Stripe, NFe, taxas de frete, dados da loja, gestão de usuários e auditoria — Fase 5."
     />
   );
 }

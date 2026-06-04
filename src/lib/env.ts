@@ -13,9 +13,10 @@ const envSchema = z.object({
     .min(32, "SESSION_SECRET precisa ter no mínimo 32 caracteres"),
   SESSION_COOKIE_NAME: z.string().default("doce_session"),
 
-  ASAAS_API_KEY: z.string().optional().default(""),
-  ASAAS_BASE_URL: z.string().url().default("https://sandbox.asaas.com/api/v3"),
-  ASAAS_WEBHOOK_TOKEN: z.string().optional().default(""),
+  // Stripe — chave secreta (server), publicável (client) e segredo do webhook
+  STRIPE_SECRET_KEY: z.string().optional().default(""),
+  STRIPE_PUBLISHABLE_KEY: z.string().optional().default(""),
+  STRIPE_WEBHOOK_SECRET: z.string().optional().default(""),
 
   RATE_LIMIT_LOGIN_PER_MIN: z.coerce.number().int().positive().default(5),
   RATE_LIMIT_CHECKOUT_PER_MIN: z.coerce.number().int().positive().default(10),
