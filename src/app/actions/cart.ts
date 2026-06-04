@@ -3,15 +3,22 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
+  getCart,
   setCartItem,
   addToCart as addToCartLib,
   removeFromCart as removeFromCartLib,
   clearCart as clearCartLib,
   setShippingZip,
+  type CartSummary,
 } from "@/lib/cart";
 
 const productIdSchema = z.string().min(1).max(100);
 const quantitySchema = z.number().int().min(0).max(99);
+
+// Retorna o estado atual do carrinho (usado pelo mini-carrinho no client)
+export async function getCartSummary(): Promise<CartSummary> {
+  return getCart();
+}
 
 export type ActionResult = { ok: boolean; error?: string };
 

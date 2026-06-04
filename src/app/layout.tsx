@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { League_Spartan, Akshar, Fraunces } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/components/cart/CartProvider";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 const spartan = League_Spartan({
   subsets: ["latin"],
@@ -66,7 +68,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${spartan.variable} ${akshar.variable} ${fraunces.variable}`}>
       <body className="min-h-screen flex flex-col antialiased">
-        {children}
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

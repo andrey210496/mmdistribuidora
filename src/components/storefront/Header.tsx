@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  ShoppingBag,
   User,
   Search,
   Menu,
@@ -12,13 +11,9 @@ import {
   Crown,
   ArrowRight,
 } from "lucide-react";
-import { getCart } from "@/lib/cart";
-import { centsToBRL } from "@/lib/money";
+import { CartButton } from "@/components/cart/CartButton";
 
-export async function Header() {
-  const cart = await getCart();
-  const cartCount = cart.totalItems;
-  const cartTotal = cart.subtotalCents;
+export function Header() {
   return (
     <header className="sticky top-0 z-50">
       {/* Top bar escuro */}
@@ -186,21 +181,7 @@ export async function Header() {
                 <div className="text-[11px] text-cocoa/60">ou cadastrar</div>
               </div>
             </Link>
-            <Link
-              href="/carrinho"
-              className="flex items-center gap-2.5 hover:text-rose-brand transition group relative"
-            >
-              <div className="relative">
-                <ShoppingBag size={26} strokeWidth={1.5} className="text-cocoa" />
-                <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-rose-brand text-white text-[10px] font-bold flex items-center justify-center">
-                  {cartCount}
-                </span>
-              </div>
-              <div className="hidden lg:block text-cocoa">
-                <div className="text-[10px] uppercase tracking-widest text-cocoa/60">Carrinho</div>
-                <div className="font-bold text-[13px]">{centsToBRL(cartTotal)}</div>
-              </div>
-            </Link>
+            <CartButton />
             <button aria-label="Menu" className="lg:hidden p-2 text-cocoa">
               <Menu size={22} strokeWidth={1.5} />
             </button>

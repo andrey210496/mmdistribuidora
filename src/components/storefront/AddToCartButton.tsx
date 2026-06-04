@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { ShoppingBag, Check, Plus, Minus } from "lucide-react";
-import { addToCart } from "@/app/actions/cart";
+import { useCart } from "@/components/cart/CartProvider";
 
 type Props = {
   productId: string;
@@ -17,6 +17,7 @@ export function AddToCartButton({
   variant = "card",
   initialQuantity = 1,
 }: Props) {
+  const { addItem } = useCart();
   const [pending, startTransition] = useTransition();
   const [added, setAdded] = useState(false);
   const [qty, setQty] = useState(initialQuantity);
@@ -25,7 +26,8 @@ export function AddToCartButton({
   const handle = () => {
     setError(null);
     startTransition(async () => {
-      const res = await addToCart(productId, qty);
+      // addItem adiciona, atualiza o carrinho e ABRE a gaveta lateral
+      const res = await addItem(productId, qty);
       if (res.ok) {
         setAdded(true);
         setTimeout(() => setAdded(false), 1800);
