@@ -33,3 +33,6 @@ public/uploads/*
 # Artefatos de deploy local
 deploy/release/
 deploy/*.tar.gz
+
+# Cache do TypeScript
+*.tsbuildinfo
