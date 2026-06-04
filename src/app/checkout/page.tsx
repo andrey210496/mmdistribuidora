@@ -1,0 +1,28 @@
+import { redirect } from "next/navigation";
+import { Header } from "@/components/storefront/Header";
+import { Footer } from "@/components/storefront/Footer";
+import { CheckoutForm } from "@/components/storefront/CheckoutForm";
+import { getCart } from "@/lib/cart";
+
+export const metadata = { title: "Finalizar compra" };
+export const dynamic = "force-dynamic";
+
+export default async function CheckoutPage() {
+  const cart = await getCart();
+  if (cart.lines.length === 0) {
+    redirect("/carrinho");
+  }
+
+  return (
+    <>
+      <Header />
+      <main className="container-default py-10 lg:py-14 min-h-[60vh]">
+        <h1 className="font-display text-3xl lg:text-4xl font-bold text-cocoa mb-8">
+          Finalizar compra
+        </h1>
+        <CheckoutForm cart={cart} />
+      </main>
+      <Footer />
+    </>
+  );
+}

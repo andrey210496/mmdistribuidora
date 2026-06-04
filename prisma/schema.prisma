@@ -1,0 +1,383 @@
+// ============================================================
+// Doce Encanto — Schema do Banco
+// Princípio: backend é fonte da verdade. Snapshots são gravados
+// nos pedidos para que mudanças futuras de preço/produto não
+// reescrevam o histórico.
+// ============================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  // Inclui binário pra Linux (deploy) além do nativo (Windows dev)
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USUÁRIOS DO SISTEMA (admin, separador, financeiro)
+// ============================================================
+enum UserRole {
+  ADMIN
+  PICKER
+  FINANCE
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String
+  passwordHash        String
+  role                UserRole  @default(ADMIN)
+  active              Boolean   @default(true)
+  mustChangePassword  Boolean   @default(false)
+  lastLoginAt         DateTime?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+// ============================================================
+// CLIENTES DA LOJA
+// ============================================================
+model Customer {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  cpfCnpj      String?   @unique
+  phone        String?
+  passwordHash String?
+  emailVerified DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  addresses   Address[]
+  orders      Order[]
+  clubMember  ClubMember?
+
+  @@index([email])
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  customerId   String
+  label        String  @default("Principal")
+  zip          String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String  @db.Char(2)
+  isDefault    Boolean @default(false)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+// ============================================================
+// CATÁLOGO
+// ============================================================
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  description         String   @db.Text
+  sku                 String   @unique
+  priceCents          Int
+  compareAtPriceCents Int?
+  stock               Int      @default(0)
+  weightGrams         Int      @default(0)
+  active              Boolean  @default(true)
+  featured            Boolean  @default(false)
+  categoryId          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  category   Category?      @relation(fields: [categoryId], references: [id])
+  images     ProductImage[]
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([active])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// ============================================================
+// PEDIDOS
+// ============================================================
+enum OrderStatus {
+  PENDING_PAYMENT  // criado, aguardando confirmação do pagamento
+  PAID             // pago, fila de separação
+  SEPARATING       // em separação no estoque
+  READY_TO_SHIP    // separado, aguardando envio
+  SHIPPED          // enviado
+  DELIVERED        // entregue
+  CANCELED         // cancelado
+  REFUNDED         // estornado
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  BOLETO
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique // Ex: DE-2025-0001
+  customerId  String
+  status      OrderStatus @default(PENDING_PAYMENT)
+
+  // Valores em centavos (Int) — nunca usar Float pra dinheiro
+  subtotalCents Int
+  discountCents Int @default(0)
+  shippingCents Int @default(0)
+  totalCents    Int
+
+  // Snapshot do endereço (não usa FK para preservar histórico)
+  shippingZip          String
+  shippingStreet       String
+  shippingNumber       String
+  shippingComplement   String?
+  shippingNeighborhood String
+  shippingCity         String
+  shippingState        String  @db.Char(2)
+
+  // Snapshot do cliente (idem)
+  customerNameSnapshot  String
+  customerEmailSnapshot String
+  customerCpfSnapshot   String?
+  customerPhoneSnapshot String?
+
+  // Pagamento
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  asaasPaymentId  String?       @unique
+  asaasInvoiceUrl String?
+  paidAt          DateTime?
+
+  // Token único para QR de separação (não usar id sequencial)
+  pickToken String @unique @default(cuid())
+
+  // Nota fiscal
+  nfIssuedAt DateTime?
+  nfNumber   String?
+  nfPdfPath  String?
+
+  // Observações internas
+  internalNotes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer       Customer            @relation(fields: [customerId], references: [id])
+  items          OrderItem[]
+  statusHistory  OrderStatusHistory[]
+  financialEntry FinancialEntry?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([pickToken])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+
+  // Snapshot — preço/nome travados no momento do pedido
+  productNameSnapshot String
+  productSkuSnapshot  String
+  unitPriceCents      Int
+  quantity            Int
+  totalCents          Int
+
+  // Controle de separação
+  picked   Boolean   @default(false)
+  pickedAt DateTime?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  changedBy String?     // userId (null = sistema)
+  notes     String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ============================================================
+// CLUBE DE VANTAGENS
+// ============================================================
+enum ClubTier {
+  BRONZE
+  PRATA
+  OURO
+}
+
+enum ClubStatus {
+  ACTIVE
+  PAUSED
+  CANCELED
+}
+
+model ClubMember {
+  id              String     @id @default(cuid())
+  customerId      String     @unique
+  tier            ClubTier   @default(BRONZE)
+  status          ClubStatus @default(ACTIVE)
+  monthlyFeeCents Int
+  joinedAt        DateTime   @default(now())
+  lastBilledAt    DateTime?
+  nextBillingAt   DateTime?
+  canceledAt      DateTime?
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([nextBillingAt])
+}
+
+model ClubBenefit {
+  id              String   @id @default(cuid())
+  tier            ClubTier
+  name            String
+  description     String   @db.Text
+  discountPercent Int      @default(0) // 0–100
+  freeShipping    Boolean  @default(false)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  @@index([tier, active])
+}
+
+// ============================================================
+// FINANCEIRO
+// ============================================================
+enum FinancialEntryType {
+  RECEIVABLE  // a receber
+  PAYABLE     // a pagar
+}
+
+enum FinancialEntryStatus {
+  OPEN
+  PAID
+  OVERDUE
+  CANCELED
+}
+
+model FinancialEntry {
+  id          String               @id @default(cuid())
+  type        FinancialEntryType
+  status      FinancialEntryStatus @default(OPEN)
+  category    String               // ex: "venda", "frete", "fornecedor"
+  description String
+  amountCents Int
+  dueDate     DateTime
+  paidAt      DateTime?
+  orderId     String?              @unique
+  notes       String?              @db.Text
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([type, status])
+  @@index([dueDate])
+}
+
+// ============================================================
+// WEBHOOK ASAAS — idempotência
+// ============================================================
+model AsaasWebhookEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique // do payload Asaas
+  eventType   String
+  payload     Json
+  receivedAt  DateTime @default(now())
+  processedAt DateTime?
+  error       String?
+
+  @@index([eventType])
+}
+
+// ============================================================
+// AUDITORIA — quem fez o quê
+// ============================================================
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // ex: "order.status.changed", "user.login"
+  entityType String?
+  entityId   String?
+  beforeJson Json?
+  afterJson  Json?
+  ip         String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ============================================================
+// CONFIGURAÇÕES — chave/valor
+// ============================================================
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}

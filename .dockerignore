@@ -1,0 +1,33 @@
+# Ignorar do build do Docker pra acelerar e não vazar lixo
+node_modules
+.next
+out
+dist
+build
+
+.env
+.env.local
+.env.production
+.env.development.local
+
+.git
+.gitignore
+
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+.vscode
+.idea
+
+# Deploy artifacts antigos (não precisam ir pro container)
+deploy/release
+deploy/doce-encanto.tar.gz
+
+# Uploads locais de dev — em produção fica em volume separado
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Arquivos do meu workflow local
+*.md.bak

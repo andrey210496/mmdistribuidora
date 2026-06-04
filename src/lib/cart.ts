@@ -1,0 +1,193 @@
+import { prisma } from "./prisma";
+import { getCustomerSession, type CartItem } from "./session";
+
+// ============================================================
+// Lib do carrinho — toda lógica de preço é executada NO SERVIDOR.
+// Frontend só envia productId + quantity. Backend é fonte da verdade.
+// ============================================================
+
+const MAX_QTY_PER_ITEM = 99;
+const MAX_ITEMS_IN_CART = 50;
+
+export type CartLine = {
+  productId: string;
+  productName: string;
+  productSlug: string;
+  imageUrl: string | null;
+  quantity: number;
+  unitPriceCents: number;
+  totalCents: number;
+  stock: number;
+  available: boolean;
+};
+
+export type CartSummary = {
+  lines: CartLine[];
+  subtotalCents: number;
+  shippingCents: number;
+  freeShippingThresholdCents: number;
+  discountCents: number;
+  totalCents: number;
+  totalItems: number;
+  shippingZip: string | null;
+};
+
+const SHIPPING_FREE_THRESHOLD_CENTS = 20000; // R$ 200
+const SHIPPING_FLAT_RATE_CENTS = 1990; // R$ 19,90
+
+/**
+ * Lê o carrinho da sessão e enriquece com dados frescos do banco.
+ * Filtra produtos inativos/inexistentes silenciosamente.
+ */
+export async function getCart(): Promise<CartSummary> {
+  const session = await getCustomerSession();
+  const items = session.cart ?? [];
+  const zip = session.shippingZip ?? null;
+
+  if (items.length === 0) {
+    return {
+      lines: [],
+      subtotalCents: 0,
+      shippingCents: 0,
+      freeShippingThresholdCents: SHIPPING_FREE_THRESHOLD_CENTS,
+      discountCents: 0,
+      totalCents: 0,
+      totalItems: 0,
+      shippingZip: zip,
+    };
+  }
+
+  const products = await prisma.product.findMany({
+    where: {
+      id: { in: items.map((i) => i.productId) },
+      active: true,
+    },
+    include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
+  });
+
+  const lines: CartLine[] = [];
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.productId);
+    if (!product) continue;
+    const qty = Math.min(item.quantity, product.stock, MAX_QTY_PER_ITEM);
+    if (qty <= 0) continue;
+    lines.push({
+      productId: product.id,
+      productName: product.name,
+      productSlug: product.slug,
+      imageUrl: product.images[0]?.url ?? null,
+      quantity: qty,
+      unitPriceCents: product.priceCents,
+      totalCents: product.priceCents * qty,
+      stock: product.stock,
+      available: true,
+    });
+  }
+
+  const subtotalCents = lines.reduce((s, l) => s + l.totalCents, 0);
+  const shippingCents =
+    subtotalCents === 0
+      ? 0
+      : subtotalCents >= SHIPPING_FREE_THRESHOLD_CENTS
+        ? 0
+        : SHIPPING_FLAT_RATE_CENTS;
+  const totalCents = subtotalCents + shippingCents;
+  const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
+
+  return {
+    lines,
+    subtotalCents,
+    shippingCents,
+    freeShippingThresholdCents: SHIPPING_FREE_THRESHOLD_CENTS,
+    discountCents: 0,
+    totalCents,
+    totalItems,
+    shippingZip: zip,
+  };
+}
+
+/**
+ * Conta items do carrinho — leve, só pra header.
+ */
+export async function getCartCount(): Promise<number> {
+  const session = await getCustomerSession();
+  const items = session.cart ?? [];
+  return items.reduce((s, i) => s + i.quantity, 0);
+}
+
+/**
+ * Modifica o carrinho na sessão. Validações:
+ * - quantity > 0 e <= MAX_QTY_PER_ITEM
+ * - máx MAX_ITEMS_IN_CART produtos diferentes
+ * - produto precisa existir, estar ativo e ter estoque
+ */
+export async function setCartItem(
+  productId: string,
+  quantity: number
+): Promise<{ ok: boolean; reason?: string }> {
+  if (quantity < 0) return { ok: false, reason: "quantidade inválida" };
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, active: true, stock: true },
+  });
+
+  if (!product || !product.active) {
+    return { ok: false, reason: "produto não encontrado" };
+  }
+
+  const session = await getCustomerSession();
+  const cart: CartItem[] = session.cart ?? [];
+
+  const finalQty = Math.min(quantity, product.stock, MAX_QTY_PER_ITEM);
+
+  const existingIndex = cart.findIndex((i) => i.productId === productId);
+
+  if (finalQty === 0) {
+    if (existingIndex >= 0) cart.splice(existingIndex, 1);
+  } else {
+    if (existingIndex >= 0) {
+      cart[existingIndex]!.quantity = finalQty;
+    } else {
+      if (cart.length >= MAX_ITEMS_IN_CART) {
+        return { ok: false, reason: "limite de produtos atingido" };
+      }
+      cart.push({ productId, quantity: finalQty });
+    }
+  }
+
+  session.cart = cart;
+  await session.save();
+
+  return { ok: true };
+}
+
+export async function addToCart(
+  productId: string,
+  delta = 1
+): Promise<{ ok: boolean; reason?: string }> {
+  const session = await getCustomerSession();
+  const cart = session.cart ?? [];
+  const existing = cart.find((i) => i.productId === productId);
+  const newQty = (existing?.quantity ?? 0) + delta;
+  return setCartItem(productId, newQty);
+}
+
+export async function removeFromCart(productId: string): Promise<void> {
+  const session = await getCustomerSession();
+  const cart = session.cart ?? [];
+  session.cart = cart.filter((i) => i.productId !== productId);
+  await session.save();
+}
+
+export async function clearCart(): Promise<void> {
+  const session = await getCustomerSession();
+  session.cart = [];
+  await session.save();
+}
+
+export async function setShippingZip(zip: string | null): Promise<void> {
+  const session = await getCustomerSession();
+  session.shippingZip = zip ?? undefined;
+  await session.save();
+}

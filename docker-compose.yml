@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: doce-encanto-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: doce
+      POSTGRES_PASSWORD: doce
+      POSTGRES_DB: doce_encanto
+    ports:
+      - "5432:5432"
+    volumes:
+      - doce-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U doce -d doce_encanto"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  doce-pgdata:
