@@ -36,7 +36,7 @@ const promos = [
 
 export function PromoQuad() {
   return (
-    <section className="pt-4 pb-12 lg:pb-16 bg-cream">
+    <section className="pt-10 lg:pt-14 pb-12 lg:pb-16 bg-cream">
       <div className="container-wide">
         <div className="text-center mb-7">
           <span className="eyebrow text-cocoa/60">Pra todo tipo de negócio</span>

@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { HeroBanner } from "@/components/storefront/HeroBanner";
-import { CategoryRound } from "@/components/storefront/CategoryRound";
 import { PromoQuad } from "@/components/storefront/PromoQuad";
 import { BenefitsBar } from "@/components/storefront/BenefitsBar";
 import { ProductShelf } from "@/components/storefront/ProductShelf";
@@ -35,7 +34,6 @@ export default async function HomePage() {
     <>
       <Header />
       <HeroBanner />
-      <CategoryRound />
       <PromoQuad />
       <BenefitsBar />
       <ProductShelf
