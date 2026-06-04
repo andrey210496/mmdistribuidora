@@ -76,8 +76,9 @@ export const stripe = {
 
     const session = await client().checkout.sessions.create({
       mode: "payment",
-      // Cartão + PIX. PIX exige conta Stripe BR com o método ativado no painel.
-      payment_method_types: ["card", "pix"],
+      // Não fixamos os métodos aqui — o Stripe usa automaticamente os que
+      // estiverem ATIVADOS no painel (Cartão, PIX, etc). Assim nunca quebra
+      // se um método não estiver habilitado na conta.
       line_items,
       customer_email: input.customerEmail,
       client_reference_id: input.orderId,
