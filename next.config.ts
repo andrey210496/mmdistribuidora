@@ -5,6 +5,10 @@ const config: NextConfig = {
   poweredByHeader: false, // remove X-Powered-By: Next.js
   // Empacota tudo necessário em .next/standalone — deploy sem rodar build na VPS
   output: "standalone",
+  // NÃO empacotar o Prisma no bundle do servidor — deixa carregar de
+  // node_modules em runtime (onde o engine binário existe). Sem isso, o
+  // Next bundliza o client mas o engine fica de fora → erro 500 nas queries.
+  serverExternalPackages: ["@prisma/client", "prisma", "argon2"],
   // Headers de segurança (defense in depth — middleware tbm aplica)
   async headers() {
     return [
