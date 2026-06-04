@@ -6,7 +6,7 @@ import { z } from "zod";
 import Link from "next/link";
 
 export const metadata = { title: "Produtos" };
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 const querySchema = z.object({
   categoria: z.string().max(80).optional(),

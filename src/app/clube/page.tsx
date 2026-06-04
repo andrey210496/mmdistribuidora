@@ -5,7 +5,7 @@ import { centsToBRL } from "@/lib/money";
 import { Crown, Check } from "lucide-react";
 
 export const metadata = { title: "Clube de Vantagens" };
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function ClubePage() {
   const benefits = await prisma.clubBenefit.findMany({

@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ShieldCheck, Truck, RotateCcw, Award, Heart, Share2 } from "lucide-react";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

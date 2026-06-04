@@ -11,7 +11,7 @@ import { ClubBanner } from "@/components/storefront/ClubBanner";
 import { B2BBanner } from "@/components/storefront/B2BBanner";
 import { Newsletter } from "@/components/storefront/Newsletter";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [bestSellers, offers, news] = await Promise.all([
