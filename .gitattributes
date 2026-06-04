@@ -1,0 +1,21 @@
+# Garante LF (Unix) nos arquivos que rodam em Linux/container.
+# Sem isso, o Windows commita CRLF e quebra shebang/scripts no Docker.
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+Dockerfile text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.prisma text eol=lf
+*.css text eol=lf
+
+# Binários — não mexer
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
