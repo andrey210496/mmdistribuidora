@@ -44,17 +44,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && groupadd --system --gid 1001 nodejs \
     && useradd --system --uid 1001 --gid nodejs --shell /bin/false nextjs
 
-# Standalone do Next inclui server.js + node_modules mínimo necessário
+# Standalone do Next (server.js + chunks) e estáticos
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Prisma client gerado + CLI + engines (pra db push no entrypoint)
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
+
+# node_modules COMPLETO do builder — garante Prisma CLI + TODAS as deps
+# transitivas (effect, @prisma/config, etc), tsx, argon2 e o engine.
+# Vem por último pra sobrescrever o node_modules mínimo do standalone.
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Cria diretório de uploads persistente
 RUN mkdir -p /app/uploads && chown -R nextjs:nodejs /app/uploads
