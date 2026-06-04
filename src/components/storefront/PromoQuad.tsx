@@ -1,40 +1,36 @@
 import Link from "next/link";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, MapPin, Truck } from "lucide-react";
 
+// Cards de destaque da home. Estrutura limpa: imagem no topo (sem texto por
+// cima) + conteúdo embaixo numa faixa de cor sólida da marca. Legível e coeso.
 const promos = [
   {
-    title: "EMBALAGENS",
-    titleAccent: "QUE VALORIZAM",
-    titleEnd: "O SEU PRODUTO!",
-    cta: "Ver produtos",
+    title: "Embalagens que valorizam o seu produto",
+    desc: "Caixas, sacos, forminhas e descartáveis pra apresentar bem.",
+    cta: "Ver embalagens",
     href: "/produtos?categoria=embalagens",
     bg: "bg-pink-warm",
-    text: "text-cocoa",
     btnClass: "bg-rose-brand text-white hover:bg-[#c97d92]",
     image: "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=800&q=85",
   },
   {
-    title: "INSUMOS PARA",
-    titleAccent: "CONFEITARIA",
+    title: "Insumos para confeitaria",
     desc: "Tudo o que você precisa para criar e encantar!",
-    cta: "Ver produtos",
+    cta: "Ver insumos",
     href: "/produtos?categoria=confeitaria",
     bg: "bg-[#dde0c6]",
-    text: "text-cocoa",
     btnClass: "bg-olive text-white hover:bg-[#7d8550]",
     image: "https://images.unsplash.com/photo-1559656914-a30970c1affd?w=800&q=85",
   },
   {
-    title: "PRODUTOS DAS",
-    titleAccent: "MELHORES MARCAS",
-    desc: "Qualidade e confiança que você já conhece!",
+    title: "Produtos das melhores marcas",
+    desc: "Qualidade e confiança que você já conhece.",
     cta: "Ver marcas",
-    href: "/marcas",
+    href: "/produtos",
     bg: "bg-[#f4e6d0]",
-    text: "text-cocoa",
     btnClass: "bg-caramel text-white hover:bg-[#8a4a1c]",
     image: "https://images.unsplash.com/photo-1623660053975-e30d6e2403da?w=800&q=85",
-    showBrands: true,
+    brands: ["Nutella", "Italac", "Piracanjuba", "Puratos", "Harald", "Sicao"],
   },
 ];
 
@@ -42,109 +38,87 @@ export function PromoQuad() {
   return (
     <section className="py-10 lg:py-14 bg-cream">
       <div className="container-wide">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {promos.map((p) => (
             <Link
               key={p.title}
               href={p.href}
-              className={`group relative ${p.bg} rounded-2xl overflow-hidden p-6 flex flex-col min-h-[280px] hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+              className="group flex flex-col rounded-2xl overflow-hidden border border-cocoa/10 bg-white hover:shadow-[0_16px_40px_-12px_rgba(90,43,23,0.25)] hover:-translate-y-1 transition-all duration-300"
             >
-              {/* Imagem decorativa */}
-              <div className="absolute right-0 top-0 w-2/3 h-full opacity-90 pointer-events-none">
+              {/* Imagem topo — limpa, sem texto por cima */}
+              <div className="relative h-36 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.image}
-                  alt=""
-                  className="w-full h-full object-cover object-right"
+                  alt={p.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                 />
-                {/* Fade pra esquerda */}
-                <div className={`absolute inset-0 ${p.bg} bg-gradient-to-r from-current to-transparent opacity-90`} style={{ background: "linear-gradient(to right, currentColor 0%, transparent 60%)" }} />
               </div>
 
-              <div className={`relative z-10 ${p.text} flex-1 flex flex-col`}>
-                <h3 className="font-display font-bold text-lg lg:text-xl leading-tight tracking-tight">
+              {/* Conteúdo embaixo — cor sólida da marca */}
+              <div className={`${p.bg} flex flex-col flex-1 p-5`}>
+                <h3 className="font-display font-bold text-cocoa text-lg leading-tight tracking-tight mb-1.5">
                   {p.title}
                 </h3>
-                <h3 className="font-display font-bold text-lg lg:text-xl leading-tight tracking-tight">
-                  {p.titleAccent}
-                </h3>
-                {p.titleEnd && (
-                  <h3 className="font-display font-bold text-lg lg:text-xl leading-tight tracking-tight">
-                    {p.titleEnd}
-                  </h3>
-                )}
-                {p.desc && (
-                  <p className={`text-xs lg:text-sm mt-2 mb-4 ${p.text} opacity-80 max-w-[180px]`}>
-                    {p.desc}
-                  </p>
-                )}
+                <p className="text-cocoa/70 text-xs lg:text-sm mb-3">{p.desc}</p>
 
-                {p.showBrands && (
-                  <div className="grid grid-cols-3 gap-1 my-3 max-w-[200px]">
-                    {["Nutella", "Italac", "Piracanjuba", "Puratos", "Harald", "Sicao"].map((b) => (
-                      <span key={b} className="bg-white/70 text-cocoa text-[8px] font-bold uppercase tracking-tight px-1 py-0.5 rounded text-center truncate">
+                {p.brands && (
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    {p.brands.map((b) => (
+                      <span
+                        key={b}
+                        className="bg-white/80 text-cocoa text-[9px] font-bold uppercase tracking-tight px-1.5 py-0.5 rounded"
+                      >
                         {b}
                       </span>
                     ))}
                   </div>
                 )}
 
-                <div className="mt-auto">
-                  <span className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider ${p.btnClass} transition`}>
-                    {p.cta}
-                  </span>
-                </div>
+                <span
+                  className={`mt-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider ${p.btnClass} transition w-fit`}
+                >
+                  {p.cta}
+                  <ArrowRight size={12} className="group-hover:translate-x-0.5 transition" />
+                </span>
               </div>
             </Link>
           ))}
 
-          {/* 4º card — Entregas escuro com mapa */}
+          {/* 4º card — Entrega (destaque escuro) */}
           <Link
-            href="/atendimento"
-            className="group relative bg-gradient-to-br from-cocoa to-espresso rounded-2xl overflow-hidden p-6 flex flex-col min-h-[280px] text-cream hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            href="/contato"
+            className="group flex flex-col rounded-2xl overflow-hidden bg-gradient-to-br from-cocoa to-espresso text-cream hover:shadow-[0_16px_40px_-12px_rgba(90,43,23,0.4)] hover:-translate-y-1 transition-all duration-300 min-h-[280px]"
           >
-            {/* Mapa decorativo */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-25 pointer-events-none">
-              <svg viewBox="0 0 200 240" className="w-32 h-40" aria-hidden>
-                <path
-                  d="M 50 30 Q 60 10, 100 25 Q 140 15, 160 50 Q 175 90, 165 140 Q 155 190, 110 215 Q 75 225, 50 200 Q 30 170, 35 130 Q 28 80, 50 30 Z"
-                  fill="none"
-                  stroke="#d4a574"
-                  strokeWidth="2"
-                />
-                {[
-                  [80, 60], [110, 80], [95, 100], [130, 130], [85, 140], [115, 170],
-                ].map(([x, y], i) => (
-                  <g key={i}>
-                    <circle cx={x} cy={y} r="6" fill="#e8a2b6" />
-                    <circle cx={x} cy={y} r="2" fill="white" />
-                  </g>
+            {/* Faixa visual topo com mapa */}
+            <div className="relative h-36 flex items-center justify-center bg-black/10 overflow-hidden">
+              <Truck size={56} className="text-gold/80" strokeWidth={1.2} />
+              {/* pontos de entrega decorativos */}
+              <div className="absolute inset-0 opacity-40">
+                {[[30, 40], [70, 30], [55, 65], [80, 70], [40, 75]].map(([x, y], i) => (
+                  <span
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full bg-rose-brand"
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                  />
                 ))}
-              </svg>
+              </div>
             </div>
 
-            <div className="relative z-10 flex-1 flex flex-col">
-              <MapPin size={20} className="text-gold mb-2" />
-              <h3 className="font-display font-bold text-lg lg:text-xl leading-tight">
-                ENTREGAMOS NO
+            <div className="flex flex-col flex-1 p-5">
+              <MapPin size={18} className="text-gold mb-2" />
+              <h3 className="font-display font-bold text-lg leading-tight mb-1.5">
+                Entregamos no{" "}
+                <span className="text-gold">Vale do Paraíba</span> e Litoral Norte
               </h3>
-              <h3 className="font-display font-bold text-lg lg:text-xl leading-tight text-gold">
-                VALE DO PARAÍBA
-              </h3>
-              <h3 className="font-display font-bold text-lg lg:text-xl leading-tight">
-                E LITORAL NORTE!
-              </h3>
-              <p className="text-cream/75 text-xs lg:text-sm mt-2 mb-4 max-w-[180px]">
+              <p className="text-cream/70 text-xs lg:text-sm mb-3">
                 Mais agilidade e segurança para o seu negócio.
               </p>
-
-              <div className="mt-auto">
-                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-brand text-white hover:bg-[#c97d92] transition">
-                  Saiba mais
-                  <ArrowRight size={12} />
-                </span>
-              </div>
+              <span className="mt-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-brand text-white hover:bg-[#c97d92] transition w-fit">
+                Saiba mais
+                <ArrowRight size={12} className="group-hover:translate-x-0.5 transition" />
+              </span>
             </div>
           </Link>
         </div>
