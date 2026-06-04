@@ -30,10 +30,31 @@ const envSchema = z.object({
 
 const parsed = envSchema.safeParse(process.env);
 
+// Durante o `next build` (fase de coleta de dados das páginas), as variáveis
+// de runtime ainda não estão disponíveis — o EasyPanel/Docker só injeta elas
+// quando o container roda. Nessa fase, NÃO derrubamos o build: usamos
+// placeholders que satisfazem o schema. Em runtime, se algo estiver faltando,
+// aí sim falha (comportamento correto).
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
 if (!parsed.success) {
-  console.error("❌ Variáveis de ambiente inválidas:");
-  console.error(parsed.error.flatten().fieldErrors);
-  throw new Error("Falha ao carregar variáveis de ambiente.");
+  if (!isBuildPhase) {
+    console.error("❌ Variáveis de ambiente inválidas:");
+    console.error(parsed.error.flatten().fieldErrors);
+    throw new Error("Falha ao carregar variáveis de ambiente.");
+  }
+  console.warn(
+    "[env] Variáveis ausentes durante o build — usando placeholders (validação real ocorre em runtime)."
+  );
 }
 
-export const env = parsed.data;
+export const env = parsed.success
+  ? parsed.data
+  : envSchema.parse({
+      ...process.env,
+      DATABASE_URL:
+        process.env.DATABASE_URL ??
+        "postgresql://placeholder:placeholder@localhost:5432/placeholder",
+      SESSION_SECRET:
+        process.env.SESSION_SECRET ?? "build_time_placeholder_secret_0123456789abcdef",
+    });
