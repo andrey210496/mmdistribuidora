@@ -50,5 +50,8 @@ if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
   node node_modules/tsx/dist/cli.mjs prisma/ensure-admin.ts || echo "[entrypoint] ensure-admin falhou (seguindo)"
 fi
 
+# ---- Anuncio de checkout do Clube (cria uma vez; idempotente) ----
+node node_modules/tsx/dist/cli.mjs prisma/ensure-checkout-upsell.ts || echo "[entrypoint] ensure-checkout-upsell falhou (seguindo)"
+
 echo "[entrypoint] Iniciando aplicacao na porta ${PORT:-3000}..."
 exec "$@"

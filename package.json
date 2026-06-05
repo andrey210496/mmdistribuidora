@@ -15,6 +15,7 @@
     "db:studio": "prisma studio",
     "admin:ensure": "tsx prisma/ensure-admin.ts",
     "admin:reset": "tsx prisma/reset-admin.ts",
+    "seed:checkout-upsell": "tsx prisma/ensure-checkout-upsell.ts",
     "setup": "prisma migrate deploy && prisma db seed"
   },
   "prisma": {
