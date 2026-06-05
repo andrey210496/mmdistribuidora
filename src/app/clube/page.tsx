@@ -6,7 +6,7 @@ import { ProductShelf } from "@/components/storefront/ProductShelf";
 import { ClubSubscribeButton } from "@/components/storefront/ClubSubscribeButton";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
-import { getClubConfig } from "@/lib/club";
+import { getClubConfig, monthlyUnderCents } from "@/lib/club";
 import { getCurrentCustomer } from "@/lib/customer";
 
 export const metadata = { title: "Clube de Vantagens" };
@@ -26,6 +26,7 @@ export default async function ClubePage() {
 
   const isMember = customer?.isClubMember ?? false;
   const priceLabel = centsToBRL(cfg.annualPriceCents);
+  const monthlyLabel = centsToBRL(monthlyUnderCents(cfg.annualPriceCents));
 
   return (
     <>
@@ -82,10 +83,15 @@ export default async function ClubePage() {
           <div className="rounded-2xl border-2 border-[#d4a574]/50 bg-white overflow-hidden shadow-lg lg:sticky lg:top-44">
             <div className="bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream p-6 text-center">
               <div className="text-[11px] uppercase tracking-widest text-[#e6c089] font-bold">
-                Plano anual
+                Por menos de
               </div>
-              <div className="font-display text-4xl font-bold text-gold mt-2">{priceLabel}</div>
-              <div className="text-cream/70 text-sm mt-1">por ano · acesso por 12 meses</div>
+              <div className="font-display font-bold text-gold mt-1 leading-none">
+                <span className="text-5xl">{monthlyLabel}</span>
+                <span className="text-lg text-gold/80"> /mês</span>
+              </div>
+              <div className="text-cream/70 text-sm mt-2">
+                equivalente a {priceLabel} por ano
+              </div>
             </div>
 
             <div className="p-6">

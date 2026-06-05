@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   User,
   Search,
-  Menu,
   MapPin,
   Package,
   Phone,
@@ -12,7 +11,22 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { CartButton } from "@/components/cart/CartButton";
+import { CategoryNav, type NavItem } from "@/components/storefront/CategoryNav";
+import { MobileMenu } from "@/components/storefront/MobileMenu";
 import { getCurrentCustomer } from "@/lib/customer";
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "Início", href: "/", active: true },
+  { label: "Embalagens", href: "/produtos?categoria=embalagens" },
+  { label: "Insumos", href: "/produtos?categoria=confeitaria" },
+  { label: "Descartáveis", href: "/produtos?categoria=embalagens" },
+  { label: "Confeitaria", href: "/produtos?categoria=doces-finos" },
+  { label: "Food Service", href: "/produtos?categoria=festas" },
+  { label: "Promoções", href: "/produtos?ofertas=1" },
+  { label: "Marcas", href: "/marcas" },
+  { label: "Quem Somos", href: "/sobre" },
+  { label: "Contato", href: "/contato" },
+];
 
 export async function Header() {
   const customer = await getCurrentCustomer();
@@ -208,45 +222,18 @@ export async function Header() {
               </Link>
             )}
             <CartButton />
-            <button aria-label="Menu" className="lg:hidden p-2 text-cocoa">
-              <Menu size={22} strokeWidth={1.5} />
-            </button>
+            <MobileMenu
+              items={NAV_ITEMS}
+              customerName={firstName}
+              isMember={customer?.isClubMember}
+            />
           </div>
         </div>
 
-        {/* Nav */}
+        {/* Nav de categorias — responsiva com overflow "⋯ Mais" */}
         <nav className="border-t border-cocoa/10 bg-cream">
           <div className="container-wide">
-            <ul className="flex items-center gap-1 lg:gap-2 h-12 overflow-x-auto scrollbar-hide text-[13px] font-semibold">
-              {[
-                { label: "Início", href: "/", active: true },
-                { label: "Embalagens", href: "/produtos?categoria=embalagens" },
-                { label: "Insumos", href: "/produtos?categoria=confeitaria" },
-                { label: "Descartáveis", href: "/produtos?categoria=embalagens" },
-                { label: "Confeitaria", href: "/produtos?categoria=doces-finos" },
-                { label: "Food Service", href: "/produtos?categoria=festas" },
-                { label: "Promoções", href: "/produtos?ofertas=1" },
-                { label: "Marcas", href: "/marcas" },
-                { label: "Quem Somos", href: "/sobre" },
-                { label: "Contato", href: "/contato" },
-              ].map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className={`relative px-4 py-2 whitespace-nowrap transition ${
-                      item.active
-                        ? "text-rose-brand"
-                        : "text-cocoa hover:text-rose-brand"
-                    }`}
-                  >
-                    {item.label}
-                    {item.active && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-rose-brand rounded-full" />
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <CategoryNav items={NAV_ITEMS} />
           </div>
         </nav>
       </div>

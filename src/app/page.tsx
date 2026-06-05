@@ -40,6 +40,9 @@ export default async function HomePage() {
       {/* Capa */}
       <HeroBanner />
 
+      {/* DESTAQUE DO CLUBE — logo no início pra chamar atenção */}
+      <ClubBanner />
+
       {/* PRODUTOS LOGO — foco em comprar */}
       <ProductShelf
         title="Mais vendidos"
@@ -67,9 +70,8 @@ export default async function HomePage() {
         badge="new"
       />
 
-      {/* Apoio: blocos de categoria + clube + confiança */}
+      {/* Apoio: blocos de categoria + confiança */}
       <PromoQuad />
-      <ClubBanner />
       <BenefitsBar />
 
       <Footer />

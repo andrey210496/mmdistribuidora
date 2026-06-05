@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, Crown, Check } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
-import { getClubConfig } from "@/lib/club";
+import { getClubConfig, monthlyUnderCents } from "@/lib/club";
 
 export async function ClubBanner() {
   const cfg = await getClubConfig();
   if (!cfg.active) return null;
+
+  const monthly = monthlyUnderCents(cfg.annualPriceCents);
 
   return (
     <section className="py-16 lg:py-24 bg-cream-soft">
@@ -37,12 +39,15 @@ export async function ClubBanner() {
             {/* Preço + CTA */}
             <div className="bg-cream/5 border border-[#d4a574]/25 rounded-2xl p-8 text-center backdrop-blur-sm">
               <div className="text-[11px] uppercase tracking-widest text-[#e6c089] font-bold">
-                Plano anual
+                Por menos de
               </div>
-              <div className="font-display text-5xl font-bold text-gold mt-2">
-                {centsToBRL(cfg.annualPriceCents)}
+              <div className="font-display font-bold text-gold mt-1 leading-none">
+                <span className="text-5xl lg:text-6xl">{centsToBRL(monthly)}</span>
+                <span className="text-xl text-gold/80"> /mês</span>
               </div>
-              <div className="text-cream/60 text-sm mt-1">por ano · 12 meses de acesso</div>
+              <div className="text-cream/60 text-sm mt-2">
+                equivalente a {centsToBRL(cfg.annualPriceCents)} por ano
+              </div>
 
               <Link
                 href="/clube"

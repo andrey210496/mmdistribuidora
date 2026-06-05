@@ -92,3 +92,15 @@ export function addOneYear(from: Date): Date {
   d.setFullYear(d.getFullYear() + 1);
   return d;
 }
+
+/**
+ * Valor mensal equivalente "arredondado pra cima" ao próximo R$ 0,50,
+ * para a chamada "Por menos de R$ X por mês".
+ * Ex.: 9990/ano → 832,5/mês → "menos de R$ 8,50".
+ */
+export function monthlyUnderCents(annualCents: number): number {
+  const exact = annualCents / 12;
+  let v = Math.ceil(exact / 50) * 50;
+  if (v <= exact) v += 50;
+  return v;
+}
