@@ -12,8 +12,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { CartButton } from "@/components/cart/CartButton";
+import { getCurrentCustomer } from "@/lib/customer";
 
-export function Header() {
+export async function Header() {
+  const customer = await getCurrentCustomer();
+  const firstName = customer?.name.split(/\s+/)[0];
+
   return (
     <header className="sticky top-0 z-50">
       {/* Top bar escuro */}
@@ -171,16 +175,38 @@ export function Header() {
 
           {/* Ações */}
           <div className="flex items-center gap-5 shrink-0">
-            <Link
-              href="/conta"
-              className="hidden md:flex items-center gap-2.5 hover:text-rose-brand transition group"
-            >
-              <User size={26} strokeWidth={1.5} className="text-cocoa" />
-              <div className="leading-tight text-cocoa">
-                <div className="font-bold text-[13px]">Entrar</div>
-                <div className="text-[11px] text-cocoa/60">ou cadastrar</div>
-              </div>
-            </Link>
+            {customer ? (
+              <Link
+                href="/conta"
+                className="hidden md:flex items-center gap-2.5 hover:text-rose-brand transition group"
+              >
+                <div className="relative">
+                  <User size={26} strokeWidth={1.5} className="text-cocoa" />
+                  {customer.isClubMember && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] flex items-center justify-center ring-1 ring-cream">
+                      <Crown size={9} className="text-[#5a2b17]" fill="currentColor" />
+                    </span>
+                  )}
+                </div>
+                <div className="leading-tight text-cocoa">
+                  <div className="font-bold text-[13px]">{firstName}</div>
+                  <div className="text-[11px] text-cocoa/60">
+                    {customer.isClubMember ? "Membro do Clube" : "Minha conta"}
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <Link
+                href="/entrar"
+                className="hidden md:flex items-center gap-2.5 hover:text-rose-brand transition group"
+              >
+                <User size={26} strokeWidth={1.5} className="text-cocoa" />
+                <div className="leading-tight text-cocoa">
+                  <div className="font-bold text-[13px]">Entrar</div>
+                  <div className="text-[11px] text-cocoa/60">ou cadastrar</div>
+                </div>
+              </Link>
+            )}
             <CartButton />
             <button aria-label="Menu" className="lg:hidden p-2 text-cocoa">
               <Menu size={22} strokeWidth={1.5} />

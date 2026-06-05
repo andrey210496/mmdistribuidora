@@ -33,7 +33,7 @@ type CheckoutItem = {
 type CreateCheckoutInput = {
   orderId: string;
   orderNumber: string;
-  customerEmail: string;
+  customerEmail?: string;
   items: CheckoutItem[];
   shippingCents: number;
   successUrl: string;

@@ -11,6 +11,7 @@ import { env } from "@/lib/env";
 import { logAudit } from "@/lib/audit";
 import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
+import { getCurrentCustomer } from "@/lib/customer";
 import type { OrderStatus } from "@prisma/client";
 
 export type CheckoutState = {
@@ -37,6 +38,13 @@ export async function submitCheckout(
   const rl = rateLimit(`checkout:${ip}`, env.RATE_LIMIT_CHECKOUT_PER_MIN, 60);
   if (!rl.ok) {
     return { error: `Muitas tentativas. Tente novamente em ${rl.resetInSeconds}s.` };
+  }
+
+  // EXIGE LOGIN — checkout só para cliente autenticado (validação de membro do clube).
+  // Backend não confia no frontend: revalida a sessão aqui.
+  const customer = await getCurrentCustomer();
+  if (!customer) {
+    return { error: "Faça login para finalizar a compra.", redirectTo: "/entrar?next=/checkout" };
   }
 
   // Lê carrinho NO SERVIDOR — frontend não envia preços nem itens
@@ -69,7 +77,9 @@ export async function submitCheckout(
   }
   const data = parsed.data;
 
-  // Recalcula tudo do banco — preço enviado/exibido nunca é fonte da verdade
+  // Recalcula tudo do banco — preço enviado/exibido nunca é fonte da verdade.
+  // O preço de membro só vale se o cliente logado for membro ATIVO (anti-burla).
+  const isClubMember = customer.isClubMember;
   const productIds = data.items.map((i) => i.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, active: true },
@@ -82,43 +92,49 @@ export async function submitCheckout(
   // Valida estoque + monta items com snapshot
   const orderItemsData = [];
   let subtotalCents = 0;
+  let normalSubtotalCents = 0;
   for (const item of data.items) {
     const product = products.find((p) => p.id === item.productId)!;
     if (item.quantity > product.stock) {
       return { error: `Estoque insuficiente para "${product.name}".` };
     }
-    const totalCents = product.priceCents * item.quantity;
+    const hasClubPrice =
+      product.clubPriceCents != null && product.clubPriceCents < product.priceCents;
+    const unitPriceCents =
+      isClubMember && hasClubPrice ? product.clubPriceCents! : product.priceCents;
+
+    const totalCents = unitPriceCents * item.quantity;
     subtotalCents += totalCents;
+    normalSubtotalCents += product.priceCents * item.quantity;
     orderItemsData.push({
       productId: product.id,
       productNameSnapshot: product.name,
       productSkuSnapshot: product.sku,
-      unitPriceCents: product.priceCents,
+      unitPriceCents,
       quantity: item.quantity,
       totalCents,
     });
   }
+
+  const discountCents = Math.max(0, normalSubtotalCents - subtotalCents);
 
   const FREE_SHIPPING_THRESHOLD = 20000;
   const FLAT_SHIPPING = 1990;
   const shippingCents = subtotalCents >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
   const totalCents = subtotalCents + shippingCents;
 
-  // Cria/atualiza Customer
-  let customer = await prisma.customer.findUnique({
-    where: { email: data.customerEmail.toLowerCase() },
+  // Atualiza dados de contato do cliente logado se vierem novos no formulário
+  await prisma.customer.update({
+    where: { id: customer.id },
+    data: {
+      name: data.customerName || customer.name,
+      email: data.customerEmail ? data.customerEmail.toLowerCase() : undefined,
+      cpfCnpj: customer.cpfCnpj ?? data.customerCpfCnpj,
+      phone: data.customerPhone ?? customer.phone ?? undefined,
+    },
   });
 
-  if (!customer) {
-    customer = await prisma.customer.create({
-      data: {
-        name: data.customerName,
-        email: data.customerEmail.toLowerCase(),
-        cpfCnpj: data.customerCpfCnpj,
-        phone: data.customerPhone,
-      },
-    });
-  }
+  const snapshotEmail = data.customerEmail?.toLowerCase() ?? customer.email ?? "";
 
   // Gera orderNumber sequencial baseado em count (em prod, melhor um sequence dedicado)
   const orderCount = await prisma.order.count();
@@ -131,6 +147,7 @@ export async function submitCheckout(
       customerId: customer.id,
       status: "PENDING_PAYMENT",
       subtotalCents,
+      discountCents,
       shippingCents,
       totalCents,
       shippingZip: data.shippingAddress.zip,
@@ -140,12 +157,12 @@ export async function submitCheckout(
       shippingNeighborhood: data.shippingAddress.neighborhood,
       shippingCity: data.shippingAddress.city,
       shippingState: data.shippingAddress.state.toUpperCase(),
-      customerNameSnapshot: data.customerName,
-      customerEmailSnapshot: data.customerEmail,
-      customerCpfSnapshot: data.customerCpfCnpj,
-      customerPhoneSnapshot: data.customerPhone,
-      // paymentMethod fica null — o Stripe Checkout mostra cartão e PIX,
-      // e o método real é registrado quando o webhook confirma o pagamento.
+      customerNameSnapshot: data.customerName || customer.name,
+      customerEmailSnapshot: snapshotEmail,
+      customerCpfSnapshot: customer.cpfCnpj ?? data.customerCpfCnpj,
+      customerPhoneSnapshot: data.customerPhone ?? customer.phone,
+      // paymentMethod fica null — o Stripe Checkout define o método real,
+      // registrado quando o webhook confirma o pagamento.
       paymentStatus: "PENDING",
       items: { create: orderItemsData },
       statusHistory: {
@@ -169,7 +186,7 @@ export async function submitCheckout(
       const session = await stripe.createCheckoutSession({
         orderId: order.id,
         orderNumber,
-        customerEmail: data.customerEmail,
+        customerEmail: snapshotEmail || undefined,
         items: orderItemsData.map((i) => ({
           name: i.productNameSnapshot,
           description: `SKU ${i.productSkuSnapshot}`,

@@ -36,6 +36,7 @@ export type CartItem = {
 
 export type CustomerSession = {
   customerId?: string;
+  name?: string;
   email?: string;
   loggedAt?: number;
   // Carrinho — só productId + quantity. Preços são SEMPRE recalculados no backend.

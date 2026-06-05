@@ -46,21 +46,23 @@ model User {
 // CLIENTES DA LOJA
 // ============================================================
 model Customer {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  cpfCnpj      String?   @unique
-  phone        String?
-  passwordHash String?
+  id            String    @id @default(cuid())
+  name          String
+  // E-mail é OPCIONAL: o cadastro rápido usa apenas nome+telefone+CPF+senha.
+  email         String?   @unique
+  cpfCnpj       String?   @unique
+  phone         String?
+  passwordHash  String?
   emailVerified DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  addresses   Address[]
-  orders      Order[]
-  clubMember  ClubMember?
+  addresses  Address[]
+  orders     Order[]
+  clubMember ClubMember?
 
   @@index([email])
+  @@index([cpfCnpj])
 }
 
 model Address {
@@ -140,14 +142,14 @@ model ProductImage {
 // PEDIDOS
 // ============================================================
 enum OrderStatus {
-  PENDING_PAYMENT  // criado, aguardando confirmação do pagamento
-  PAID             // pago, fila de separação
-  SEPARATING       // em separação no estoque
-  READY_TO_SHIP    // separado, aguardando envio
-  SHIPPED          // enviado
-  DELIVERED        // entregue
-  CANCELED         // cancelado
-  REFUNDED         // estornado
+  PENDING_PAYMENT // criado, aguardando confirmação do pagamento
+  PAID // pago, fila de separação
+  SEPARATING // em separação no estoque
+  READY_TO_SHIP // separado, aguardando envio
+  SHIPPED // enviado
+  DELIVERED // entregue
+  CANCELED // cancelado
+  REFUNDED // estornado
 }
 
 enum PaymentMethod {
@@ -191,10 +193,10 @@ model Order {
 
   // Pagamento (via Stripe Checkout — método só é conhecido após o pagamento)
   paymentMethod         PaymentMethod?
-  paymentStatus         PaymentStatus @default(PENDING)
-  stripeSessionId       String?       @unique
+  paymentStatus         PaymentStatus  @default(PENDING)
+  stripeSessionId       String?        @unique
   stripePaymentIntentId String?
-  paymentUrl            String?       @db.Text
+  paymentUrl            String?        @db.Text
   paidAt                DateTime?
 
   // Token único para QR de separação (não usar id sequencial)
@@ -211,7 +213,7 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customer       Customer            @relation(fields: [customerId], references: [id])
+  customer       Customer             @relation(fields: [customerId], references: [id])
   items          OrderItem[]
   statusHistory  OrderStatusHistory[]
   financialEntry FinancialEntry?
@@ -246,13 +248,13 @@ model OrderItem {
 }
 
 model OrderStatusHistory {
-  id        String      @id @default(cuid())
-  orderId   String
+  id         String       @id @default(cuid())
+  orderId    String
   fromStatus OrderStatus?
   toStatus   OrderStatus
-  changedBy String?     // userId (null = sistema)
-  notes     String?
-  createdAt DateTime    @default(now())
+  changedBy  String? // userId (null = sistema)
+  notes      String?
+  createdAt  DateTime     @default(now())
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -271,24 +273,33 @@ enum ClubTier {
 enum ClubStatus {
   ACTIVE
   PAUSED
+  EXPIRED
   CANCELED
 }
 
 model ClubMember {
   id              String     @id @default(cuid())
   customerId      String     @unique
-  tier            ClubTier   @default(BRONZE)
+  tier            ClubTier   @default(OURO)
   status          ClubStatus @default(ACTIVE)
-  monthlyFeeCents Int
+  // Assinatura ANUAL: valor pago e data de expiração (joinedAt + 1 ano).
+  // monthlyFeeCents é legado (mantido p/ compatibilidade) — não usar.
+  monthlyFeeCents Int?
+  pricePaidCents  Int?
   joinedAt        DateTime   @default(now())
+  expiresAt       DateTime?
+  // Vínculo com o pagamento da assinatura no Stripe (idempotência/auditoria)
+  stripeSessionId String?    @unique
   lastBilledAt    DateTime?
   nextBillingAt   DateTime?
   canceledAt      DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @default(now()) @updatedAt
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([status])
-  @@index([nextBillingAt])
+  @@index([expiresAt])
 }
 
 model ClubBenefit {
@@ -305,11 +316,37 @@ model ClubBenefit {
 }
 
 // ============================================================
+// ANÚNCIOS / POP-UPS — divulgação do Clube e campanhas
+// Frequência e limite de exibições são controlados no cliente
+// (localStorage), mas o conteúdo e as regras vêm do admin.
+// ============================================================
+model Announcement {
+  id             String    @id @default(cuid())
+  title          String
+  body           String    @db.Text
+  imageUrl       String?
+  ctaText        String?
+  ctaHref        String?   @default("/clube")
+  active         Boolean   @default(true)
+  // Regras de exibição
+  frequencyHours Int       @default(24) // intervalo mínimo entre exibições p/ o mesmo visitante
+  maxDisplays    Int       @default(3) // nº máximo de vezes que aparece p/ o mesmo visitante
+  delaySeconds   Int       @default(4) // atraso antes de abrir o pop-up
+  priority       Int       @default(0) // maior aparece primeiro
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([active])
+}
+
+// ============================================================
 // FINANCEIRO
 // ============================================================
 enum FinancialEntryType {
-  RECEIVABLE  // a receber
-  PAYABLE     // a pagar
+  RECEIVABLE // a receber
+  PAYABLE // a pagar
 }
 
 enum FinancialEntryStatus {
@@ -323,7 +360,7 @@ model FinancialEntry {
   id          String               @id @default(cuid())
   type        FinancialEntryType
   status      FinancialEntryStatus @default(OPEN)
-  category    String               // ex: "venda", "frete", "fornecedor"
+  category    String // ex: "venda", "frete", "fornecedor"
   description String
   amountCents Int
   dueDate     DateTime
@@ -361,7 +398,7 @@ model WebhookEvent {
 model AuditLog {
   id         String   @id @default(cuid())
   userId     String?
-  action     String   // ex: "order.status.changed", "user.login"
+  action     String // ex: "order.status.changed", "user.login"
   entityType String?
   entityId   String?
   beforeJson Json?

@@ -1,12 +1,20 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { ShieldCheck, Lock, CreditCard } from "lucide-react";
+import { useActionState, useState, useEffect } from "react";
+import { ShieldCheck, Lock, CreditCard, Crown } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { submitCheckout, type CheckoutState } from "@/app/actions/checkout";
 import type { CartSummary } from "@/lib/cart";
 
 const initial: CheckoutState = {};
+
+type CheckoutCustomer = {
+  name: string;
+  email: string | null;
+  cpfCnpj: string | null;
+  phone: string | null;
+  isClubMember: boolean;
+};
 
 const states = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
@@ -39,13 +47,30 @@ const formatPhone = (v: string) => {
   return d.replace(/(\d{2})(\d{5})(\d{0,4})/, "($1) $2-$3").trim();
 };
 
-export function CheckoutForm({ cart }: { cart: CartSummary }) {
+export function CheckoutForm({
+  cart,
+  customer,
+}: {
+  cart: CartSummary;
+  customer: CheckoutCustomer;
+}) {
   const [state, formAction, pending] = useActionState(submitCheckout, initial);
-  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState(
+    customer.cpfCnpj ? formatCpfCnpj(customer.cpfCnpj) : ""
+  );
   const [cep, setCep] = useState(cart.shippingZip ? formatCep(cart.shippingZip) : "");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState(
+    customer.phone ? formatPhone(customer.phone) : ""
+  );
 
   const fe = state.fieldErrors ?? {};
+
+  // Fallback: se a sessão expirar no meio do checkout, o backend pede login
+  useEffect(() => {
+    if (state.redirectTo) {
+      window.location.href = state.redirectTo;
+    }
+  }, [state.redirectTo]);
 
   return (
     <form action={formAction} className="grid lg:grid-cols-[1fr_380px] gap-8">
@@ -66,18 +91,19 @@ export function CheckoutForm({ cart }: { cart: CartSummary }) {
                 name="customerName"
                 required
                 maxLength={200}
+                defaultValue={customer.name}
                 className="input-field"
                 placeholder="Seu nome"
               />
             </div>
             <div>
-              <label htmlFor="customerEmail" className="label">E-mail *</label>
+              <label htmlFor="customerEmail" className="label">E-mail (opcional)</label>
               <input
                 id="customerEmail"
                 name="customerEmail"
                 type="email"
-                required
                 maxLength={200}
+                defaultValue={customer.email ?? ""}
                 className="input-field"
                 placeholder="seu@email.com"
               />
@@ -231,11 +257,26 @@ export function CheckoutForm({ cart }: { cart: CartSummary }) {
             ))}
           </div>
 
+          {cart.isClubMember && cart.clubSavingsCents > 0 && (
+            <div className="mx-6 mt-4 rounded-lg bg-[#faf3e6] border border-[#d4a574]/40 px-3 py-2 flex items-center gap-2 text-[#8a5a1e]">
+              <Crown size={14} fill="currentColor" />
+              <span className="text-xs font-bold">
+                Preço de membro aplicado — você economiza {centsToBRL(cart.clubSavingsCents)}
+              </span>
+            </div>
+          )}
+
           <div className="px-6 py-5 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-cocoa/70">Subtotal</span>
               <span className="text-cocoa font-semibold">{centsToBRL(cart.subtotalCents)}</span>
             </div>
+            {cart.isClubMember && cart.clubSavingsCents > 0 && (
+              <div className="flex justify-between">
+                <span className="text-cocoa/70">Desconto de membro</span>
+                <span className="text-olive font-semibold">−{centsToBRL(cart.clubSavingsCents)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-cocoa/70">Frete</span>
               <span className={`font-semibold ${cart.shippingCents === 0 ? "text-olive" : "text-cocoa"}`}>

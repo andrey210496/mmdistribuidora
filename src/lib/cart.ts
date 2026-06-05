@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
+import { isCurrentCustomerActiveMember } from "./customer";
 
 // ============================================================
 // Lib do carrinho — toda lógica de preço é executada NO SERVIDOR.
@@ -17,6 +18,11 @@ export type CartLine = {
   quantity: number;
   unitPriceCents: number;
   totalCents: number;
+  // Preço normal (sem clube) — usado para exibir o "de/por" quando o
+  // preço de membro está aplicado.
+  normalUnitPriceCents: number;
+  // true quando o preço de membro foi aplicado nesta linha
+  clubPriceApplied: boolean;
   stock: number;
   available: boolean;
 };
@@ -30,6 +36,10 @@ export type CartSummary = {
   totalCents: number;
   totalItems: number;
   shippingZip: string | null;
+  // Cliente logado é membro ativo do clube? (decidido no backend)
+  isClubMember: boolean;
+  // Quanto o cliente está economizando com o preço de membro neste carrinho
+  clubSavingsCents: number;
 };
 
 const SHIPPING_FREE_THRESHOLD_CENTS = 20000; // R$ 200
@@ -54,8 +64,14 @@ export async function getCart(): Promise<CartSummary> {
       totalCents: 0,
       totalItems: 0,
       shippingZip: zip,
+      isClubMember: false,
+      clubSavingsCents: 0,
     };
   }
+
+  // ANTI-BURLA: o preço de membro só é aplicado se o cliente logado for
+  // membro ATIVO. Isso é decidido aqui, no servidor — o frontend não influi.
+  const isClubMember = await isCurrentCustomerActiveMember();
 
   const products = await prisma.product.findMany({
     where: {
@@ -66,19 +82,31 @@ export async function getCart(): Promise<CartSummary> {
   });
 
   const lines: CartLine[] = [];
+  let clubSavingsCents = 0;
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId);
     if (!product) continue;
     const qty = Math.min(item.quantity, product.stock, MAX_QTY_PER_ITEM);
     if (qty <= 0) continue;
+
+    const normalUnit = product.priceCents;
+    const hasClubPrice =
+      product.clubPriceCents != null && product.clubPriceCents < normalUnit;
+    const clubPriceApplied = isClubMember && hasClubPrice;
+    const unit = clubPriceApplied ? product.clubPriceCents! : normalUnit;
+
+    if (clubPriceApplied) clubSavingsCents += (normalUnit - unit) * qty;
+
     lines.push({
       productId: product.id,
       productName: product.name,
       productSlug: product.slug,
       imageUrl: product.images[0]?.url ?? null,
       quantity: qty,
-      unitPriceCents: product.priceCents,
-      totalCents: product.priceCents * qty,
+      unitPriceCents: unit,
+      totalCents: unit * qty,
+      normalUnitPriceCents: normalUnit,
+      clubPriceApplied,
       stock: product.stock,
       available: true,
     });
@@ -99,10 +127,12 @@ export async function getCart(): Promise<CartSummary> {
     subtotalCents,
     shippingCents,
     freeShippingThresholdCents: SHIPPING_FREE_THRESHOLD_CENTS,
-    discountCents: 0,
+    discountCents: clubSavingsCents,
     totalCents,
     totalItems,
     shippingZip: zip,
+    isClubMember,
+    clubSavingsCents,
   };
 }
 

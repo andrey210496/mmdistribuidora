@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidCpf, onlyDigits } from "./cpf";
 
 // ============================================================
 // Schemas de validação — TODA entrada do cliente passa por aqui.
@@ -9,6 +10,39 @@ export const loginSchema = z.object({
   email: z.string().email("E-mail inválido").max(200),
   password: z.string().min(1, "Senha obrigatória").max(200),
 });
+
+// ---- Cadastro/Login de CLIENTE da loja (CPF + senha) ----
+export const customerRegisterSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Informe seu nome completo")
+    .max(120)
+    .refine((v) => v.trim().split(/\s+/).length >= 2, "Informe nome e sobrenome"),
+  phone: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length >= 10 && v.length <= 11, "Telefone inválido (com DDD)"),
+  cpf: z
+    .string()
+    .transform(onlyDigits)
+    .refine(isValidCpf, "CPF inválido"),
+  password: z
+    .string()
+    .min(8, "Mínimo 8 caracteres")
+    .max(200),
+});
+
+export const customerLoginSchema = z.object({
+  cpf: z
+    .string()
+    .transform(onlyDigits)
+    .refine((v) => v.length === 11, "CPF inválido"),
+  password: z.string().min(1, "Senha obrigatória").max(200),
+});
+
+export type CustomerRegisterInput = z.infer<typeof customerRegisterSchema>;
+export type CustomerLoginInput = z.infer<typeof customerLoginSchema>;
 
 export const changePasswordSchema = z
   .object({
@@ -54,7 +88,13 @@ export const checkoutItemSchema = z.object({
 
 export const checkoutSchema = z.object({
   customerName: z.string().min(2).max(200),
-  customerEmail: z.string().email().max(200),
+  // E-mail é opcional (cadastro rápido não exige e-mail). Aceita vazio.
+  customerEmail: z
+    .string()
+    .email()
+    .max(200)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   customerCpfCnpj: cpfCnpjSchema.optional(),
   customerPhone: z.string().max(30).optional(),
   shippingAddress: addressSchema,

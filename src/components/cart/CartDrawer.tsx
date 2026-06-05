@@ -131,8 +131,15 @@ export function CartDrawer() {
                     >
                       {line.productName}
                     </Link>
-                    <div className="text-cocoa/60 text-xs mt-0.5">
-                      {centsToBRL(line.unitPriceCents)} cada
+                    <div className="text-cocoa/60 text-xs mt-0.5 flex items-center gap-1.5">
+                      {line.clubPriceApplied && (
+                        <span className="text-cocoa/40 line-through">
+                          {centsToBRL(line.normalUnitPriceCents)}
+                        </span>
+                      )}
+                      <span className={line.clubPriceApplied ? "text-[#8a5a1e] font-semibold" : ""}>
+                        {centsToBRL(line.unitPriceCents)} cada
+                      </span>
                     </div>
 
                     <div className="flex items-center justify-between mt-2">
