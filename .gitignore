@@ -36,3 +36,14 @@ deploy/*.tar.gz
 
 # Cache do TypeScript
 *.tsbuildinfo
+
+# Ferramentas locais (claude-flow / claude code) — NÃO fazem parte do app
+.claude/
+.claude-flow/
+.swarm/
+.mcp.json
+CLAUDE.md
+ruvector.db
+*.db
+*.db-shm
+*.db-wal
