@@ -40,6 +40,8 @@ export type CartSummary = {
   isClubMember: boolean;
   // Quanto o cliente está economizando com o preço de membro neste carrinho
   clubSavingsCents: number;
+  // Quanto ele ECONOMIZARIA se fosse membro (vale também para não-membros)
+  potentialClubSavingsCents: number;
 };
 
 const SHIPPING_FREE_THRESHOLD_CENTS = 20000; // R$ 200
@@ -66,6 +68,7 @@ export async function getCart(): Promise<CartSummary> {
       shippingZip: zip,
       isClubMember: false,
       clubSavingsCents: 0,
+      potentialClubSavingsCents: 0,
     };
   }
 
@@ -83,6 +86,7 @@ export async function getCart(): Promise<CartSummary> {
 
   const lines: CartLine[] = [];
   let clubSavingsCents = 0;
+  let potentialClubSavingsCents = 0;
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId);
     if (!product) continue;
@@ -95,6 +99,8 @@ export async function getCart(): Promise<CartSummary> {
     const clubPriceApplied = isClubMember && hasClubPrice;
     const unit = clubPriceApplied ? product.clubPriceCents! : normalUnit;
 
+    // Economia que o clube proporcionaria neste item (independe de ser membro)
+    if (hasClubPrice) potentialClubSavingsCents += (normalUnit - product.clubPriceCents!) * qty;
     if (clubPriceApplied) clubSavingsCents += (normalUnit - unit) * qty;
 
     lines.push({
@@ -133,6 +139,7 @@ export async function getCart(): Promise<CartSummary> {
     shippingZip: zip,
     isClubMember,
     clubSavingsCents,
+    potentialClubSavingsCents,
   };
 }
 

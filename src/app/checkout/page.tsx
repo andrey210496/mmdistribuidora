@@ -4,6 +4,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { CheckoutForm } from "@/components/storefront/CheckoutForm";
 import { getCart } from "@/lib/cart";
 import { requireCustomer } from "@/lib/customer";
+import { fetchCheckoutUpsell } from "@/app/actions/announcements";
 
 export const metadata = { title: "Finalizar compra" };
 export const dynamic = "force-dynamic";
@@ -16,6 +17,9 @@ export default async function CheckoutPage() {
   if (cart.lines.length === 0) {
     redirect("/carrinho");
   }
+
+  // Card do clube no checkout — só para quem NÃO é membro
+  const checkoutUpsell = customer.isClubMember ? null : await fetchCheckoutUpsell();
 
   return (
     <>
@@ -33,6 +37,7 @@ export default async function CheckoutPage() {
             phone: customer.phone,
             isClubMember: customer.isClubMember,
           }}
+          checkoutUpsell={checkoutUpsell}
         />
       </main>
       <Footer />

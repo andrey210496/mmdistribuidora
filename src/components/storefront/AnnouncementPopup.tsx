@@ -54,13 +54,23 @@ export function AnnouncementPopup() {
     const path = window.location.pathname;
     if (path.startsWith("/admin") || path.startsWith("/checkout")) return;
 
+    // Em qual contexto estamos?
+    const isHome = path === "/";
+    const isCatalog = path.startsWith("/produtos");
+    const placementMatches = (placement: string) => {
+      if (placement === "STOREFRONT") return true;
+      if (placement === "HOME") return isHome;
+      if (placement === "CATALOG") return isCatalog;
+      return false; // CHECKOUT é tratado no checkout
+    };
+
     (async () => {
       try {
         const list = await fetchActiveAnnouncements();
         if (cancelled || list.length === 0) return;
 
         const now = Date.now();
-        const pick = list.find((a) => isEligible(a, now));
+        const pick = list.find((a) => placementMatches(a.placement) && isEligible(a, now));
         if (!pick) return;
 
         openTimer = setTimeout(() => {

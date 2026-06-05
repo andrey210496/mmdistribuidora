@@ -57,11 +57,24 @@ export async function saveAnnouncement(
     return { ok: false, error: parsed.error.errors[0]?.message ?? "Dados inválidos" };
   }
 
+  const placements = ["STOREFRONT", "HOME", "CATALOG", "CHECKOUT"] as const;
+  const audiences = ["ALL", "NON_MEMBERS", "MEMBERS"] as const;
+  const placementRaw = String(formData.get("placement") ?? "STOREFRONT");
+  const audienceRaw = String(formData.get("audience") ?? "ALL");
+  const placement = (placements as readonly string[]).includes(placementRaw)
+    ? (placementRaw as (typeof placements)[number])
+    : "STOREFRONT";
+  const audience = (audiences as readonly string[]).includes(audienceRaw)
+    ? (audienceRaw as (typeof audiences)[number])
+    : "ALL";
+
   const data = {
     ...parsed.data,
     imageUrl: parsed.data.imageUrl ?? null,
     ctaText: parsed.data.ctaText ?? null,
     ctaHref: parsed.data.ctaHref || "/clube",
+    placement,
+    audience,
     active: formData.get("active") === "on",
     startsAt: parseDate(formData.get("startsAt")),
     endsAt: parseDate(formData.get("endsAt")),

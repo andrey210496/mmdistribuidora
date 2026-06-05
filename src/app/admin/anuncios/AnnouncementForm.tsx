@@ -14,6 +14,8 @@ export type EditingAnnouncement = {
   imageUrl: string;
   ctaText: string;
   ctaHref: string;
+  placement: string;
+  audience: string;
   frequencyHours: number;
   maxDisplays: number;
   delaySeconds: number;
@@ -74,13 +76,39 @@ export function AnnouncementForm({ editing }: { editing?: EditingAnnouncement })
         </div>
       </div>
 
+      {/* Onde aparece + Público */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Onde aparece</label>
+          <select name="placement" defaultValue={e?.placement ?? "STOREFRONT"} className={`${field} bg-white`}>
+            <option value="STOREFRONT">Em toda a loja (pop-up)</option>
+            <option value="HOME">Só na página inicial</option>
+            <option value="CATALOG">Catálogo / página de produto</option>
+            <option value="CHECKOUT">Ao finalizar a compra</option>
+          </select>
+          <p className="text-[10px] text-cocoa/50 mt-1">
+            &ldquo;Ao finalizar a compra&rdquo; mostra o card quando o cliente clica em
+            &ldquo;Ir para o pagamento&rdquo; e inclui a economia daquela compra.
+          </p>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Público</label>
+          <select name="audience" defaultValue={e?.audience ?? "ALL"} className={`${field} bg-white`}>
+            <option value="ALL">Todos</option>
+            <option value="NON_MEMBERS">Só quem NÃO é do clube</option>
+            <option value="MEMBERS">Só membros do clube</option>
+          </select>
+          <p className="text-[10px] text-cocoa/50 mt-1">Para o card de checkout do clube, escolha &ldquo;Só quem não é do clube&rdquo;.</p>
+        </div>
+      </div>
+
       <div className="grid sm:grid-cols-3 gap-4">
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">
             Intervalo (horas)
           </label>
           <input name="frequencyHours" type="number" min="0" defaultValue={e?.frequencyHours ?? 24} className={field} />
-          <p className="text-[10px] text-cocoa/50 mt-1">Tempo mínimo entre exibições p/ a mesma pessoa</p>
+          <p className="text-[10px] text-cocoa/50 mt-1">Pop-up: tempo mínimo entre exibições</p>
         </div>
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Máx. exibições</label>

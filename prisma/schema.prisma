@@ -329,25 +329,42 @@ model ClubBenefit {
 // Frequência e limite de exibições são controlados no cliente
 // (localStorage), mas o conteúdo e as regras vêm do admin.
 // ============================================================
+enum AnnouncementPlacement {
+  STOREFRONT // qualquer página da loja (pop-up)
+  HOME       // só a página inicial
+  CATALOG    // catálogo / página de produto
+  CHECKOUT   // ao tentar finalizar a compra (interstitial)
+}
+
+enum AnnouncementAudience {
+  ALL         // todos os visitantes
+  NON_MEMBERS // só quem NÃO é membro do clube
+  MEMBERS     // só membros do clube
+}
+
 model Announcement {
-  id             String    @id @default(cuid())
+  id             String                @id @default(cuid())
   title          String
-  body           String    @db.Text
+  body           String                @db.Text
   imageUrl       String?
   ctaText        String?
-  ctaHref        String?   @default("/clube")
-  active         Boolean   @default(true)
-  // Regras de exibição
-  frequencyHours Int       @default(24) // intervalo mínimo entre exibições p/ o mesmo visitante
-  maxDisplays    Int       @default(3) // nº máximo de vezes que aparece p/ o mesmo visitante
-  delaySeconds   Int       @default(4) // atraso antes de abrir o pop-up
-  priority       Int       @default(0) // maior aparece primeiro
+  ctaHref        String?               @default("/clube")
+  active         Boolean               @default(true)
+  // Onde e para quem aparece
+  placement      AnnouncementPlacement @default(STOREFRONT)
+  audience       AnnouncementAudience  @default(ALL)
+  // Regras de exibição (pop-up passivo)
+  frequencyHours Int                   @default(24) // intervalo mínimo entre exibições p/ o mesmo visitante
+  maxDisplays    Int                   @default(3) // nº máximo de vezes que aparece p/ o mesmo visitante
+  delaySeconds   Int                   @default(4) // atraso antes de abrir o pop-up
+  priority       Int                   @default(0) // maior aparece primeiro
   startsAt       DateTime?
   endsAt         DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
 
   @@index([active])
+  @@index([placement, active])
 }
 
 // ============================================================

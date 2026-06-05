@@ -35,6 +35,8 @@ export default async function AdminAnunciosPage({ searchParams }: { searchParams
         imageUrl: editingRow.imageUrl ?? "",
         ctaText: editingRow.ctaText ?? "",
         ctaHref: editingRow.ctaHref ?? "/clube",
+        placement: editingRow.placement,
+        audience: editingRow.audience,
         frequencyHours: editingRow.frequencyHours,
         maxDisplays: editingRow.maxDisplays,
         delaySeconds: editingRow.delaySeconds,

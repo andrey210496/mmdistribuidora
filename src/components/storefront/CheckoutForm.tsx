@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
-import { ShieldCheck, Lock, CreditCard, Crown } from "lucide-react";
+import { useActionState, useState, useEffect, useRef } from "react";
+import { ShieldCheck, Lock, CreditCard, Crown, ArrowRight, X } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { submitCheckout, type CheckoutState } from "@/app/actions/checkout";
 import type { CartSummary } from "@/lib/cart";
@@ -15,6 +15,14 @@ type CheckoutCustomer = {
   phone: string | null;
   isClubMember: boolean;
 };
+
+type CheckoutUpsell = {
+  id: string;
+  title: string;
+  body: string;
+  ctaText: string | null;
+  ctaHref: string | null;
+} | null;
 
 const states = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
@@ -50,9 +58,11 @@ const formatPhone = (v: string) => {
 export function CheckoutForm({
   cart,
   customer,
+  checkoutUpsell = null,
 }: {
   cart: CartSummary;
   customer: CheckoutCustomer;
+  checkoutUpsell?: CheckoutUpsell;
 }) {
   const [state, formAction, pending] = useActionState(submitCheckout, initial);
   const [cpfCnpj, setCpfCnpj] = useState(
@@ -63,6 +73,12 @@ export function CheckoutForm({
     customer.phone ? formatPhone(customer.phone) : ""
   );
 
+  // Card do clube no checkout (só não-membros). Mostra uma vez antes de pagar.
+  const formRef = useRef<HTMLFormElement>(null);
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [upsellPassed, setUpsellPassed] = useState(false);
+  const shouldUpsell = !customer.isClubMember && !!checkoutUpsell;
+
   const fe = state.fieldErrors ?? {};
 
   // Fallback: se a sessão expirar no meio do checkout, o backend pede login
@@ -72,8 +88,90 @@ export function CheckoutForm({
     }
   }, [state.redirectTo]);
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (shouldUpsell && !upsellPassed) {
+      e.preventDefault();
+      setShowUpsell(true);
+    }
+  };
+
+  const proceedToPayment = () => {
+    setUpsellPassed(true);
+    setShowUpsell(false);
+    // Reenvia o formulário agora liberado
+    requestAnimationFrame(() => formRef.current?.requestSubmit());
+  };
+
   return (
-    <form action={formAction} className="grid lg:grid-cols-[1fr_380px] gap-8">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={handleSubmit}
+      className="grid lg:grid-cols-[1fr_380px] gap-8"
+    >
+      {/* Card do Clube ao finalizar (interstitial) */}
+      {showUpsell && checkoutUpsell && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div
+            onClick={() => setShowUpsell(false)}
+            className="absolute inset-0 bg-espresso/60 backdrop-blur-sm"
+            aria-hidden
+          />
+          <div
+            className="relative w-full max-w-md bg-cream rounded-2xl overflow-hidden shadow-2xl"
+            role="dialog"
+            aria-label={checkoutUpsell.title}
+          >
+            <button
+              type="button"
+              onClick={() => setShowUpsell(false)}
+              aria-label="Fechar"
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-cocoa flex items-center justify-center shadow"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="h-20 bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] flex items-center justify-center">
+              <Crown size={32} className="text-gold" fill="currentColor" />
+            </div>
+
+            <div className="p-6 text-center">
+              <h3 className="font-display text-2xl font-bold text-cocoa mb-2">
+                {checkoutUpsell.title}
+              </h3>
+              <p className="text-cocoa/70 text-sm whitespace-pre-line">{checkoutUpsell.body}</p>
+
+              {cart.potentialClubSavingsCents > 0 && (
+                <div className="mt-4 rounded-xl bg-[#faf3e6] border border-[#d4a574]/40 px-4 py-3">
+                  <div className="text-[11px] uppercase tracking-wider text-[#a07640] font-bold">
+                    Sendo membro, nesta compra você economizaria
+                  </div>
+                  <div className="font-display text-3xl font-bold text-[#8a5a1e] leading-none mt-1">
+                    {centsToBRL(cart.potentialClubSavingsCents)}
+                  </div>
+                </div>
+              )}
+
+              <a
+                href={checkoutUpsell.ctaHref || "/clube"}
+                className="mt-5 inline-flex items-center justify-center gap-2 w-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] font-bold py-3 rounded-full shadow-md hover:-translate-y-0.5 transition-all"
+              >
+                <Crown size={16} fill="currentColor" />
+                {checkoutUpsell.ctaText || "Quero ser membro"}
+                <ArrowRight size={16} />
+              </a>
+              <button
+                type="button"
+                onClick={proceedToPayment}
+                className="mt-2 w-full text-cocoa/60 hover:text-cocoa text-sm py-2"
+              >
+                Continuar sem o desconto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Coluna principal */}
       <div className="space-y-6">
         {/* Identificação */}
