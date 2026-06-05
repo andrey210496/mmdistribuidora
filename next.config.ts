@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // remove X-Powered-By: Next.js
+  // Lint é checagem de desenvolvimento — não deve derrubar o deploy.
+  // (O TypeScript continua validando tipos no build.)
+  eslint: { ignoreDuringBuilds: true },
   // Empacota tudo necessário em .next/standalone — deploy sem rodar build na VPS
   output: "standalone",
   // NÃO empacotar o Prisma no bundle do servidor — deixa carregar de

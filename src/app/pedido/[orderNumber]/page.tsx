@@ -117,7 +117,7 @@ export default async function OrderPage({
                   Ir para o pagamento
                   <ExternalLink size={14} />
                 </Link>
-              ) : (
+              ) : process.env.NODE_ENV !== "production" ? (
                 <div>
                   <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-4">
                     <div className="flex items-start gap-2">
@@ -128,6 +128,11 @@ export default async function OrderPage({
                     </div>
                   </div>
                   <DevPaymentSimulator orderId={order.id} />
+                </div>
+              ) : (
+                <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 text-sm text-yellow-900">
+                  Estamos preparando o seu pagamento. Atualize a página em alguns
+                  instantes. Se o problema persistir, fale com a gente pelo WhatsApp.
                 </div>
               )}
             </div>

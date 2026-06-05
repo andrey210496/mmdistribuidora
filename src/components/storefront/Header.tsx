@@ -23,7 +23,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Confeitaria", href: "/produtos?categoria=doces-finos" },
   { label: "Food Service", href: "/produtos?categoria=festas" },
   { label: "Promoções", href: "/produtos?ofertas=1" },
-  { label: "Marcas", href: "/marcas" },
+  { label: "Clube", href: "/clube" },
   { label: "Quem Somos", href: "/sobre" },
   { label: "Contato", href: "/contato" },
 ];

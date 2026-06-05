@@ -1,0 +1,140 @@
+{
+  "running": true,
+  "startedAt": "2026-06-05T20:57:24.925Z",
+  "workers": {
+    "map": {
+      "runCount": 3,
+      "successCount": 3,
+      "failureCount": 0,
+      "averageDurationMs": 6,
+      "lastRun": "2026-06-05T21:20:53.371Z",
+      "lastStartedAt": "2026-06-05T21:20:53.365Z",
+      "nextRun": "2026-06-05T21:35:53.375Z",
+      "isRunning": false
+    },
+    "audit": {
+      "runCount": 4,
+      "successCount": 4,
+      "failureCount": 0,
+      "averageDurationMs": 237.75,
+      "lastRun": "2026-06-05T21:22:54.318Z",
+      "lastStartedAt": "2026-06-05T21:22:53.948Z",
+      "nextRun": "2026-06-05T21:32:54.321Z",
+      "isRunning": false
+    },
+    "optimize": {
+      "runCount": 3,
+      "successCount": 3,
+      "failureCount": 0,
+      "averageDurationMs": 90.66666666666667,
+      "lastRun": "2026-06-05T21:24:53.649Z",
+      "lastStartedAt": "2026-06-05T21:24:53.571Z",
+      "nextRun": "2026-06-05T21:39:53.652Z",
+      "isRunning": false
+    },
+    "consolidate": {
+      "runCount": 1,
+      "successCount": 1,
+      "failureCount": 0,
+      "averageDurationMs": 5,
+      "lastRun": "2026-06-05T21:03:24.948Z",
+      "lastStartedAt": "2026-06-05T21:03:24.943Z",
+      "nextRun": "2026-06-05T21:33:24.951Z",
+      "isRunning": false
+    },
+    "testgaps": {
+      "runCount": 2,
+      "successCount": 2,
+      "failureCount": 0,
+      "averageDurationMs": 61.5,
+      "lastRun": "2026-06-05T21:25:25.066Z",
+      "lastStartedAt": "2026-06-05T21:25:24.995Z",
+      "nextRun": "2026-06-05T21:25:24.993Z",
+      "isRunning": false
+    },
+    "predict": {
+      "runCount": 0,
+      "successCount": 0,
+      "failureCount": 0,
+      "averageDurationMs": 0,
+      "isRunning": false
+    },
+    "document": {
+      "runCount": 0,
+      "successCount": 0,
+      "failureCount": 0,
+      "averageDurationMs": 0,
+      "isRunning": false
+    }
+  },
+  "config": {
+    "autoStart": false,
+    "logDir": "C:\\Users\\andre\\Downloads\\doce-encanto\\.claude-flow\\logs",
+    "stateFile": "C:\\Users\\andre\\Downloads\\doce-encanto\\.claude-flow\\daemon-state.json",
+    "maxConcurrent": 2,
+    "workerTimeoutMs": 960000,
+    "resourceThresholds": {
+      "maxCpuLoad": 6.4,
+      "minFreeMemoryPercent": 10
+    },
+    "workers": [
+      {
+        "type": "map",
+        "intervalMs": 900000,
+        "offsetMs": 0,
+        "priority": "normal",
+        "description": "Codebase mapping",
+        "enabled": true
+      },
+      {
+        "type": "audit",
+        "intervalMs": 600000,
+        "offsetMs": 120000,
+        "priority": "critical",
+        "description": "Security analysis",
+        "enabled": true
+      },
+      {
+        "type": "optimize",
+        "intervalMs": 900000,
+        "offsetMs": 240000,
+        "priority": "high",
+        "description": "Performance optimization",
+        "enabled": true
+      },
+      {
+        "type": "consolidate",
+        "intervalMs": 1800000,
+        "offsetMs": 360000,
+        "priority": "low",
+        "description": "Memory consolidation",
+        "enabled": true
+      },
+      {
+        "type": "testgaps",
+        "intervalMs": 1200000,
+        "offsetMs": 480000,
+        "priority": "normal",
+        "description": "Test coverage analysis",
+        "enabled": true
+      },
+      {
+        "type": "predict",
+        "intervalMs": 600000,
+        "offsetMs": 0,
+        "priority": "low",
+        "description": "Predictive preloading",
+        "enabled": false
+      },
+      {
+        "type": "document",
+        "intervalMs": 3600000,
+        "offsetMs": 0,
+        "priority": "low",
+        "description": "Auto-documentation",
+        "enabled": false
+      }
+    ]
+  },
+  "savedAt": "2026-06-05T21:25:25.066Z"
+}
