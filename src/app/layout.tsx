@@ -3,6 +3,7 @@ import { League_Spartan, Akshar, Fraunces } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { AnnouncementPopup } from "@/components/storefront/AnnouncementPopup";
 
 const spartan = League_Spartan({
   subsets: ["latin"],
@@ -72,6 +73,7 @@ export default function RootLayout({
           {children}
           <CartDrawer />
         </CartProvider>
+        <AnnouncementPopup />
       </body>
     </html>
   );

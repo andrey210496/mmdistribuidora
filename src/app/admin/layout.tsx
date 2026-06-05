@@ -8,6 +8,7 @@ import {
   Users,
   CreditCard,
   Crown,
+  Megaphone,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -25,6 +26,7 @@ const NAV = [
   { href: "/admin/clientes", label: "Clientes", icon: Users },
   { href: "/admin/financeiro", label: "Financeiro", icon: CreditCard },
   { href: "/admin/clube", label: "Clube", icon: Crown },
+  { href: "/admin/anuncios", label: "Anúncios", icon: Megaphone },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 

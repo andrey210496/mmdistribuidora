@@ -21,7 +21,11 @@ const statusLabels: Record<string, string> = {
   REFUNDED: "Estornado",
 };
 
-export default async function ContaPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function ContaPage({ searchParams }: { searchParams: SearchParams }) {
+  const sp = await searchParams;
+  const justSubscribed = sp.clube === "ativando";
   const customer = await requireCustomer("/conta");
 
   const orders = await prisma.order.findMany({
@@ -60,6 +64,13 @@ export default async function ContaPage() {
             </button>
           </form>
         </div>
+
+        {justSubscribed && !customer.isClubMember && (
+          <div className="mb-6 rounded-2xl bg-[#faf3e6] border border-[#d4a574]/40 px-5 py-4 text-[#8a5a1e] text-sm">
+            <strong>Estamos confirmando seu pagamento.</strong> Seu acesso de membro
+            será ativado em instantes — atualize a página em alguns segundos.
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-[340px_1fr] gap-6">
           {/* Card do Clube */}

@@ -97,6 +97,50 @@ export const stripe = {
     return { id: session.id, url: session.url };
   },
 
+  /**
+   * Checkout da assinatura ANUAL do Clube (pagamento único que concede 1 ano).
+   * metadata.type = "club" para o webhook distinguir de pedidos.
+   */
+  async createClubCheckoutSession(input: {
+    customerId: string;
+    customerEmail?: string;
+    priceCents: number;
+    clubName: string;
+    successUrl: string;
+    cancelUrl: string;
+  }): Promise<{ id: string; url: string }> {
+    const session = await client().checkout.sessions.create({
+      mode: "payment",
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "brl",
+            unit_amount: input.priceCents,
+            product_data: {
+              name: `${input.clubName} — Assinatura anual`,
+              description: "Acesso aos preços de membro por 12 meses",
+            },
+          },
+        },
+      ],
+      ...(input.customerEmail ? { customer_email: input.customerEmail } : {}),
+      client_reference_id: input.customerId,
+      metadata: {
+        type: "club",
+        customerId: input.customerId,
+      },
+      success_url: input.successUrl,
+      cancel_url: input.cancelUrl,
+      locale: "pt-BR",
+    });
+
+    if (!session.url) {
+      throw new Error("Stripe não retornou URL de checkout");
+    }
+    return { id: session.id, url: session.url };
+  },
+
   async getSession(sessionId: string) {
     return client().checkout.sessions.retrieve(sessionId);
   },

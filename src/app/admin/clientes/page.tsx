@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Eye, Users, Mail, Phone } from "lucide-react";
+import { Search, Eye, Users, Mail, Phone, Crown } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
@@ -36,10 +36,12 @@ export default async function AdminClientesPage({
       orders: {
         select: { id: true, totalCents: true, paymentStatus: true },
       },
+      clubMember: { select: { status: true, expiresAt: true } },
     },
   });
 
   const total = await prisma.customer.count();
+  const now = new Date();
 
   return (
     <div className="p-6 lg:p-8">
@@ -82,6 +84,7 @@ export default async function AdminClientesPage({
                 <tr className="text-left text-cocoa/70">
                   <th className="px-5 py-3 font-bold uppercase text-[11px] tracking-wider">Cliente</th>
                   <th className="px-5 py-3 font-bold uppercase text-[11px] tracking-wider">Contato</th>
+                  <th className="px-5 py-3 font-bold uppercase text-[11px] tracking-wider text-center">Clube</th>
                   <th className="px-5 py-3 font-bold uppercase text-[11px] tracking-wider text-center">Pedidos</th>
                   <th className="px-5 py-3 font-bold uppercase text-[11px] tracking-wider text-right">LTV</th>
                   <th className="px-5 py-3 font-bold uppercase text-[11px] tracking-wider">Cadastro</th>
@@ -92,6 +95,9 @@ export default async function AdminClientesPage({
                 {customers.map((c) => {
                   const paidOrders = c.orders.filter((o) => o.paymentStatus === "CONFIRMED");
                   const ltv = paidOrders.reduce((s, o) => s + o.totalCents, 0);
+                  const isMember =
+                    c.clubMember?.status === "ACTIVE" &&
+                    (!c.clubMember.expiresAt || c.clubMember.expiresAt > now);
                   return (
                     <tr key={c.id} className="border-b border-cocoa/8 hover:bg-cream/30 transition">
                       <td className="px-5 py-3">
@@ -103,15 +109,27 @@ export default async function AdminClientesPage({
                         )}
                       </td>
                       <td className="px-5 py-3 text-xs">
-                        <div className="flex items-center gap-1.5 text-cocoa">
-                          <Mail size={12} className="text-cocoa/40" />
-                          {c.email}
-                        </div>
+                        {c.email && (
+                          <div className="flex items-center gap-1.5 text-cocoa">
+                            <Mail size={12} className="text-cocoa/40" />
+                            {c.email}
+                          </div>
+                        )}
                         {c.phone && (
                           <div className="flex items-center gap-1.5 text-cocoa/70 mt-0.5">
                             <Phone size={11} className="text-cocoa/40" />
                             {c.phone}
                           </div>
+                        )}
+                        {!c.email && !c.phone && <span className="text-cocoa/40">—</span>}
+                      </td>
+                      <td className="px-5 py-3 text-center">
+                        {isMember ? (
+                          <span className="inline-flex items-center gap-1 bg-[#faf3e6] text-[#a07640] border border-[#d4a574]/40 rounded-full px-2 py-0.5 text-[11px] font-bold">
+                            <Crown size={11} fill="currentColor" /> Membro
+                          </span>
+                        ) : (
+                          <span className="text-cocoa/35 text-xs">—</span>
                         )}
                       </td>
                       <td className="px-5 py-3 text-center">
