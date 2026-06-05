@@ -8,6 +8,7 @@ export type NavItem = { label: string; href: string; active?: boolean };
 
 // Barra de categorias responsiva: mostra quantos itens couberem na largura
 // disponível e move o restante para um menu "⋯ Mais" (overflow).
+// Nunca causa scroll horizontal da página — as linhas são clipadas.
 export function CategoryNav({ items }: { items: NavItem[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRefs = useRef<Array<HTMLSpanElement | null>>([]);
@@ -15,23 +16,33 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
   const [visibleCount, setVisibleCount] = useState(items.length);
   const [openMore, setOpenMore] = useState(false);
 
-  // Calcula quantos itens cabem
   useEffect(() => {
     const compute = () => {
       const container = containerRef.current;
       if (!container) return;
-      const RESERVED = 96; // espaço reservado para o botão "Mais"
       const available = container.offsetWidth;
+
+      // Tudo cabe sem precisar do botão "Mais"?
+      const total = items.reduce(
+        (sum, _, i) => sum + (measureRefs.current[i]?.offsetWidth ?? 0),
+        0
+      );
+      if (total <= available) {
+        setVisibleCount(items.length);
+        return;
+      }
+
+      // Não cabe tudo: reserva espaço pro botão "Mais" e conta quantos cabem
+      const RESERVED = 56;
       let used = 0;
       let count = 0;
       for (let i = 0; i < items.length; i++) {
-        const el = measureRefs.current[i];
-        if (!el) break;
-        used += el.offsetWidth;
-        if (used > available - RESERVED) break;
+        const w = measureRefs.current[i]?.offsetWidth ?? 0;
+        if (used + w > available - RESERVED) break;
+        used += w;
         count++;
       }
-      setVisibleCount(used <= available ? items.length : Math.max(1, count));
+      setVisibleCount(Math.max(1, count));
     };
 
     compute();
@@ -40,7 +51,6 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
     return () => ro.disconnect();
   }, [items]);
 
-  // Fecha o "Mais" ao clicar fora
   useEffect(() => {
     if (!openMore) return;
     const onClick = (e: MouseEvent) => {
@@ -56,16 +66,16 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
   const overflow = items.slice(visibleCount);
 
   const linkClass = (active?: boolean) =>
-    `relative px-3.5 py-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition ${
+    `relative shrink-0 px-3.5 py-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition ${
       active ? "text-rose-brand" : "text-cocoa hover:text-rose-brand hover:bg-cocoa/5"
     }`;
 
   return (
-    <div ref={containerRef} className="relative flex items-center h-12 gap-0.5">
-      {/* Linha de medição (invisível) — mede a largura real de cada item */}
+    <div ref={containerRef} className="relative flex items-center h-12 min-w-0 w-full">
+      {/* Linha de medição — clipada (h-0/overflow-hidden) para nunca gerar scroll */}
       <div
         aria-hidden
-        className="absolute -z-10 opacity-0 pointer-events-none flex"
+        className="absolute inset-x-0 top-0 h-0 overflow-hidden opacity-0 pointer-events-none flex whitespace-nowrap"
       >
         {items.map((item, i) => (
           <span
@@ -80,17 +90,19 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
         ))}
       </div>
 
-      {/* Itens visíveis */}
-      {visible.map((item) => (
-        <Link key={item.label} href={item.href} className={linkClass(item.active)}>
-          {item.label}
-          {item.active && (
-            <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-brand rounded-full" />
-          )}
-        </Link>
-      ))}
+      {/* Itens visíveis — clipados para nunca vazar a largura */}
+      <div className="flex items-center gap-0.5 overflow-hidden flex-1 min-w-0">
+        {visible.map((item) => (
+          <Link key={item.label} href={item.href} className={linkClass(item.active)}>
+            {item.label}
+            {item.active && (
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-brand rounded-full" />
+            )}
+          </Link>
+        ))}
+      </div>
 
-      {/* Botão "Mais" com overflow */}
+      {/* Botão "Mais" + dropdown (fora da área clipada) */}
       {overflow.length > 0 && (
         <div ref={moreRef} className="relative shrink-0">
           <button
@@ -98,13 +110,13 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
             onClick={() => setOpenMore((v) => !v)}
             aria-label="Mais categorias"
             aria-expanded={openMore}
-            className="flex items-center gap-1 px-3 py-2 rounded-full text-[13px] font-semibold text-cocoa hover:text-rose-brand hover:bg-cocoa/5 transition"
+            className="flex items-center px-2.5 py-2 rounded-full text-cocoa hover:text-rose-brand hover:bg-cocoa/5 transition"
           >
             <MoreHorizontal size={18} />
           </button>
 
           {openMore && (
-            <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] bg-white rounded-xl shadow-xl ring-1 ring-cocoa/10 py-2">
+            <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] max-h-[70vh] overflow-y-auto bg-white rounded-xl shadow-xl ring-1 ring-cocoa/10 py-2">
               {overflow.map((item) => (
                 <Link
                   key={item.label}
