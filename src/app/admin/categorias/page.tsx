@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CategoriesManager } from "./CategoriesManager";
 
@@ -6,7 +6,7 @@ export const metadata = { title: "Categorias · Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminCategoriasPage() {
-  await requireAdmin();
+  await requireArea("categorias");
 
   const categories = await prisma.category.findMany({
     orderBy: { sortOrder: "asc" },

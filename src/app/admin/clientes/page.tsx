@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Search, Eye, Users, Mail, Phone, Crown } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 
@@ -14,7 +14,7 @@ export default async function AdminClientesPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAdmin();
+  await requireArea("clientes");
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
 

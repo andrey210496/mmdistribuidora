@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { saveClubConfig, addOneYear, type ClubConfig } from "@/lib/club";
@@ -17,7 +17,7 @@ export async function saveClubConfigAction(
   _prev: ClubAdminResult,
   formData: FormData
 ): Promise<ClubAdminResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("clube");
 
   const name = String(formData.get("name") ?? "").trim();
   const tagline = String(formData.get("tagline") ?? "").trim();
@@ -64,7 +64,7 @@ export async function saveClubConfigAction(
 // Conceder acesso de membro manualmente (1 ano a partir de hoje)
 // ============================================================
 export async function grantMembership(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireArea("clube");
   const customerId = String(formData.get("customerId") ?? "");
   if (!customerId) return;
 
@@ -108,7 +108,7 @@ export async function grantMembership(formData: FormData): Promise<void> {
 // Revogar acesso de membro
 // ============================================================
 export async function revokeMembership(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireArea("clube");
   const customerId = String(formData.get("customerId") ?? "");
   if (!customerId) return;
 

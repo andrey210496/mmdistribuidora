@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "../../ProductForm";
 
@@ -10,7 +10,7 @@ export default async function EditarProdutoPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireArea("produtos");
   const { id } = await params;
 
   const [product, categories] = await Promise.all([

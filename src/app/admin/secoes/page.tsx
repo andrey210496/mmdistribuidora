@@ -1,5 +1,5 @@
 import { LayoutList, ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, Save, AlertTriangle } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SECTION_TYPE_META, resolveSectionProducts } from "@/lib/home-sections";
 import {
@@ -32,7 +32,7 @@ const ruleHint: Record<HomeSectionType, string> = {
 };
 
 export default async function AdminSecoesPage() {
-  await requireAdmin();
+  await requireArea("secoes");
 
   const sections = await prisma.homeSection.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],

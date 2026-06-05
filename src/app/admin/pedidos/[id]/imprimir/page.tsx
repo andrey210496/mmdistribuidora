@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { env } from "@/lib/env";
@@ -14,7 +14,7 @@ export default async function PrintOrderPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireArea("pedidos");
   const { id } = await params;
 
   const order = await prisma.order.findUnique({

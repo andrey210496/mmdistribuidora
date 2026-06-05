@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Crown, Users, UserCheck, UserX, ShieldOff, ShieldCheck } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { getClubConfig } from "@/lib/club";
@@ -11,7 +11,7 @@ export const metadata = { title: "Clube · Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminClubePage() {
-  await requireAdmin();
+  await requireArea("clube");
 
   const now = new Date();
   const [config, members, totalCustomers, recentCustomers] = await Promise.all([

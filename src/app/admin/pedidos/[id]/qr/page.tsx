@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import QRCode from "qrcode";
 import { Smartphone, ArrowLeft } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
 
@@ -14,7 +14,7 @@ export default async function OrderQrPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireArea("pedidos");
   const { id } = await params;
 
   const order = await prisma.order.findUnique({

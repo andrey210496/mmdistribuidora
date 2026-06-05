@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { slugify } from "@/lib/utils";
@@ -21,7 +21,7 @@ export async function createCategory(
   _prev: CategoryActionResult,
   formData: FormData
 ): Promise<CategoryActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("categorias");
 
   const name = String(formData.get("name") ?? "").trim();
   const parsed = nameSchema.safeParse(name);
@@ -69,7 +69,7 @@ export async function renameCategory(
   categoryId: string,
   newName: string
 ): Promise<CategoryActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("categorias");
 
   const id = idSchema.safeParse(categoryId);
   const parsed = nameSchema.safeParse(newName.trim());
@@ -113,7 +113,7 @@ export async function renameCategory(
 // Ativar/desativar categoria
 // ============================================================
 export async function toggleCategoryActive(categoryId: string): Promise<CategoryActionResult> {
-  await requireAdmin();
+  await requireArea("categorias");
   const id = idSchema.safeParse(categoryId);
   if (!id.success) return { ok: false, error: "Categoria inválida" };
 
@@ -134,7 +134,7 @@ export async function toggleCategoryActive(categoryId: string): Promise<Category
 // Excluir categoria — desvincula produtos antes (não apaga produtos)
 // ============================================================
 export async function deleteCategory(categoryId: string): Promise<CategoryActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("categorias");
   const id = idSchema.safeParse(categoryId);
   if (!id.success) return { ok: false, error: "Categoria inválida" };
 
@@ -177,7 +177,7 @@ export async function moveCategorySort(
   categoryId: string,
   direction: "up" | "down"
 ): Promise<CategoryActionResult> {
-  await requireAdmin();
+  await requireArea("categorias");
   const id = idSchema.safeParse(categoryId);
   if (!id.success) return { ok: false, error: "Categoria inválida" };
 

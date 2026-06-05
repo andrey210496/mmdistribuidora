@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Search, Eye, Filter } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ORDER_STATUS_META } from "@/lib/orders";
@@ -28,7 +28,7 @@ export default async function AdminPedidosPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAdmin();
+  await requireArea("pedidos");
   const sp = await searchParams;
   const statusFilter = (typeof sp.status === "string" ? sp.status : "OPEN") as
     | OrderStatus

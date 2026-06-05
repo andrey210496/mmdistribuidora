@@ -12,7 +12,7 @@ import {
   Phone,
   Clock,
 } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ORDER_STATUS_META, PAYMENT_STATUS_META, PAYMENT_METHOD_LABELS } from "@/lib/orders";
@@ -25,7 +25,7 @@ export default async function OrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireArea("pedidos");
   const { id } = await params;
 
   const order = await prisma.order.findUnique({

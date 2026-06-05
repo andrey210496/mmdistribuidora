@@ -1,8 +1,8 @@
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { ComingSoon } from "@/components/admin/ComingSoon";
 
 export default async function FinanceiroPage() {
-  await requireAdmin();
+  await requireArea("financeiro");
   return (
     <ComingSoon
       title="Financeiro"

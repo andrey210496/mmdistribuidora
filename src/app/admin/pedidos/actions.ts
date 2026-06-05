@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { canCancel, nextStatusOf } from "@/lib/orders";
@@ -18,7 +18,7 @@ const idSchema = z.string().min(1).max(100);
 // Avança status do pedido para o próximo na linha do tempo
 // ============================================================
 export async function advanceOrderStatus(orderId: string): Promise<ActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("pedidos");
 
   const id = idSchema.safeParse(orderId);
   if (!id.success) return { ok: false, error: "Pedido inválido" };
@@ -77,7 +77,7 @@ const setStatusSchema = z.object({
 });
 
 export async function setOrderStatus(input: z.infer<typeof setStatusSchema>): Promise<ActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("pedidos");
 
   const parsed = setStatusSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Dados inválidos" };
@@ -122,7 +122,7 @@ export async function setOrderStatus(input: z.infer<typeof setStatusSchema>): Pr
 // Cancela pedido (somente em status onde faz sentido)
 // ============================================================
 export async function cancelOrder(orderId: string, reason?: string): Promise<ActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("pedidos");
 
   const id = idSchema.safeParse(orderId);
   if (!id.success) return { ok: false, error: "Pedido inválido" };
@@ -270,7 +270,7 @@ const issueNfSchema = z.object({
 });
 
 export async function issueNf(input: z.infer<typeof issueNfSchema>): Promise<ActionResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("pedidos");
 
   const parsed = issueNfSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Dados inválidos" };

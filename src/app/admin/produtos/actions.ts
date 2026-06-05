@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { brlToCents } from "@/lib/money";
@@ -85,7 +85,7 @@ export async function createProduct(
   _prev: ProductActionState,
   formData: FormData
 ): Promise<ProductActionState> {
-  const user = await requireAdmin();
+  const user = await requireArea("produtos");
   const data = parseFormData(formData);
 
   const parsed = productFormSchema.safeParse(data);
@@ -135,7 +135,7 @@ export async function updateProduct(
   _prev: ProductActionState,
   formData: FormData
 ): Promise<ProductActionState> {
-  const user = await requireAdmin();
+  const user = await requireArea("produtos");
 
   const id = z.string().min(1).safeParse(productId);
   if (!id.success) return { error: "Produto inválido" };
@@ -211,7 +211,7 @@ export async function updateProduct(
 }
 
 export async function toggleProductActive(productId: string): Promise<{ ok: boolean; error?: string }> {
-  const user = await requireAdmin();
+  const user = await requireArea("produtos");
   const id = z.string().min(1).safeParse(productId);
   if (!id.success) return { ok: false, error: "Produto inválido" };
 

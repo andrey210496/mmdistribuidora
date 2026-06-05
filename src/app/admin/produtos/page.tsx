@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus, Search, Eye, Edit3, Package } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ToggleProductActiveButton } from "./ToggleProductActiveButton";
@@ -15,7 +15,7 @@ export default async function AdminProdutosPage({
 }: {
   searchParams: SearchParams;
 }) {
-  await requireAdmin();
+  await requireArea("produtos");
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const filter = (typeof sp.filter === "string" ? sp.filter : "all") as

@@ -3,6 +3,7 @@ import { prisma } from "./prisma";
 import { verifyPassword } from "./crypto";
 import { getAdminSession } from "./session";
 import { logAudit } from "./audit";
+import { hasArea, isSuperAdmin, type AreaKey } from "./permissions";
 
 export const MAX_FAILED_ATTEMPTS = 5;
 export const LOCKOUT_MINUTES = 15;
@@ -107,11 +108,41 @@ export async function requireAdmin() {
   }
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, email: true, name: true, role: true, active: true, mustChangePassword: true },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      active: true,
+      mustChangePassword: true,
+      jobTitle: true,
+      permissions: true,
+    },
   });
   if (!user || !user.active) {
     session.destroy();
     redirect("/admin/login");
+  }
+  return user;
+}
+
+/**
+ * Garante que o usuário logado pode acessar uma ÁREA específica.
+ * ADMIN passa sempre; STAFF só se a área estiver liberada.
+ */
+export async function requireArea(area: AreaKey) {
+  const user = await requireAdmin();
+  if (!hasArea(user, area)) {
+    redirect(`/admin?sem_acesso=${area}`);
+  }
+  return user;
+}
+
+/** Garante que o usuário é ADMIN (super-admin) — ex.: gerir colaboradores. */
+export async function requireSuperAdmin() {
+  const user = await requireAdmin();
+  if (!isSuperAdmin(user)) {
+    redirect(`/admin?sem_acesso=colaboradores`);
   }
   return user;
 }

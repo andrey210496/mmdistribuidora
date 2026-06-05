@@ -11,25 +11,29 @@ import {
   Megaphone,
   LayoutList,
   Settings,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
 import { getAdminSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { hasArea, isSuperAdmin, type AreaKey } from "@/lib/permissions";
 import { logoutAction } from "./login/actions";
 
 export const metadata = { robots: { index: false } };
 
-const NAV = [
+// area: undefined = sempre visível; "admin" = só super-admin
+const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin" }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
-  { href: "/admin/produtos", label: "Produtos", icon: Package },
-  { href: "/admin/categorias", label: "Categorias", icon: Tag },
-  { href: "/admin/secoes", label: "Seções da Home", icon: LayoutList },
-  { href: "/admin/clientes", label: "Clientes", icon: Users },
-  { href: "/admin/financeiro", label: "Financeiro", icon: CreditCard },
-  { href: "/admin/clube", label: "Clube", icon: Crown },
-  { href: "/admin/anuncios", label: "Anúncios", icon: Megaphone },
-  { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart, area: "pedidos" },
+  { href: "/admin/produtos", label: "Produtos", icon: Package, area: "produtos" },
+  { href: "/admin/categorias", label: "Categorias", icon: Tag, area: "categorias" },
+  { href: "/admin/secoes", label: "Seções da Home", icon: LayoutList, area: "secoes" },
+  { href: "/admin/clientes", label: "Clientes", icon: Users, area: "clientes" },
+  { href: "/admin/financeiro", label: "Financeiro", icon: CreditCard, area: "financeiro" },
+  { href: "/admin/clube", label: "Clube", icon: Crown, area: "clube" },
+  { href: "/admin/anuncios", label: "Anúncios", icon: Megaphone, area: "anuncios" },
+  { href: "/admin/colaboradores", label: "Colaboradores", icon: ShieldCheck, area: "admin" },
+  { href: "/admin/configuracoes", label: "Configurações", icon: Settings, area: "configuracoes" },
 ];
 
 export default async function AdminLayout({
@@ -49,7 +53,7 @@ export default async function AdminLayout({
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, email: true, name: true, role: true, active: true, mustChangePassword: true },
+    select: { id: true, email: true, name: true, role: true, active: true, mustChangePassword: true, permissions: true },
   });
 
   if (!user || !user.active) {
@@ -81,7 +85,11 @@ export default async function AdminLayout({
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {NAV.filter(({ area }) => {
+            if (!area) return true; // Dashboard
+            if (area === "admin") return isSuperAdmin(user);
+            return hasArea(user, area);
+          }).map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}

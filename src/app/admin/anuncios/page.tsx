@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Megaphone, Pencil, Trash2, Eye, EyeOff, Clock, Repeat } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AnnouncementForm, type EditingAnnouncement } from "./AnnouncementForm";
 import { toggleAnnouncementActive, deleteAnnouncement } from "./actions";
@@ -18,7 +18,7 @@ function toLocalInput(d: Date | null): string {
 }
 
 export default async function AdminAnunciosPage({ searchParams }: { searchParams: SearchParams }) {
-  await requireAdmin();
+  await requireArea("anuncios");
   const sp = await searchParams;
   const editId = typeof sp.edit === "string" ? sp.edit : null;
 

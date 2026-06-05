@@ -20,9 +20,10 @@ datasource db {
 // USUÁRIOS DO SISTEMA (admin, separador, financeiro)
 // ============================================================
 enum UserRole {
-  ADMIN
-  PICKER
-  FINANCE
+  ADMIN // acesso total (super-admin); gerencia colaboradores
+  STAFF // colaborador com acesso limitado às áreas liberadas
+  PICKER // legado
+  FINANCE // legado
 }
 
 model User {
@@ -31,6 +32,10 @@ model User {
   name                String
   passwordHash        String
   role                UserRole  @default(ADMIN)
+  // Cargo (rótulo livre: "Gerente", "Separação", "Financeiro"...)
+  jobTitle            String?
+  // Áreas liberadas para STAFF (ex.: ["pedidos","produtos"]). ADMIN ignora (vê tudo).
+  permissions         String[]  @default([])
   active              Boolean   @default(true)
   mustChangePassword  Boolean   @default(false)
   lastLoginAt         DateTime?

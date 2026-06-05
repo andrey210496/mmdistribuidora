@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { SECTION_TYPE_META, DEFAULT_SECTIONS } from "@/lib/home-sections";
 import type { HomeSectionType } from "@prisma/client";
 
@@ -25,7 +25,7 @@ function revalidate() {
 }
 
 export async function createSection(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireArea("secoes");
   const type = String(formData.get("type") ?? "") as HomeSectionType;
   if (!VALID_TYPES.includes(type)) return;
 
@@ -48,7 +48,7 @@ export async function createSection(formData: FormData): Promise<void> {
 }
 
 export async function updateSection(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireArea("secoes");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
 
@@ -66,7 +66,7 @@ export async function updateSection(formData: FormData): Promise<void> {
 }
 
 export async function toggleSection(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireArea("secoes");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const s = await prisma.homeSection.findUnique({ where: { id } });
@@ -76,7 +76,7 @@ export async function toggleSection(formData: FormData): Promise<void> {
 }
 
 export async function moveSection(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireArea("secoes");
   const id = String(formData.get("id") ?? "");
   const direction = String(formData.get("direction") ?? "");
   if (!id) return;
@@ -97,7 +97,7 @@ export async function moveSection(formData: FormData): Promise<void> {
 }
 
 export async function deleteSection(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireArea("secoes");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   await prisma.homeSection.delete({ where: { id } });
@@ -106,7 +106,7 @@ export async function deleteSection(formData: FormData): Promise<void> {
 
 /** Cria as seções padrão (quando o admin ainda não configurou nenhuma). */
 export async function seedDefaultSections(): Promise<void> {
-  await requireAdmin();
+  await requireArea("secoes");
   const count = await prisma.homeSection.count();
   if (count > 0) return;
 

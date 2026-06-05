@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 
@@ -38,7 +38,7 @@ export async function saveAnnouncement(
   _prev: AnnouncementResult,
   formData: FormData
 ): Promise<AnnouncementResult> {
-  const user = await requireAdmin();
+  const user = await requireArea("anuncios");
 
   const id = String(formData.get("id") ?? "").trim();
   const parsed = schema.safeParse({
@@ -89,7 +89,7 @@ export async function saveAnnouncement(
 }
 
 export async function toggleAnnouncementActive(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireArea("anuncios");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   const a = await prisma.announcement.findUnique({ where: { id } });
@@ -99,7 +99,7 @@ export async function toggleAnnouncementActive(formData: FormData): Promise<void
 }
 
 export async function deleteAnnouncement(formData: FormData): Promise<void> {
-  const user = await requireAdmin();
+  const user = await requireArea("anuncios");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
   await prisma.announcement.delete({ where: { id } });

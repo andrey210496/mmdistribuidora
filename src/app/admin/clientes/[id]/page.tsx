@@ -10,7 +10,7 @@ import {
   Calendar,
   Package,
 } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ORDER_STATUS_META } from "@/lib/orders";
@@ -23,7 +23,7 @@ export default async function ClienteDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireAdmin();
+  await requireArea("clientes");
   const { id } = await params;
 
   const customer = await prisma.customer.findUnique({
