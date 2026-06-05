@@ -57,6 +57,17 @@ async function main() {
   });
 
   console.log(`[ensure-admin] Admin garantido: ${email}`);
+
+  // Segurança: desativa o admin padrão (credencial conhecida admin/admin)
+  // quando há um admin próprio configurado.
+  const DEFAULT_ADMIN = "admin@doceencanto.local";
+  if (email !== DEFAULT_ADMIN) {
+    const def = await prisma.user.findUnique({ where: { email: DEFAULT_ADMIN } });
+    if (def && def.active) {
+      await prisma.user.update({ where: { email: DEFAULT_ADMIN }, data: { active: false } });
+      console.log("[ensure-admin] Admin padrão desativado por seguranca.");
+    }
+  }
 }
 
 main()

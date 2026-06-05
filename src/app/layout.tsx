@@ -26,6 +26,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://doceencantodistribuidora.com"),
   title: {
     default: "Doce Encanto — Distribuidora de Doces & Embalagens",
     template: "%s | Doce Encanto",
