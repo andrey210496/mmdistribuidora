@@ -113,6 +113,8 @@ model Product {
   // Preço exclusivo para membros do Clube. Se preenchido, o produto entra
   // na vitrine do Clube exibindo "preço normal" + "preço de membro".
   clubPriceCents      Int?
+  // Custo do produto (uso interno) — base para margem/lucro no financeiro.
+  costCents           Int?     @default(0)
   stock               Int      @default(0)
   weightGrams         Int      @default(0)
   active              Boolean  @default(true)
@@ -244,6 +246,9 @@ model OrderItem {
   unitPriceCents      Int
   quantity            Int
   totalCents          Int
+  // Snapshot do CUSTO na venda (unitário e total) — base do lucro/CMV
+  unitCostCents       Int     @default(0)
+  costTotalCents      Int     @default(0)
 
   // Controle de separação
   picked   Boolean   @default(false)

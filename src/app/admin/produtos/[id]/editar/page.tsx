@@ -39,6 +39,7 @@ export default async function EditarProdutoPage({
           priceCents: product.priceCents,
           compareAtPriceCents: product.compareAtPriceCents,
           clubPriceCents: product.clubPriceCents,
+          costCents: product.costCents,
           stock: product.stock,
           weightGrams: product.weightGrams,
           active: product.active,

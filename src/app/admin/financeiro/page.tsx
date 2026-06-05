@@ -153,6 +153,37 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
         </div>
       </div>
 
+      {/* Rentabilidade real (com base no custo dos produtos) */}
+      <section className="bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg font-bold text-gold">Rentabilidade das vendas</h2>
+          <span className="text-[11px] text-cream/50">com base no custo cadastrado</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <div className="text-cream/60 text-xs">Receita de produtos</div>
+            <div className="font-display text-xl font-bold text-cream mt-1">{centsToBRL(summary.productRevenueCents)}</div>
+          </div>
+          <div>
+            <div className="text-cream/60 text-xs">Custo (CMV)</div>
+            <div className="font-display text-xl font-bold text-cream/90 mt-1">{centsToBRL(summary.cogsCents)}</div>
+          </div>
+          <div>
+            <div className="text-cream/60 text-xs">Lucro bruto</div>
+            <div className="font-display text-xl font-bold text-gold mt-1">{centsToBRL(summary.grossProfitCents)}</div>
+          </div>
+          <div>
+            <div className="text-cream/60 text-xs">Margem bruta</div>
+            <div className="font-display text-xl font-bold text-gold mt-1">{summary.grossMarginPct.toFixed(1)}%</div>
+          </div>
+        </div>
+        {summary.cogsCents === 0 && summary.productRevenueCents > 0 && (
+          <p className="text-[11px] text-gold/70 mt-3">
+            Cadastre o <strong>custo</strong> dos produtos para o lucro e a margem ficarem corretos.
+          </p>
+        )}
+      </section>
+
       {/* Gráfico mensal */}
       <section className="bg-white rounded-2xl border border-cocoa/10 p-6">
         <div className="flex items-center justify-between mb-5">
@@ -245,7 +276,14 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
                   <div className="h-2 bg-cream rounded-full overflow-hidden">
                     <div className="h-full bg-rose-brand rounded-full" style={{ width: `${(p.revenueCents / maxProd) * 100}%` }} />
                   </div>
-                  <div className="text-[11px] text-cocoa/45 mt-0.5">{p.qty} un. vendidas</div>
+                  <div className="text-[11px] text-cocoa/45 mt-0.5 flex justify-between">
+                    <span>{p.qty} un. vendidas</span>
+                    {p.costCents > 0 && (
+                      <span className="text-olive font-semibold">
+                        lucro {centsToBRL(p.profitCents)} ({p.marginPct.toFixed(0)}%)
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

@@ -104,6 +104,7 @@ export async function submitCheckout(
       isClubMember && hasClubPrice ? product.clubPriceCents! : product.priceCents;
 
     const totalCents = unitPriceCents * item.quantity;
+    const unitCostCents = product.costCents ?? 0;
     subtotalCents += totalCents;
     normalSubtotalCents += product.priceCents * item.quantity;
     orderItemsData.push({
@@ -113,6 +114,8 @@ export async function submitCheckout(
       unitPriceCents,
       quantity: item.quantity,
       totalCents,
+      unitCostCents,
+      costTotalCents: unitCostCents * item.quantity,
     });
   }
 

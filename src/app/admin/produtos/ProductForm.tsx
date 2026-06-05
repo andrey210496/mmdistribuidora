@@ -18,6 +18,7 @@ type Product = {
   priceCents: number;
   compareAtPriceCents: number | null;
   clubPriceCents: number | null;
+  costCents: number | null;
   stock: number;
   weightGrams: number;
   active: boolean;
@@ -211,6 +212,26 @@ export function ProductForm({
                 </div>
                 <p className="text-[11px] text-cocoa/55 mt-1">
                   Se preenchido, o produto aparece na <strong>vitrine do Clube</strong> na home, mostrando o preço normal e este preço de membro.
+                </p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="label" htmlFor="cost">
+                  Custo do produto <span className="text-cocoa/45 font-normal">(uso interno)</span>
+                </label>
+                <div className="flex">
+                  <span className="px-3 py-3 bg-cocoa/5 border border-r-0 border-cocoa/15 rounded-l-full text-cocoa/70 text-sm font-bold">R$</span>
+                  <input
+                    id="cost"
+                    name="cost"
+                    defaultValue={product?.costCents ? formatBrl(product.costCents) : ""}
+                    inputMode="decimal"
+                    className="input-field rounded-l-none"
+                    placeholder="0,00"
+                  />
+                </div>
+                <p className="text-[11px] text-cocoa/55 mt-1">
+                  Quanto o produto custa para você. Base do <strong>lucro e da margem</strong> no
+                  Financeiro. Não aparece para o cliente.
                 </p>
               </div>
               <div>

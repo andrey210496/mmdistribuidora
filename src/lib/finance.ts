@@ -43,6 +43,11 @@ export type FinanceSummary = {
   paidOrdersCount: number;
   ordersRevenueCents: number; // faturamento de vendas (pedidos) no período
   avgTicketCents: number;
+  // Rentabilidade com base no custo dos produtos
+  productRevenueCents: number; // receita só dos produtos (sem frete)
+  cogsCents: number; // custo das mercadorias vendidas (CMV)
+  grossProfitCents: number; // lucro bruto = receita produtos - CMV
+  grossMarginPct: number;
 };
 
 export async function getFinanceSummary(period: Period): Promise<FinanceSummary> {
@@ -60,6 +65,7 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
     overduePayable,
     overdueReceivable,
     ordersAgg,
+    itemsAgg,
   ] = await Promise.all([
     prisma.financialEntry.aggregate({
       where: { type: "RECEIVABLE", status: "PAID", paidAt: { gte: period.from, lte: period.to } },
@@ -95,6 +101,10 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
       _sum: { totalCents: true },
       _count: true,
     }),
+    prisma.orderItem.aggregate({
+      where: { order: { paymentStatus: "CONFIRMED", paidAt: { gte: period.from, lte: period.to } } },
+      _sum: { totalCents: true, costTotalCents: true },
+    }),
   ]);
 
   const receivedCents = received._sum.amountCents ?? 0;
@@ -103,6 +113,9 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
   const resultCents = receivedCents - expensesPaidCents;
   const paidOrdersCount = ordersAgg._count;
   const ordersRevenueCents = ordersAgg._sum.totalCents ?? 0;
+  const productRevenueCents = itemsAgg._sum.totalCents ?? 0;
+  const cogsCents = itemsAgg._sum.costTotalCents ?? 0;
+  const grossProfitCents = productRevenueCents - cogsCents;
 
   return {
     receivedCents,
@@ -122,6 +135,10 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
     paidOrdersCount,
     ordersRevenueCents,
     avgTicketCents: paidOrdersCount > 0 ? Math.round(ordersRevenueCents / paidOrdersCount) : 0,
+    productRevenueCents,
+    cogsCents,
+    grossProfitCents,
+    grossMarginPct: productRevenueCents > 0 ? (grossProfitCents / productRevenueCents) * 100 : 0,
   };
 }
 
@@ -170,22 +187,37 @@ async function byCategory(type: "RECEIVABLE" | "PAYABLE", period: Period): Promi
 export const getRevenueByCategory = (p: Period) => byCategory("RECEIVABLE", p);
 export const getExpenseByCategory = (p: Period) => byCategory("PAYABLE", p);
 
-export type TopProduct = { name: string; revenueCents: number; qty: number };
+export type TopProduct = {
+  name: string;
+  revenueCents: number;
+  qty: number;
+  costCents: number;
+  profitCents: number;
+  marginPct: number;
+};
 
-/** Produtos que mais faturaram no período (pedidos pagos). */
+/** Produtos que mais faturaram no período (pedidos pagos), com lucro/margem. */
 export async function getTopProductsByRevenue(period: Period, limit = 8): Promise<TopProduct[]> {
   const grouped = await prisma.orderItem.groupBy({
     by: ["productId", "productNameSnapshot"],
     where: { order: { paymentStatus: "CONFIRMED", paidAt: { gte: period.from, lte: period.to } } },
-    _sum: { totalCents: true, quantity: true },
+    _sum: { totalCents: true, quantity: true, costTotalCents: true },
     orderBy: { _sum: { totalCents: "desc" } },
     take: limit,
   });
-  return grouped.map((g) => ({
-    name: g.productNameSnapshot,
-    revenueCents: g._sum.totalCents ?? 0,
-    qty: g._sum.quantity ?? 0,
-  }));
+  return grouped.map((g) => {
+    const revenueCents = g._sum.totalCents ?? 0;
+    const costCents = g._sum.costTotalCents ?? 0;
+    const profitCents = revenueCents - costCents;
+    return {
+      name: g.productNameSnapshot,
+      revenueCents,
+      qty: g._sum.quantity ?? 0,
+      costCents,
+      profitCents,
+      marginPct: revenueCents > 0 ? (profitCents / revenueCents) * 100 : 0,
+    };
+  });
 }
 
 export type EntryRow = {
