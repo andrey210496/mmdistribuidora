@@ -5,7 +5,7 @@ import { env } from "./env";
 export type AdminSession = {
   userId?: string;
   email?: string;
-  role?: "ADMIN" | "PICKER" | "FINANCE";
+  role?: "ADMIN" | "STAFF" | "PICKER" | "FINANCE";
   // CSRF token para Server Actions sensíveis
   csrf?: string;
   // Marca login pra rotacionar sessão se necessário

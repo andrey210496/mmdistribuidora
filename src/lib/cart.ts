@@ -1,6 +1,10 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
 import { isCurrentCustomerActiveMember } from "./customer";
+import {
+  SHIPPING_FREE_THRESHOLD_CENTS,
+  computeShippingCents,
+} from "./shipping";
 
 // ============================================================
 // Lib do carrinho — toda lógica de preço é executada NO SERVIDOR.
@@ -43,9 +47,6 @@ export type CartSummary = {
   // Quanto ele ECONOMIZARIA se fosse membro (vale também para não-membros)
   potentialClubSavingsCents: number;
 };
-
-const SHIPPING_FREE_THRESHOLD_CENTS = 20000; // R$ 200
-const SHIPPING_FLAT_RATE_CENTS = 1990; // R$ 19,90
 
 /**
  * Lê o carrinho da sessão e enriquece com dados frescos do banco.
@@ -119,12 +120,7 @@ export async function getCart(): Promise<CartSummary> {
   }
 
   const subtotalCents = lines.reduce((s, l) => s + l.totalCents, 0);
-  const shippingCents =
-    subtotalCents === 0
-      ? 0
-      : subtotalCents >= SHIPPING_FREE_THRESHOLD_CENTS
-        ? 0
-        : SHIPPING_FLAT_RATE_CENTS;
+  const shippingCents = computeShippingCents(subtotalCents);
   const totalCents = subtotalCents + shippingCents;
   const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
 

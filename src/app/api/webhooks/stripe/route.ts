@@ -135,7 +135,10 @@ export async function POST(req: NextRequest) {
         const orderId = session.metadata?.orderId ?? session.client_reference_id;
         if (!orderId) break;
 
-        const order = await prisma.order.findUnique({ where: { id: orderId } });
+        const order = await prisma.order.findUnique({
+          where: { id: orderId },
+          include: { items: true },
+        });
         if (!order || order.paymentStatus === "CONFIRMED") break;
 
         const method = mapPaymentMethod(session.payment_method_types);
@@ -154,6 +157,14 @@ export async function POST(req: NextRequest) {
                   : undefined,
             },
           }),
+          // Baixa de estoque — só acontece uma vez (a checagem acima impede
+          // reprocessamento depois de CONFIRMED).
+          ...order.items.map((it) =>
+            prisma.product.update({
+              where: { id: it.productId },
+              data: { stock: { decrement: it.quantity } },
+            })
+          ),
           prisma.orderStatusHistory.create({
             data: {
               orderId: order.id,

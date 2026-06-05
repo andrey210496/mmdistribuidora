@@ -22,7 +22,10 @@ export async function simulatePayment(
   const id = z.string().min(1).safeParse(orderId);
   if (!id.success) return { ok: false, error: "Pedido inválido" };
 
-  const order = await prisma.order.findUnique({ where: { id: id.data } });
+  const order = await prisma.order.findUnique({
+    where: { id: id.data },
+    include: { items: true },
+  });
   if (!order) return { ok: false, error: "Pedido não encontrado" };
   if (order.paymentStatus === "CONFIRMED") {
     return { ok: false, error: "Pagamento já confirmado" };
@@ -37,6 +40,12 @@ export async function simulatePayment(
         status: "PAID",
       },
     }),
+    ...order.items.map((it) =>
+      prisma.product.update({
+        where: { id: it.productId },
+        data: { stock: { decrement: it.quantity } },
+      })
+    ),
     prisma.orderStatusHistory.create({
       data: {
         orderId: order.id,

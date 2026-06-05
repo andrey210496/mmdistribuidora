@@ -12,7 +12,8 @@ import { logAudit } from "@/lib/audit";
 import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
 import { getCurrentCustomer } from "@/lib/customer";
-import type { OrderStatus } from "@prisma/client";
+import { computeShippingCents } from "@/lib/shipping";
+import { Prisma, type OrderStatus } from "@prisma/client";
 
 export type CheckoutState = {
   ok?: boolean;
@@ -121,58 +122,81 @@ export async function submitCheckout(
 
   const discountCents = Math.max(0, normalSubtotalCents - subtotalCents);
 
-  const FREE_SHIPPING_THRESHOLD = 20000;
-  const FLAT_SHIPPING = 1990;
-  const shippingCents = subtotalCents >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
+  const shippingCents = computeShippingCents(subtotalCents);
   const totalCents = subtotalCents + shippingCents;
 
-  // Atualiza dados de contato do cliente logado se vierem novos no formulário
+  // Atualiza dados de contato do cliente logado se vierem novos no formulário.
+  // E-mail é @unique: NÃO sobrescreve se já pertencer a OUTRO cliente (evita 500).
+  const emailToSet = data.customerEmail ? data.customerEmail.toLowerCase() : undefined;
+  let emailConflict = false;
+  if (emailToSet && emailToSet !== customer.email) {
+    const other = await prisma.customer.findFirst({
+      where: { email: emailToSet, NOT: { id: customer.id } },
+      select: { id: true },
+    });
+    emailConflict = !!other;
+  }
   await prisma.customer.update({
     where: { id: customer.id },
     data: {
       name: data.customerName || customer.name,
-      email: data.customerEmail ? data.customerEmail.toLowerCase() : undefined,
+      email: emailConflict ? undefined : emailToSet,
       cpfCnpj: customer.cpfCnpj ?? data.customerCpfCnpj,
       phone: data.customerPhone ?? customer.phone ?? undefined,
     },
   });
 
-  const snapshotEmail = data.customerEmail?.toLowerCase() ?? customer.email ?? "";
+  const snapshotEmail = emailToSet ?? customer.email ?? "";
 
-  // Gera orderNumber sequencial baseado em count (em prod, melhor um sequence dedicado)
-  const orderCount = await prisma.order.count();
-  const orderNumber = generateOrderNumber(orderCount + 1);
-
-  // Cria Order no banco (status PENDING_PAYMENT)
-  const order = await prisma.order.create({
-    data: {
-      orderNumber,
-      customerId: customer.id,
-      status: "PENDING_PAYMENT",
-      subtotalCents,
-      discountCents,
-      shippingCents,
-      totalCents,
-      shippingZip: data.shippingAddress.zip,
-      shippingStreet: data.shippingAddress.street,
-      shippingNumber: data.shippingAddress.number,
-      shippingComplement: data.shippingAddress.complement,
-      shippingNeighborhood: data.shippingAddress.neighborhood,
-      shippingCity: data.shippingAddress.city,
-      shippingState: data.shippingAddress.state.toUpperCase(),
-      customerNameSnapshot: data.customerName || customer.name,
-      customerEmailSnapshot: snapshotEmail,
-      customerCpfSnapshot: customer.cpfCnpj ?? data.customerCpfCnpj,
-      customerPhoneSnapshot: data.customerPhone ?? customer.phone,
-      // paymentMethod fica null — o Stripe Checkout define o método real,
-      // registrado quando o webhook confirma o pagamento.
-      paymentStatus: "PENDING",
-      items: { create: orderItemsData },
-      statusHistory: {
-        create: { toStatus: "PENDING_PAYMENT" as OrderStatus, notes: "Pedido criado" },
-      },
+  const orderBaseData = {
+    customerId: customer.id,
+    status: "PENDING_PAYMENT" as OrderStatus,
+    subtotalCents,
+    discountCents,
+    shippingCents,
+    totalCents,
+    shippingZip: data.shippingAddress.zip,
+    shippingStreet: data.shippingAddress.street,
+    shippingNumber: data.shippingAddress.number,
+    shippingComplement: data.shippingAddress.complement,
+    shippingNeighborhood: data.shippingAddress.neighborhood,
+    shippingCity: data.shippingAddress.city,
+    shippingState: data.shippingAddress.state.toUpperCase(),
+    customerNameSnapshot: data.customerName || customer.name,
+    customerEmailSnapshot: snapshotEmail,
+    customerCpfSnapshot: customer.cpfCnpj ?? data.customerCpfCnpj,
+    customerPhoneSnapshot: data.customerPhone ?? customer.phone,
+    paymentStatus: "PENDING" as const,
+    items: { create: orderItemsData },
+    statusHistory: {
+      create: { toStatus: "PENDING_PAYMENT" as OrderStatus, notes: "Pedido criado" },
     },
-  });
+  };
+
+  // Cria o pedido com orderNumber resistente a concorrência:
+  // se dois pedidos simultâneos gerarem o mesmo número (@unique), tenta de novo.
+  let order: Awaited<ReturnType<typeof prisma.order.create>> | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const orderCount = await prisma.order.count();
+    const orderNumber = generateOrderNumber(orderCount + 1 + attempt);
+    try {
+      order = await prisma.order.create({ data: { orderNumber, ...orderBaseData } });
+      break;
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2002" &&
+        attempt < 4
+      ) {
+        continue; // colisão de orderNumber — recalcula e tenta de novo
+      }
+      throw err;
+    }
+  }
+  if (!order) {
+    return { error: "Não foi possível criar o pedido. Tente novamente." };
+  }
+  const orderNumber = order.orderNumber;
 
   await logAudit({
     action: "order.created",

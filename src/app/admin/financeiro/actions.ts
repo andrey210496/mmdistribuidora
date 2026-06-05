@@ -81,6 +81,8 @@ export async function markEntryPaid(formData: FormData): Promise<void> {
   const user = await requireArea("financeiro");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+  const exists = await prisma.financialEntry.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) return;
   await prisma.financialEntry.update({
     where: { id },
     data: { status: "PAID", paidAt: new Date() },
@@ -104,6 +106,8 @@ export async function cancelEntry(formData: FormData): Promise<void> {
   const user = await requireArea("financeiro");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
+  const exists = await prisma.financialEntry.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) return;
   await prisma.financialEntry.update({ where: { id }, data: { status: "CANCELED" } });
   const h = await headers();
   await logAudit({
