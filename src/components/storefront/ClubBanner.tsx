@@ -1,84 +1,61 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Crown, Check } from "lucide-react";
+import { centsToBRL } from "@/lib/money";
+import { getClubConfig } from "@/lib/club";
 
-const tiers = [
-  {
-    name: "Bronze",
-    price: "19,90",
-    benefits: ["5% off em todo catálogo", "Ofertas exclusivas mensais", "Suporte prioritário"],
-  },
-  {
-    name: "Prata",
-    price: "39,90",
-    featured: true,
-    benefits: ["10% off em todo catálogo", "Frete grátis acima de R$ 200", "Brindes em datas especiais"],
-  },
-  {
-    name: "Ouro",
-    price: "69,90",
-    benefits: ["15% off em todo catálogo", "Frete grátis sempre", "Concierge de confeitaria"],
-  },
-];
+export async function ClubBanner() {
+  const cfg = await getClubConfig();
+  if (!cfg.active) return null;
 
-export function ClubBanner() {
   return (
-    <section className="py-20 lg:py-28 bg-cream-soft">
+    <section className="py-16 lg:py-24 bg-cream-soft">
       <div className="container-wide">
-        <div className="text-center mb-16 max-w-2xl mx-auto">
-          <span className="eyebrow mb-3">Clube de Vantagens</span>
-          <h2 className="display-section text-espresso mt-3 mb-5">
-            Vale mais a pena <span className="font-serif italic font-medium text-caramel">comprar no clube</span>.
-          </h2>
-          <p className="text-cocoa/60 text-base lg:text-lg leading-relaxed">
-            Mensalidade simbólica. Desconto fixo, frete grátis e benefícios exclusivos para quem compra todo mês.
-          </p>
-        </div>
+        <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream">
+          <div className="absolute -top-16 left-1/3 w-[500px] h-40 bg-[#d4a574]/30 blur-[90px] pointer-events-none" />
 
-        <div className="grid md:grid-cols-3 gap-px bg-cocoa/15 border border-cocoa/15 max-w-5xl mx-auto">
-          {tiers.map((tier) => (
-            <div
-              key={tier.name}
-              className={`relative bg-cream p-10 lg:p-12 transition hover:bg-white ${tier.featured ? "lg:bg-espresso lg:text-cream lg:hover:bg-espresso" : ""}`}
-            >
-              {tier.featured && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gold text-espresso text-[10px] font-bold uppercase tracking-[0.25em] px-4 py-1.5">
-                  Mais escolhido
-                </span>
-              )}
-
-              <div className={`eyebrow mb-3 ${tier.featured ? "lg:text-gold" : ""}`}>
-                Plano {tier.name}
+          <div className="relative grid md:grid-cols-2 gap-8 p-8 lg:p-12 items-center">
+            {/* Texto + benefícios */}
+            <div>
+              <div className="inline-flex items-center gap-2 text-[#e6c089] font-bold uppercase tracking-[0.2em] text-xs mb-4">
+                <Crown size={16} fill="currentColor" /> {cfg.name}
               </div>
+              <h2 className="font-display text-3xl lg:text-4xl font-bold text-gold leading-tight mb-3">
+                Vale mais a pena comprar no clube.
+              </h2>
+              <p className="text-cream/80 mb-6">{cfg.tagline}</p>
 
-              <div className="flex items-baseline gap-2 mb-8">
-                <span className={`text-sm ${tier.featured ? "lg:text-cream/60" : "text-cocoa/60"}`}>R$</span>
-                <span className={`font-display text-5xl lg:text-6xl font-bold leading-none tracking-tighter ${tier.featured ? "lg:text-gold-shimmer" : "text-espresso"}`}>
-                  {tier.price}
-                </span>
-                <span className={`text-sm ${tier.featured ? "lg:text-cream/60" : "text-cocoa/60"}`}>/mês</span>
-              </div>
-
-              <ul className="space-y-3 mb-10">
-                {tier.benefits.map((b) => (
-                  <li
-                    key={b}
-                    className={`text-sm leading-relaxed flex gap-3 ${tier.featured ? "lg:text-cream/85" : "text-cocoa/85"}`}
-                  >
-                    <span className={`mt-2 w-1.5 h-1.5 shrink-0 ${tier.featured ? "lg:bg-gold" : "bg-caramel"}`} />
+              <ul className="space-y-2.5">
+                {cfg.benefits.slice(0, 4).map((b, i) => (
+                  <li key={i} className="flex gap-2.5 items-start text-cream/90 text-sm">
+                    <Check size={16} className="text-gold shrink-0 mt-0.5" strokeWidth={2.5} />
                     {b}
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Preço + CTA */}
+            <div className="bg-cream/5 border border-[#d4a574]/25 rounded-2xl p-8 text-center backdrop-blur-sm">
+              <div className="text-[11px] uppercase tracking-widest text-[#e6c089] font-bold">
+                Plano anual
+              </div>
+              <div className="font-display text-5xl font-bold text-gold mt-2">
+                {centsToBRL(cfg.annualPriceCents)}
+              </div>
+              <div className="text-cream/60 text-sm mt-1">por ano · 12 meses de acesso</div>
 
               <Link
                 href="/clube"
-                className={`inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.2em] border-b pb-1 transition hover:gap-3 ${tier.featured ? "lg:text-gold lg:border-gold/40 lg:hover:border-gold" : "text-espresso border-espresso/30 hover:border-espresso"}`}
+                className="mt-6 inline-flex items-center justify-center gap-2 w-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] font-bold py-3.5 rounded-full shadow-[0_8px_24px_-8px_rgba(212,165,116,0.7)] hover:-translate-y-0.5 transition-all"
               >
-                Assinar
-                <ArrowRight size={13} />
+                Conhecer o clube
+                <ArrowRight size={16} />
               </Link>
+              <p className="text-cream/50 text-[11px] mt-3">
+                Preços de membro exclusivos no catálogo
+              </p>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>
