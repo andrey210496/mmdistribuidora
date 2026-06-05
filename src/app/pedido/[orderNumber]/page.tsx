@@ -16,6 +16,8 @@ import { DevPaymentSimulator } from "@/components/storefront/DevPaymentSimulator
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { stripe } from "@/lib/stripe";
+import { getCurrentCustomer } from "@/lib/customer";
+import { getAdminSession } from "@/lib/session";
 
 export const metadata = { title: "Detalhes do Pedido" };
 export const dynamic = "force-dynamic";
@@ -52,6 +54,18 @@ export default async function OrderPage({
   });
 
   if (!order) notFound();
+
+  // AUTORIZAÇÃO — só o DONO do pedido (cliente logado) ou um ADMIN podem ver.
+  // Impede enumeração de números de pedido para vazar dados pessoais (IDOR).
+  const [customer, adminSession] = await Promise.all([
+    getCurrentCustomer(),
+    getAdminSession(),
+  ]);
+  const isOwner = !!customer && customer.id === order.customerId;
+  const isAdmin = !!adminSession.userId;
+  if (!isOwner && !isAdmin) {
+    notFound();
+  }
 
   const status = statusLabels[order.status] ?? { label: order.status, color: "bg-cocoa/10 text-cocoa" };
   const isPending = order.paymentStatus === "PENDING";
