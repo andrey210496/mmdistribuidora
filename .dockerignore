@@ -31,3 +31,13 @@ public/uploads/*
 
 # Arquivos do meu workflow local
 *.md.bak
+
+# Ferramentas locais (claude-flow / claude code) — fora da imagem
+.claude
+.claude-flow
+.swarm
+.mcp.json
+CLAUDE.md
+*.db
+*.db-shm
+*.db-wal
