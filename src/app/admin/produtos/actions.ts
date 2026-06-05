@@ -29,6 +29,7 @@ const productFormSchema = z.object({
   weightGrams: z.number().int().nonnegative(),
   active: z.boolean(),
   featured: z.boolean(),
+  expiryDate: z.date().nullable().optional(),
   categoryId: z.string().nullable().optional(),
   // Aceita URL completa (https://...) OU caminho de upload local (/uploads/...)
   imageUrl: z
@@ -52,6 +53,13 @@ function parseFormData(formData: FormData) {
     }
   };
 
+  const parseDate = (v: FormDataEntryValue | null): Date | null => {
+    const s = typeof v === "string" ? v.trim() : "";
+    if (!s) return null;
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   const compareAt = parseMoney(formData.get("compareAtPrice"));
   const clubPrice = parseMoney(formData.get("clubPrice"));
 
@@ -67,6 +75,7 @@ function parseFormData(formData: FormData) {
     weightGrams: Number(formData.get("weightGrams") ?? 0),
     active: formData.get("active") === "on",
     featured: formData.get("featured") === "on",
+    expiryDate: parseDate(formData.get("expiryDate")),
     categoryId: (formData.get("categoryId") as string) || null,
     imageUrl: String(formData.get("imageUrl") ?? "").trim(),
   };

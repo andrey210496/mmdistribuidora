@@ -22,6 +22,7 @@ type Product = {
   weightGrams: number;
   active: boolean;
   featured: boolean;
+  expiryDate?: string | null; // "YYYY-MM-DD"
   categoryId: string | null;
   imageUrl?: string | null;
 };
@@ -234,6 +235,22 @@ export function ProductForm({
                   defaultValue={product?.weightGrams ?? 0}
                   className="input-field"
                 />
+              </div>
+              <div className="md:col-span-2">
+                <label className="label" htmlFor="expiryDate">
+                  Validade do produto <span className="text-cocoa/45 font-normal">(uso interno)</span>
+                </label>
+                <input
+                  id="expiryDate"
+                  name="expiryDate"
+                  type="date"
+                  defaultValue={product?.expiryDate ?? ""}
+                  className="input-field"
+                />
+                <p className="text-[11px] text-cocoa/55 mt-1">
+                  Usado para destacar automaticamente itens com validade próxima na seção
+                  <strong> Destaque do Clube</strong>. Não é exibido ao cliente.
+                </p>
               </div>
             </div>
           </section>

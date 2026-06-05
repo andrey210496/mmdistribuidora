@@ -43,6 +43,9 @@ export default async function EditarProdutoPage({
           weightGrams: product.weightGrams,
           active: product.active,
           featured: product.featured,
+          expiryDate: product.expiryDate
+            ? product.expiryDate.toISOString().slice(0, 10)
+            : null,
           categoryId: product.categoryId,
           imageUrl: product.images[0]?.url ?? null,
         }}

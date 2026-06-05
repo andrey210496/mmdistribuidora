@@ -112,6 +112,9 @@ model Product {
   weightGrams         Int      @default(0)
   active              Boolean  @default(true)
   featured            Boolean  @default(false)
+  // Validade do produto (uso interno). Alimenta a seção "Destaque do Clube",
+  // que destaca produtos com validade próxima — sem revelar isso ao cliente.
+  expiryDate          DateTime?
   categoryId          String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -124,6 +127,7 @@ model Product {
   @@index([slug])
   @@index([active])
   @@index([clubPriceCents])
+  @@index([expiryDate])
 }
 
 model ProductImage {
@@ -339,6 +343,35 @@ model Announcement {
   updatedAt      DateTime  @updatedAt
 
   @@index([active])
+}
+
+// ============================================================
+// SEÇÕES DA HOME — configuráveis pelo admin (ordem + regra)
+// Os produtos exibidos são selecionados automaticamente pela regra do tipo.
+// ============================================================
+enum HomeSectionType {
+  CLUB_NEAR_EXPIRY // Destaque do Clube: produtos com validade próxima
+  BEST_SELLERS     // Mais vendidos: inteligência baseada em vendas pagas
+  NEW_ARRIVALS     // Acabou de chegar: novidades por data de cadastro
+  BEST_OFFERS      // Ofertas: maior desconto sobre o preço cheio
+  FEATURED         // Em destaque: marcados manualmente (featured)
+}
+
+model HomeSection {
+  id              String          @id @default(cuid())
+  type            HomeSectionType
+  title           String
+  subtitle        String?
+  enabled         Boolean         @default(true)
+  sortOrder       Int             @default(0)
+  productLimit    Int             @default(10)
+  // Config específica por tipo:
+  expiryDays      Int             @default(30) // CLUB_NEAR_EXPIRY: validade dentro de N dias
+  salesWindowDays Int             @default(90) // BEST_SELLERS: janela de análise (0 = todo período)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([enabled, sortOrder])
 }
 
 // ============================================================

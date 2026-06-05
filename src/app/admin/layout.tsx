@@ -9,6 +9,7 @@ import {
   CreditCard,
   Crown,
   Megaphone,
+  LayoutList,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const NAV = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
   { href: "/admin/produtos", label: "Produtos", icon: Package },
   { href: "/admin/categorias", label: "Categorias", icon: Tag },
+  { href: "/admin/secoes", label: "Seções da Home", icon: LayoutList },
   { href: "/admin/clientes", label: "Clientes", icon: Users },
   { href: "/admin/financeiro", label: "Financeiro", icon: CreditCard },
   { href: "/admin/clube", label: "Clube", icon: Crown },
