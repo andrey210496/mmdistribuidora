@@ -1,7 +1,7 @@
-import { LayoutList, ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, Save } from "lucide-react";
+import { LayoutList, ArrowUp, ArrowDown, Eye, EyeOff, Trash2, Plus, Save, AlertTriangle } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { SECTION_TYPE_META } from "@/lib/home-sections";
+import { SECTION_TYPE_META, resolveSectionProducts } from "@/lib/home-sections";
 import {
   createSection,
   updateSection,
@@ -37,6 +37,25 @@ export default async function AdminSecoesPage() {
   const sections = await prisma.homeSection.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
   });
+
+  // Conta, ao vivo, quantos produtos cada seção mostra hoje (mesma regra da home)
+  const counts = await Promise.all(
+    sections.map((s) =>
+      resolveSectionProducts({
+        id: s.id,
+        type: s.type,
+        title: s.title,
+        subtitle: s.subtitle,
+        enabled: s.enabled,
+        sortOrder: s.sortOrder,
+        productLimit: s.productLimit,
+        expiryDays: s.expiryDays,
+        salesWindowDays: s.salesWindowDays,
+      })
+        .then((p) => p.length)
+        .catch(() => 0)
+    )
+  );
 
   return (
     <div className="p-6 lg:p-8 space-y-8">
@@ -91,11 +110,13 @@ export default async function AdminSecoesPage() {
         <div className="space-y-4">
           {sections.map((s, i) => {
             const meta = SECTION_TYPE_META[s.type];
+            const count = counts[i] ?? 0;
+            const emptyButEnabled = s.enabled && count === 0;
             return (
               <div key={s.id} className="bg-white rounded-2xl border border-cocoa/10 p-5">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-cocoa">{meta.label}</span>
                       {s.enabled ? (
                         <span className="text-[10px] bg-olive/15 text-olive font-bold px-2 py-0.5 rounded-full uppercase">
@@ -106,8 +127,32 @@ export default async function AdminSecoesPage() {
                           Oculta
                         </span>
                       )}
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          count > 0 ? "bg-rose-brand/10 text-rose-brand" : "bg-cocoa/10 text-cocoa/50"
+                        }`}
+                      >
+                        {count} produto{count === 1 ? "" : "s"}
+                      </span>
                     </div>
                     <p className="text-cocoa/55 text-xs mt-1 max-w-xl">{ruleHint[s.type]}</p>
+                    {emptyButEnabled && (
+                      <p className="mt-2 inline-flex items-start gap-1.5 text-[12px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 max-w-xl">
+                        <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                        <span>
+                          Nenhum produto atende à regra agora, então esta seção
+                          <strong> não aparece na home</strong>.
+                          {s.type === "CLUB_NEAR_EXPIRY" &&
+                            " Defina a validade dos produtos (em Produtos) dentro do prazo configurado."}
+                          {s.type === "BEST_OFFERS" &&
+                            " Cadastre o preço 'de' (riscado) nos produtos em promoção."}
+                          {s.type === "FEATURED" &&
+                            " Marque produtos como 'destaque' no cadastro."}
+                          {s.type === "BEST_SELLERS" &&
+                            " Sem vendas pagas no período — aumente o período ou aguarde os primeiros pedidos."}
+                        </span>
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-1">
