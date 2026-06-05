@@ -44,5 +44,11 @@ else
   echo "[entrypoint] Banco ja populado ($USER_COUNT usuarios) - pulando seed."
 fi
 
+# ---- Admin configurado por variaveis de ambiente (login fixo, garantido) ----
+if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PASSWORD" ]; then
+  echo "[entrypoint] Garantindo admin configurado ($ADMIN_EMAIL)..."
+  node node_modules/tsx/dist/cli.mjs prisma/ensure-admin.ts || echo "[entrypoint] ensure-admin falhou (seguindo)"
+fi
+
 echo "[entrypoint] Iniciando aplicacao na porta ${PORT:-3000}..."
 exec "$@"

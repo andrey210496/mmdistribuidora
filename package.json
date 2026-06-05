@@ -13,6 +13,8 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
+    "admin:ensure": "tsx prisma/ensure-admin.ts",
+    "admin:reset": "tsx prisma/reset-admin.ts",
     "setup": "prisma migrate deploy && prisma db seed"
   },
   "prisma": {
