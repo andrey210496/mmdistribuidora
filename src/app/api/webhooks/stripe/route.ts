@@ -109,6 +109,19 @@ export async function POST(req: NextRequest) {
             },
           });
 
+          // Registra a receita da assinatura no financeiro
+          await prisma.financialEntry.create({
+            data: {
+              type: "RECEIVABLE",
+              status: "PAID",
+              category: "clube",
+              description: `Assinatura anual do Clube — ${customer.name}`,
+              amountCents: session.amount_total ?? pricePaidCents ?? 0,
+              dueDate: now,
+              paidAt: now,
+            },
+          });
+
           await logAudit({
             action: "club.member.activated",
             entityType: "Customer",
