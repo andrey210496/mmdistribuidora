@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 import { getAdminSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
-import { hasArea, isSuperAdmin, type AreaKey } from "@/lib/permissions";
+import { hasArea, isSuperAdmin, firstAllowedPath, type AreaKey } from "@/lib/permissions";
 import { logoutAction } from "./login/actions";
 
 export const metadata = { robots: { index: false } };
 
 // area: undefined = sempre visível; "admin" = só super-admin
 const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin" }[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, area: "dashboard" },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart, area: "pedidos" },
   { href: "/admin/produtos", label: "Produtos", icon: Package, area: "produtos" },
   { href: "/admin/categorias", label: "Categorias", icon: Tag, area: "categorias" },
@@ -66,7 +66,7 @@ export default async function AdminLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-espresso text-cream flex flex-col shrink-0 sticky top-0 h-screen">
         <div className="p-6 border-b border-cream/10">
-          <Link href="/admin" className="flex items-center gap-3">
+          <Link href={firstAllowedPath(user)} className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"

@@ -6,6 +6,7 @@
 // ============================================================
 
 export type AreaKey =
+  | "dashboard"
   | "pedidos"
   | "produtos"
   | "categorias"
@@ -17,6 +18,7 @@ export type AreaKey =
   | "configuracoes";
 
 export const ADMIN_AREAS: { key: AreaKey; label: string; href: string; desc: string }[] = [
+  { key: "dashboard", label: "Painel (Dashboard)", href: "/admin", desc: "Visão geral: vendas, pedidos e estoque" },
   { key: "pedidos", label: "Pedidos", href: "/admin/pedidos", desc: "Ver e gerenciar pedidos, status e separação" },
   { key: "produtos", label: "Produtos", href: "/admin/produtos", desc: "Cadastrar e editar produtos e estoque" },
   { key: "categorias", label: "Categorias", href: "/admin/categorias", desc: "Organizar categorias do catálogo" },
@@ -37,10 +39,10 @@ export const AREA_LABEL: Record<AreaKey, string> = ADMIN_AREAS.reduce(
 export const ROLE_PRESETS: { label: string; areas: AreaKey[] }[] = [
   {
     label: "Gerente",
-    areas: ["pedidos", "produtos", "categorias", "secoes", "clientes", "clube", "anuncios", "financeiro"],
+    areas: ["dashboard", "pedidos", "produtos", "categorias", "secoes", "clientes", "clube", "anuncios", "financeiro"],
   },
   { label: "Separação / Estoque", areas: ["pedidos", "produtos"] },
-  { label: "Financeiro", areas: ["pedidos", "financeiro", "clientes"] },
+  { label: "Financeiro", areas: ["dashboard", "pedidos", "financeiro", "clientes"] },
   { label: "Atendimento", areas: ["pedidos", "clientes", "clube"] },
   { label: "Marketing", areas: ["secoes", "anuncios", "clube", "produtos"] },
 ];
@@ -56,4 +58,18 @@ export function hasArea(user: PermCheckUser, area: AreaKey): boolean {
 /** Apenas ADMIN gerencia colaboradores/perfis de acesso. */
 export function isSuperAdmin(user: PermCheckUser): boolean {
   return user.role === "ADMIN";
+}
+
+/**
+ * Primeira rota que o usuário pode acessar — usado no login e no logo
+ * para nunca cair numa página sem permissão (evita loop de redirecionamento).
+ */
+export function firstAllowedPath(user: PermCheckUser): string {
+  if (user.role === "ADMIN") return "/admin";
+  for (const a of ADMIN_AREAS) {
+    if (Array.isArray(user.permissions) && user.permissions.includes(a.key)) {
+      return a.href;
+    }
+  }
+  return "/admin/sem-acesso";
 }

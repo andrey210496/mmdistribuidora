@@ -8,6 +8,8 @@ import { loginSchema } from "@/lib/validations";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { randomToken } from "@/lib/crypto";
+import { prisma } from "@/lib/prisma";
+import { firstAllowedPath } from "@/lib/permissions";
 
 export type LoginState = { error?: string };
 
@@ -61,7 +63,16 @@ export async function loginAction(
   session.loggedAt = Date.now();
   await session.save();
 
-  redirect(result.mustChangePassword ? "/admin/trocar-senha" : "/admin");
+  if (result.mustChangePassword) {
+    redirect("/admin/trocar-senha");
+  }
+
+  // Leva o usuário para a primeira área que ele pode acessar
+  const u = await prisma.user.findUnique({
+    where: { id: result.userId },
+    select: { role: true, permissions: true },
+  });
+  redirect(u ? firstAllowedPath(u) : "/admin");
 }
 
 export async function logoutAction() {

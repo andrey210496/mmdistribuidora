@@ -1,22 +1,19 @@
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
-import { AREA_LABEL, type AreaKey } from "@/lib/permissions";
-import { ShoppingCart, DollarSign, Package, AlertCircle, Lock } from "lucide-react";
+import { hasArea, firstAllowedPath } from "@/lib/permissions";
+import { ShoppingCart, DollarSign, Package, AlertCircle } from "lucide-react";
 
 export const metadata = { title: "Dashboard" };
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-export default async function AdminDashboard({ searchParams }: { searchParams: SearchParams }) {
-  await requireAdmin();
-  const sp = await searchParams;
-  const denied = typeof sp.sem_acesso === "string" ? sp.sem_acesso : null;
-  const deniedLabel = denied
-    ? denied === "colaboradores"
-      ? "Colaboradores"
-      : AREA_LABEL[denied as AreaKey] ?? denied
-    : null;
+export default async function AdminDashboard() {
+  const user = await requireAdmin();
+  // Dashboard é uma área liberável. Quem não tem acesso vai para a primeira
+  // área permitida (sem loop, pois firstAllowedPath nunca retorna /admin aqui).
+  if (!hasArea(user, "dashboard")) {
+    redirect(firstAllowedPath(user));
+  }
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -84,15 +81,6 @@ export default async function AdminDashboard({ searchParams }: { searchParams: S
 
   return (
     <div className="p-8">
-      {deniedLabel && (
-        <div className="mb-6 flex items-center gap-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
-          <Lock size={16} className="shrink-0" />
-          <span>
-            Você não tem acesso à área <strong>{deniedLabel}</strong>. Fale com um
-            administrador se precisar dessa permissão.
-          </span>
-        </div>
-      )}
       <header className="mb-8">
         <h1 className="font-display text-3xl font-bold text-cocoa">
           Dashboard

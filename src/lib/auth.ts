@@ -133,7 +133,7 @@ export async function requireAdmin() {
 export async function requireArea(area: AreaKey) {
   const user = await requireAdmin();
   if (!hasArea(user, area)) {
-    redirect(`/admin?sem_acesso=${area}`);
+    redirect(`/admin/sem-acesso?area=${area}`);
   }
   return user;
 }
@@ -142,7 +142,7 @@ export async function requireArea(area: AreaKey) {
 export async function requireSuperAdmin() {
   const user = await requireAdmin();
   if (!isSuperAdmin(user)) {
-    redirect(`/admin?sem_acesso=colaboradores`);
+    redirect(`/admin/sem-acesso?area=colaboradores`);
   }
   return user;
 }
