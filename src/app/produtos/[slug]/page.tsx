@@ -158,10 +158,6 @@ export default async function ProdutoPage({
               <div className="text-sm text-cocoa/70">
                 Em até <strong className="text-cocoa">6x de {centsToBRL(Math.round(product.priceCents / 6))}</strong> sem juros
               </div>
-              <div className="text-sm text-olive font-bold mt-1 flex items-center gap-1.5">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-olive" />
-                {centsToBRL(Math.round(product.priceCents * 0.95))} no PIX (5% off)
-              </div>
             </div>
 
             {/* Adicionar ao carrinho */}

@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { HeroBanner } from "@/components/storefront/HeroBanner";
-import { CategoryStrip } from "@/components/storefront/CategoryStrip";
 import { BenefitsBar } from "@/components/storefront/BenefitsBar";
 import { ProductShelf } from "@/components/storefront/ProductShelf";
 import { PromoQuad } from "@/components/storefront/PromoQuad";
@@ -11,7 +10,7 @@ import { ClubBanner } from "@/components/storefront/ClubBanner";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [featured, clubProducts, news, categories] = await Promise.all([
+  const [featured, clubProducts, news] = await Promise.all([
     // Destaques / mais vendidos
     prisma.product.findMany({
       where: { active: true, featured: true },
@@ -33,18 +32,11 @@ export default async function HomePage() {
       take: 10,
       orderBy: { createdAt: "desc" },
     }),
-    prisma.category.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true, slug: true },
-    }),
   ]);
 
   return (
     <>
       <Header />
-      {/* Atalho de categorias — navegação rápida estilo marketplace */}
-      <CategoryStrip categories={categories} />
       {/* Capa */}
       <HeroBanner />
 

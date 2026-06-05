@@ -90,11 +90,9 @@ export function Footer() {
           </div>
 
           <div className="flex items-center gap-2 text-[10px] text-cocoa/40 tracking-widest uppercase">
-            <span>PIX</span>
+            <span>Cartão de crédito</span>
             <span>·</span>
-            <span>Cartão</span>
-            <span>·</span>
-            <span>Boleto</span>
+            <span>até 6x</span>
           </div>
         </div>
       </div>

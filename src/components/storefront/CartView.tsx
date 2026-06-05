@@ -211,10 +211,7 @@ export function CartView({ cart }: { cart: CartSummary }) {
                 <div className="font-display text-2xl font-bold text-cocoa leading-none">
                   {centsToBRL(cart.totalCents)}
                 </div>
-                <div className="text-[11px] text-olive font-bold mt-1">
-                  ou {centsToBRL(Math.round(cart.totalCents * 0.95))} no PIX (5% off)
-                </div>
-                <div className="text-[11px] text-cocoa/60">
+                <div className="text-[11px] text-cocoa/60 mt-1">
                   6x de {centsToBRL(Math.round(cart.totalCents / 6))} sem juros
                 </div>
               </div>

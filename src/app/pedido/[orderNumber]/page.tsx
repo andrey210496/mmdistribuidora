@@ -239,7 +239,7 @@ export default async function OrderPage({
                   <CreditCard size={16} className="text-rose-brand" />
                   {order.paymentMethod
                     ? paymentMethodLabels[order.paymentMethod] ?? order.paymentMethod
-                    : "Cartão ou PIX"}
+                    : "Cartão de crédito"}
                 </div>
                 <div className="text-xs text-cocoa/60 mt-1 flex items-center gap-1.5">
                   <ShieldCheck size={12} className="text-olive" />

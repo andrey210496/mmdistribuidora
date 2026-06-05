@@ -43,7 +43,6 @@ export function ProductCard({
     : 0;
 
   const installmentValue = Math.round(priceCents / 6);
-  const pixPrice = Math.round(priceCents * 0.95);
 
   const badgeText =
     badge === "bestseller" ? "Mais vendido" :
@@ -148,10 +147,6 @@ export function ProductCard({
             </div>
             <div className="text-[11px] text-cocoa/65 mt-1.5">
               6x de <strong>{centsToBRL(installmentValue)}</strong> sem juros
-            </div>
-            <div className="text-[11px] text-olive font-bold flex items-center gap-1 mt-0.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-olive" />
-              {centsToBRL(pixPrice)} no PIX
             </div>
           </div>
         )}

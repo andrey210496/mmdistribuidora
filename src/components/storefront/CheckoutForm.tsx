@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { ShieldCheck, Lock, CreditCard, QrCode } from "lucide-react";
+import { ShieldCheck, Lock, CreditCard } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { submitCheckout, type CheckoutState } from "@/app/actions/checkout";
 import type { CartSummary } from "@/lib/cart";
@@ -178,13 +178,6 @@ export function CheckoutForm({ cart }: { cart: CartSummary }) {
                 <span className="text-sm font-semibold text-cocoa">Cartão de crédito</span>
                 <span className="text-[10px] uppercase tracking-wider bg-cocoa/5 text-cocoa/60 font-bold px-2 py-0.5 rounded-full">
                   até 6x
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-white border border-cocoa/10 rounded-lg px-3 py-2">
-                <QrCode size={16} className="text-olive" />
-                <span className="text-sm font-semibold text-cocoa">PIX</span>
-                <span className="text-[10px] uppercase tracking-wider bg-olive/15 text-olive font-bold px-2 py-0.5 rounded-full">
-                  na hora
                 </span>
               </div>
             </div>

@@ -110,7 +110,7 @@ export function Hero() {
                   <div>
                     <div className="text-xs text-cocoa/40 line-through">De R$ 69,90</div>
                     <div className="font-display text-3xl font-bold text-espresso">R$ 49,90</div>
-                    <div className="text-xs text-olive font-bold">ou R$ 47,40 no PIX</div>
+                    <div className="text-xs text-olive font-bold">6x sem juros</div>
                   </div>
                   <Link
                     href="/produtos/chocolate-ao-leite-premium-1kg"
