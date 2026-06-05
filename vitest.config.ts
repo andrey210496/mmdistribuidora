@@ -9,6 +9,14 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
     // Integração (precisa de DB) roda à parte via vitest.integration.config.ts
     exclude: ["node_modules/**", "tests/integration/**"],
+    // Env de teste — torna os unitários independentes de um .env local (CI).
+    // Os testes são de funções puras: o Prisma nem chega a conectar.
+    env: {
+      DATABASE_URL: "postgresql://test:test@localhost:5432/test",
+      SESSION_SECRET: "unit_test_session_secret_0123456789_abcdef",
+      APP_URL: "http://localhost:3000",
+      NODE_ENV: "test",
+    },
   },
   resolve: {
     alias: {
