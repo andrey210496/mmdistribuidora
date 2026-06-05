@@ -48,6 +48,73 @@ export type CartSummary = {
   potentialClubSavingsCents: number;
 };
 
+export type PricingProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  priceCents: number;
+  clubPriceCents: number | null;
+  stock: number;
+  images: { url: string }[];
+};
+
+export type PricedCart = {
+  lines: CartLine[];
+  subtotalCents: number;
+  totalItems: number;
+  clubSavingsCents: number;
+  potentialClubSavingsCents: number;
+};
+
+/**
+ * Precificação PURA do carrinho (sem sessão/DB) — fácil de testar.
+ * ANTI-BURLA: o preço de membro só é aplicado quando isClubMember === true.
+ * Clampa a quantidade ao estoque e ao máximo por item.
+ */
+export function priceCartLines(
+  items: CartItem[],
+  products: PricingProduct[],
+  isClubMember: boolean
+): PricedCart {
+  const lines: CartLine[] = [];
+  let clubSavingsCents = 0;
+  let potentialClubSavingsCents = 0;
+
+  for (const item of items) {
+    const product = products.find((p) => p.id === item.productId);
+    if (!product) continue;
+    const qty = Math.min(item.quantity, product.stock, MAX_QTY_PER_ITEM);
+    if (qty <= 0) continue;
+
+    const normalUnit = product.priceCents;
+    const hasClubPrice =
+      product.clubPriceCents != null && product.clubPriceCents < normalUnit;
+    const clubPriceApplied = isClubMember && hasClubPrice;
+    const unit = clubPriceApplied ? product.clubPriceCents! : normalUnit;
+
+    if (hasClubPrice) potentialClubSavingsCents += (normalUnit - product.clubPriceCents!) * qty;
+    if (clubPriceApplied) clubSavingsCents += (normalUnit - unit) * qty;
+
+    lines.push({
+      productId: product.id,
+      productName: product.name,
+      productSlug: product.slug,
+      imageUrl: product.images[0]?.url ?? null,
+      quantity: qty,
+      unitPriceCents: unit,
+      totalCents: unit * qty,
+      normalUnitPriceCents: normalUnit,
+      clubPriceApplied,
+      stock: product.stock,
+      available: true,
+    });
+  }
+
+  const subtotalCents = lines.reduce((s, l) => s + l.totalCents, 0);
+  const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
+  return { lines, subtotalCents, totalItems, clubSavingsCents, potentialClubSavingsCents };
+}
+
 /**
  * Lê o carrinho da sessão e enriquece com dados frescos do banco.
  * Filtra produtos inativos/inexistentes silenciosamente.
@@ -85,57 +152,22 @@ export async function getCart(): Promise<CartSummary> {
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
 
-  const lines: CartLine[] = [];
-  let clubSavingsCents = 0;
-  let potentialClubSavingsCents = 0;
-  for (const item of items) {
-    const product = products.find((p) => p.id === item.productId);
-    if (!product) continue;
-    const qty = Math.min(item.quantity, product.stock, MAX_QTY_PER_ITEM);
-    if (qty <= 0) continue;
-
-    const normalUnit = product.priceCents;
-    const hasClubPrice =
-      product.clubPriceCents != null && product.clubPriceCents < normalUnit;
-    const clubPriceApplied = isClubMember && hasClubPrice;
-    const unit = clubPriceApplied ? product.clubPriceCents! : normalUnit;
-
-    // Economia que o clube proporcionaria neste item (independe de ser membro)
-    if (hasClubPrice) potentialClubSavingsCents += (normalUnit - product.clubPriceCents!) * qty;
-    if (clubPriceApplied) clubSavingsCents += (normalUnit - unit) * qty;
-
-    lines.push({
-      productId: product.id,
-      productName: product.name,
-      productSlug: product.slug,
-      imageUrl: product.images[0]?.url ?? null,
-      quantity: qty,
-      unitPriceCents: unit,
-      totalCents: unit * qty,
-      normalUnitPriceCents: normalUnit,
-      clubPriceApplied,
-      stock: product.stock,
-      available: true,
-    });
-  }
-
-  const subtotalCents = lines.reduce((s, l) => s + l.totalCents, 0);
-  const shippingCents = computeShippingCents(subtotalCents);
-  const totalCents = subtotalCents + shippingCents;
-  const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
+  const priced = priceCartLines(items, products, isClubMember);
+  const shippingCents = computeShippingCents(priced.subtotalCents);
+  const totalCents = priced.subtotalCents + shippingCents;
 
   return {
-    lines,
-    subtotalCents,
+    lines: priced.lines,
+    subtotalCents: priced.subtotalCents,
     shippingCents,
     freeShippingThresholdCents: SHIPPING_FREE_THRESHOLD_CENTS,
-    discountCents: clubSavingsCents,
+    discountCents: priced.clubSavingsCents,
     totalCents,
-    totalItems,
+    totalItems: priced.totalItems,
     shippingZip: zip,
     isClubMember,
-    clubSavingsCents,
-    potentialClubSavingsCents,
+    clubSavingsCents: priced.clubSavingsCents,
+    potentialClubSavingsCents: priced.potentialClubSavingsCents,
   };
 }
 

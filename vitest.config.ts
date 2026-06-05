@@ -7,6 +7,8 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["tests/**/*.test.ts", "src/**/*.test.ts"],
+    // Integração (precisa de DB) roda à parte via vitest.integration.config.ts
+    exclude: ["node_modules/**", "tests/integration/**"],
   },
   resolve: {
     alias: {
