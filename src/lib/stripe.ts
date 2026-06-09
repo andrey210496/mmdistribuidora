@@ -145,6 +145,11 @@ export const stripe = {
     return client().checkout.sessions.retrieve(sessionId);
   },
 
+  /** Estorna (refund) integral um pagamento pelo PaymentIntent. */
+  async createRefund(paymentIntentId: string) {
+    return client().refunds.create({ payment_intent: paymentIntentId });
+  },
+
   /**
    * Valida e constrói o evento do webhook a partir do corpo bruto + assinatura.
    * Lança erro se a assinatura não bater (proteção contra falsificação).

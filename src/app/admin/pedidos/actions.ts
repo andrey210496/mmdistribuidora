@@ -8,11 +8,62 @@ import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { canCancel, nextStatusOf } from "@/lib/orders";
+import { stripe } from "@/lib/stripe";
+import { applyRefundToOrder } from "@/lib/refunds";
 import type { OrderStatus } from "@prisma/client";
 
 export type ActionResult = { ok: boolean; error?: string };
 
 const idSchema = z.string().min(1).max(100);
+
+// ============================================================
+// Estorna o pagamento de um pedido.
+// 1) Estorna no Stripe (se houver pagamento real)
+// 2) Reverte no sistema: status REFUNDED, estoque devolvido, receita revertida.
+// O webhook charge.refunded também aplica isso (idempotente), então estornos
+// feitos direto no painel do Stripe também atualizam o sistema.
+// ============================================================
+export async function refundOrder(orderId: string): Promise<ActionResult> {
+  const user = await requireArea("pedidos");
+  const id = idSchema.safeParse(orderId);
+  if (!id.success) return { ok: false, error: "Pedido inválido" };
+
+  const order = await prisma.order.findUnique({ where: { id: id.data } });
+  if (!order) return { ok: false, error: "Pedido não encontrado" };
+  if (order.paymentStatus !== "CONFIRMED") {
+    return { ok: false, error: "Só é possível estornar um pedido pago." };
+  }
+
+  // Estorna no Stripe (quando há pagamento real vinculado)
+  if (order.stripePaymentIntentId && stripe.isConfigured()) {
+    try {
+      await stripe.createRefund(order.stripePaymentIntentId);
+    } catch (err) {
+      console.error("[refund] erro ao estornar no Stripe:", err);
+      return { ok: false, error: "Falha ao estornar no Stripe. Tente novamente." };
+    }
+  }
+
+  // Aplica no sistema (idempotente)
+  await applyRefundToOrder(id.data);
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "order.refunded",
+    entityType: "Order",
+    entityId: id.data,
+    afterJson: { orderNumber: order.orderNumber, totalCents: order.totalCents },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath(`/admin/pedidos/${id.data}`);
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/admin");
+  return { ok: true };
+}
 
 // ============================================================
 // Avança status do pedido para o próximo na linha do tempo

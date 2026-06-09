@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, X, FileText, Check, AlertCircle } from "lucide-react";
+import { ArrowRight, X, FileText, Check, AlertCircle, RotateCcw } from "lucide-react";
 import {
   advanceOrderStatus,
   cancelOrder,
   issueNf,
+  refundOrder,
 } from "../actions";
 import { ORDER_STATUS_META, nextStatusOf, canCancel } from "@/lib/orders";
 import type { OrderStatus, PaymentStatus } from "@prisma/client";
@@ -28,6 +29,7 @@ export function OrderActions({
   const [error, setError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [refundOpen, setRefundOpen] = useState(false);
 
   const next = nextStatusOf(status);
   const canCancelNow = canCancel(status);
@@ -59,6 +61,15 @@ export function OrderActions({
     startTransition(async () => {
       const r = await issueNf({ orderId });
       if (!r.ok) setError(r.error ?? "Erro ao emitir NF");
+    });
+  };
+
+  const handleRefund = () => {
+    setError(null);
+    startTransition(async () => {
+      const r = await refundOrder(orderId);
+      if (!r.ok) setError(r.error ?? "Erro ao estornar");
+      else setRefundOpen(false);
     });
   };
 
@@ -119,6 +130,17 @@ export function OrderActions({
           </span>
         )}
 
+        {isPaid && (
+          <button
+            onClick={() => setRefundOpen(!refundOpen)}
+            disabled={pending}
+            className="inline-flex items-center gap-2 text-red-600 hover:text-red-800 font-bold text-xs uppercase tracking-wider"
+          >
+            <RotateCcw size={14} />
+            Estornar pagamento
+          </button>
+        )}
+
         {canCancelNow && (
           <button
             onClick={() => setCancelOpen(!cancelOpen)}
@@ -130,6 +152,31 @@ export function OrderActions({
           </button>
         )}
       </div>
+
+      {refundOpen && (
+        <div className="mt-4 pt-4 border-t border-cocoa/10">
+          <div className="text-sm text-cocoa mb-2">
+            <strong>Estornar este pagamento?</strong> O valor é devolvido ao cliente
+            pelo Stripe, o pedido fica como <strong>Estornado</strong>, o estoque
+            retorna e a receita é revertida no financeiro. Esta ação não pode ser desfeita.
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleRefund}
+              disabled={pending}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition disabled:opacity-50"
+            >
+              {pending ? "Estornando..." : "Confirmar estorno"}
+            </button>
+            <button
+              onClick={() => setRefundOpen(false)}
+              className="text-cocoa/60 hover:text-cocoa text-xs px-3"
+            >
+              Voltar
+            </button>
+          </div>
+        </div>
+      )}
 
       {cancelOpen && (
         <div className="mt-4 pt-4 border-t border-cocoa/10">

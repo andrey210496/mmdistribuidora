@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { logAudit } from "@/lib/audit";
 import { addOneYear } from "@/lib/club";
+import { applyRefundToOrder } from "@/lib/refunds";
 import type { OrderStatus, PaymentMethod } from "@prisma/client";
 
 // Webhook do Stripe — confirma pagamentos do Checkout.
@@ -207,6 +208,31 @@ export async function POST(req: NextRequest) {
             await prisma.order.update({
               where: { id: order.id },
               data: { paymentStatus: "FAILED" },
+            });
+          }
+        }
+        break;
+      }
+
+      case "charge.refunded": {
+        // Estorno feito no painel do Stripe (ou via nossa ação) — reflete no sistema
+        const charge = event.data.object as Stripe.Charge;
+        const pi =
+          typeof charge.payment_intent === "string"
+            ? charge.payment_intent
+            : charge.payment_intent?.id;
+        if (!pi) break;
+        const order = await prisma.order.findFirst({
+          where: { stripePaymentIntentId: pi },
+        });
+        if (order) {
+          const applied = await applyRefundToOrder(order.id);
+          if (applied) {
+            await logAudit({
+              action: "order.refunded",
+              entityType: "Order",
+              entityId: order.id,
+              afterJson: { via: "stripe.webhook" },
             });
           }
         }
