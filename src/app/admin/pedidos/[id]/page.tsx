@@ -11,6 +11,7 @@ import {
   Mail,
   Phone,
   Clock,
+  MessageCircle,
 } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -42,6 +43,19 @@ export default async function OrderDetailPage({
   const statusMeta = ORDER_STATUS_META[order.status];
   const payMeta = PAYMENT_STATUS_META[order.paymentStatus];
   const pickedCount = order.items.filter((i) => i.picked).length;
+
+  // Mensagem pronta de WhatsApp para avisar o cliente sobre o estorno.
+  const refundedValue = centsToBRL(order.refundedCents ?? order.totalCents);
+  const waPhone = order.customerPhoneSnapshot?.replace(/\D/g, "") || null;
+  const waRefundUrl =
+    order.status === "REFUNDED" && waPhone
+      ? `https://wa.me/55${waPhone}?text=${encodeURIComponent(
+          `Olá, ${order.customerNameSnapshot}! Aqui é da Doce Encanto. ` +
+            `Confirmamos o estorno do seu pedido ${order.orderNumber}. ` +
+            `Valor devolvido: ${refundedValue}. O reembolso aparece na sua fatura ou conta em até ` +
+            `5 a 10 dias úteis, conforme o seu banco. Qualquer dúvida, é só chamar. 💛`
+        )}`
+      : null;
 
   return (
     <div className="p-6 lg:p-8">
@@ -99,6 +113,34 @@ export default async function OrderDetailPage({
             nfIssuedAt={order.nfIssuedAt}
             nfNumber={order.nfNumber}
           />
+
+          {/* Avisar cliente sobre o estorno */}
+          {order.status === "REFUNDED" && (
+            <section className="bg-white rounded-2xl border border-cocoa/10 p-5">
+              <h2 className="font-display text-lg font-bold text-cocoa flex items-center gap-2 mb-1">
+                <MessageCircle size={18} className="text-olive" />
+                Avisar o cliente
+              </h2>
+              <p className="text-sm text-cocoa/70 mb-3">
+                Pedido estornado — valor devolvido <strong>{refundedValue}</strong>. Envie a
+                confirmação ao cliente.
+              </p>
+              {waRefundUrl ? (
+                <a
+                  href={waRefundUrl}
+                  target="_blank"
+                  className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-white px-4 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition"
+                >
+                  <MessageCircle size={14} />
+                  Avisar no WhatsApp
+                </a>
+              ) : (
+                <p className="text-xs text-cocoa/50">
+                  Cliente sem telefone cadastrado para WhatsApp.
+                </p>
+              )}
+            </section>
+          )}
 
           {/* Itens */}
           <section className="bg-white rounded-2xl border border-cocoa/10 overflow-hidden">

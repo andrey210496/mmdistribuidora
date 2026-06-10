@@ -226,7 +226,9 @@ export async function POST(req: NextRequest) {
           where: { stripePaymentIntentId: pi },
         });
         if (order) {
-          const applied = await applyRefundToOrder(order.id);
+          // amount_refunded é o total já devolvido (cobre estorno parcial
+          // feito direto no painel do Stripe).
+          const applied = await applyRefundToOrder(order.id, charge.amount_refunded);
           if (applied) {
             await logAudit({
               action: "order.refunded",

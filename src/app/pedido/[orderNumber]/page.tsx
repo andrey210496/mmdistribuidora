@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ExternalLink,
   AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
@@ -148,6 +149,31 @@ export default async function OrderPage({
                 </h2>
                 <p className="text-cocoa/80 text-sm mt-1">
                   Já estamos preparando o seu pedido. Você receberá um e-mail quando ele for despachado.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Pedido estornado */}
+          {order.paymentStatus === "REFUNDED" && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-8 flex items-start gap-3">
+              <RotateCcw size={22} className="text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-display text-lg font-bold text-red-700">
+                  Pedido estornado
+                </h2>
+                <p className="text-cocoa/80 text-sm mt-1">
+                  O pagamento deste pedido foi estornado. Valor devolvido:{" "}
+                  <strong>{centsToBRL(order.refundedCents ?? order.totalCents)}</strong>. O reembolso
+                  aparece na sua fatura ou conta em até <strong>5 a 10 dias úteis</strong>, conforme o
+                  seu banco ou operadora do cartão.
+                </p>
+                <p className="text-cocoa/60 text-xs mt-2">
+                  Dúvidas? Consulte a{" "}
+                  <Link href="/trocas-e-reembolsos" className="text-rose-brand font-semibold hover:underline">
+                    Política de Trocas e Reembolsos
+                  </Link>
+                  .
                 </p>
               </div>
             </div>

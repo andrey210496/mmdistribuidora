@@ -209,6 +209,8 @@ model Order {
   stripePaymentIntentId String?
   paymentUrl            String?        @db.Text
   paidAt                DateTime?
+  // Valor efetivamente devolvido no estorno (total ou parcial). Em centavos.
+  refundedCents         Int?
 
   // Token único para QR de separação (não usar id sequencial)
   pickToken String @unique @default(cuid())

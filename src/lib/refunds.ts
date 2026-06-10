@@ -26,7 +26,11 @@ export async function applyRefundToOrder(
   // Trava atômica: apenas UMA execução consegue virar CONFIRMED -> REFUNDED
   const flipped = await prisma.order.updateMany({
     where: { id: orderId, paymentStatus: "CONFIRMED" },
-    data: { paymentStatus: "REFUNDED", status: "REFUNDED" },
+    data: {
+      paymentStatus: "REFUNDED",
+      status: "REFUNDED",
+      refundedCents: refundedCents ?? order.totalCents,
+    },
   });
   if (flipped.count === 0) return false; // já estornado por outra via
 

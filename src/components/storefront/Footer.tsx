@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Instagram, Facebook, Mail } from "lucide-react";
+import { COMPANY } from "@/lib/company";
 
 export function Footer() {
   return (
@@ -59,6 +60,7 @@ export function Footer() {
               <ul className="space-y-3 text-[14px]">
                 <li><Link href="/contato" className="text-cocoa/70 hover:text-espresso transition">Fale conosco</Link></li>
                 <li><Link href="/conta" className="text-cocoa/70 hover:text-espresso transition">Minha conta</Link></li>
+                <li><Link href="/trocas-e-reembolsos" className="text-cocoa/70 hover:text-espresso transition">Trocas e reembolsos</Link></li>
                 <li><Link href="/politica-de-privacidade" className="text-cocoa/70 hover:text-espresso transition">Privacidade</Link></li>
                 <li><Link href="/termos" className="text-cocoa/70 hover:text-espresso transition">Termos</Link></li>
               </ul>
@@ -69,7 +71,7 @@ export function Footer() {
         {/* Linha divisória */}
         <div className="border-t border-cocoa/15 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-[11px] text-cocoa/50 tracking-wide">
-            © {new Date().getFullYear()} Doce Encanto · CNPJ 00.000.000/0001-00
+            © {new Date().getFullYear()} {COMPANY.name} · CNPJ {COMPANY.cnpj}
           </div>
 
           <div className="flex items-center gap-3">
