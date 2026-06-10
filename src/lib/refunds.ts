@@ -35,7 +35,7 @@ export async function applyRefundToOrder(orderId: string): Promise<boolean> {
     // Reverte a receita da venda no financeiro (deixa de contar como recebida)
     prisma.financialEntry.updateMany({
       where: { orderId: order.id, type: "RECEIVABLE" },
-      data: { status: "CANCELED" },
+      data: { status: "REFUNDED" },
     }),
     // Registra no histórico
     prisma.orderStatusHistory.create({

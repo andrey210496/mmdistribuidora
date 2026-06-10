@@ -247,7 +247,7 @@ export async function getOpenPayables(limit = 12): Promise<EntryRow[]> {
 /** Lançamentos recentes, com filtros opcionais. */
 export async function listEntries(opts: {
   type?: "RECEIVABLE" | "PAYABLE";
-  status?: "OPEN" | "PAID" | "OVERDUE" | "CANCELED";
+  status?: "OPEN" | "PAID" | "OVERDUE" | "CANCELED" | "REFUNDED";
   limit?: number;
 }): Promise<EntryRow[]> {
   const now = new Date();
@@ -259,7 +259,14 @@ export async function listEntries(opts: {
     orderBy: { createdAt: "desc" },
     take: opts.limit ?? 40,
   });
-  return rows.map((r) => ({ ...r, isOverdue: r.status !== "PAID" && r.status !== "CANCELED" && r.dueDate < now }));
+  return rows.map((r) => ({
+    ...r,
+    isOverdue:
+      r.status !== "PAID" &&
+      r.status !== "CANCELED" &&
+      r.status !== "REFUNDED" &&
+      r.dueDate < now,
+  }));
 }
 
 const CATEGORY_LABELS: Record<string, string> = {

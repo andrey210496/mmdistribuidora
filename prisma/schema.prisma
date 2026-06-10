@@ -103,28 +103,28 @@ model Category {
 }
 
 model Product {
-  id                  String   @id @default(cuid())
+  id                  String    @id @default(cuid())
   name                String
-  slug                String   @unique
-  description         String   @db.Text
-  sku                 String   @unique
+  slug                String    @unique
+  description         String    @db.Text
+  sku                 String    @unique
   priceCents          Int
   compareAtPriceCents Int?
   // Preço exclusivo para membros do Clube. Se preenchido, o produto entra
   // na vitrine do Clube exibindo "preço normal" + "preço de membro".
   clubPriceCents      Int?
   // Custo do produto (uso interno) — base para margem/lucro no financeiro.
-  costCents           Int?     @default(0)
-  stock               Int      @default(0)
-  weightGrams         Int      @default(0)
-  active              Boolean  @default(true)
-  featured            Boolean  @default(false)
+  costCents           Int?      @default(0)
+  stock               Int       @default(0)
+  weightGrams         Int       @default(0)
+  active              Boolean   @default(true)
+  featured            Boolean   @default(false)
   // Validade do produto (uso interno). Alimenta a seção "Destaque do Clube",
   // que destaca produtos com validade próxima — sem revelar isso ao cliente.
   expiryDate          DateTime?
   categoryId          String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   category   Category?      @relation(fields: [categoryId], references: [id])
   images     ProductImage[]
@@ -247,8 +247,8 @@ model OrderItem {
   quantity            Int
   totalCents          Int
   // Snapshot do CUSTO na venda (unitário e total) — base do lucro/CMV
-  unitCostCents       Int     @default(0)
-  costTotalCents      Int     @default(0)
+  unitCostCents       Int    @default(0)
+  costTotalCents      Int    @default(0)
 
   // Controle de separação
   picked   Boolean   @default(false)
@@ -336,15 +336,15 @@ model ClubBenefit {
 // ============================================================
 enum AnnouncementPlacement {
   STOREFRONT // qualquer página da loja (pop-up)
-  HOME       // só a página inicial
-  CATALOG    // catálogo / página de produto
-  CHECKOUT   // ao tentar finalizar a compra (interstitial)
+  HOME // só a página inicial
+  CATALOG // catálogo / página de produto
+  CHECKOUT // ao tentar finalizar a compra (interstitial)
 }
 
 enum AnnouncementAudience {
-  ALL         // todos os visitantes
+  ALL // todos os visitantes
   NON_MEMBERS // só quem NÃO é membro do clube
-  MEMBERS     // só membros do clube
+  MEMBERS // só membros do clube
 }
 
 model Announcement {
@@ -378,10 +378,10 @@ model Announcement {
 // ============================================================
 enum HomeSectionType {
   CLUB_NEAR_EXPIRY // Destaque do Clube: produtos com validade próxima
-  BEST_SELLERS     // Mais vendidos: inteligência baseada em vendas pagas
-  NEW_ARRIVALS     // Acabou de chegar: novidades por data de cadastro
-  BEST_OFFERS      // Ofertas: maior desconto sobre o preço cheio
-  FEATURED         // Em destaque: marcados manualmente (featured)
+  BEST_SELLERS // Mais vendidos: inteligência baseada em vendas pagas
+  NEW_ARRIVALS // Acabou de chegar: novidades por data de cadastro
+  BEST_OFFERS // Ofertas: maior desconto sobre o preço cheio
+  FEATURED // Em destaque: marcados manualmente (featured)
 }
 
 model HomeSection {
@@ -414,6 +414,7 @@ enum FinancialEntryStatus {
   PAID
   OVERDUE
   CANCELED
+  REFUNDED
 }
 
 model FinancialEntry {

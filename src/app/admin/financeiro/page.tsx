@@ -27,6 +27,7 @@ const PERIODS = [
 
 const statusInfo = (status: string, isOverdue: boolean) => {
   if (status === "PAID") return { label: "Liquidado", cls: "bg-olive/15 text-olive" };
+  if (status === "REFUNDED") return { label: "Estornado", cls: "bg-amber-100 text-amber-700" };
   if (status === "CANCELED") return { label: "Cancelado", cls: "bg-cocoa/10 text-cocoa/50" };
   if (isOverdue) return { label: "Vencido", cls: "bg-red-100 text-red-700" };
   return { label: "Em aberto", cls: "bg-caramel/20 text-caramel" };
