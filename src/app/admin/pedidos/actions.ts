@@ -17,27 +17,81 @@ export type ActionResult = { ok: boolean; error?: string };
 const idSchema = z.string().min(1).max(100);
 
 // ============================================================
-// Estorna o pagamento de um pedido.
-// 1) Estorna no Stripe (se houver pagamento real)
+// Sugestão de estorno: total pago, taxa retida pelo Stripe na venda e o
+// "líquido" (total − taxa). Estornar o líquido evita o prejuízo, já que o
+// Stripe não devolve a taxa da venda original. Só leitura — usado pela tela.
+// ============================================================
+export type RefundSuggestion = {
+  paidCents: number;
+  feeCents: number;
+  suggestedNetCents: number;
+  hasStripe: boolean;
+};
+
+export async function getRefundSuggestion(orderId: string): Promise<RefundSuggestion | null> {
+  await requireArea("pedidos");
+  const id = idSchema.safeParse(orderId);
+  if (!id.success) return null;
+
+  const order = await prisma.order.findUnique({ where: { id: id.data } });
+  if (!order) return null;
+
+  const paidCents = order.totalCents;
+  let feeCents = 0;
+  const hasStripe = Boolean(order.stripePaymentIntentId) && stripe.isConfigured();
+
+  if (hasStripe && order.stripePaymentIntentId) {
+    try {
+      const fee = await stripe.getPaymentFee(order.stripePaymentIntentId);
+      if (fee) feeCents = Math.max(0, Math.min(fee.feeCents, paidCents));
+    } catch (err) {
+      console.error("[refund] erro ao buscar taxa do Stripe:", err);
+    }
+  }
+
+  return { paidCents, feeCents, suggestedNetCents: Math.max(0, paidCents - feeCents), hasStripe };
+}
+
+// ============================================================
+// Estorna o pagamento de um pedido (total ou parcial).
+// 1) Estorna no Stripe (se houver pagamento real) — `amountCents` opcional
+//    permite devolver menos que o total (ex.: total menos a taxa).
 // 2) Reverte no sistema: status REFUNDED, estoque devolvido, receita revertida.
 // O webhook charge.refunded também aplica isso (idempotente), então estornos
 // feitos direto no painel do Stripe também atualizam o sistema.
+// Anti-burla: o valor é validado e limitado ao total do pedido no backend —
+// nunca confiamos no que vem da tela.
 // ============================================================
-export async function refundOrder(orderId: string): Promise<ActionResult> {
-  const user = await requireArea("pedidos");
-  const id = idSchema.safeParse(orderId);
-  if (!id.success) return { ok: false, error: "Pedido inválido" };
+const refundSchema = z.object({
+  orderId: z.string().min(1).max(100),
+  amountCents: z.number().int().positive().optional(),
+});
 
-  const order = await prisma.order.findUnique({ where: { id: id.data } });
+export async function refundOrder(orderId: string, amountCents?: number): Promise<ActionResult> {
+  const user = await requireArea("pedidos");
+  const parsed = refundSchema.safeParse({ orderId, amountCents });
+  if (!parsed.success) return { ok: false, error: "Dados inválidos" };
+
+  const order = await prisma.order.findUnique({ where: { id: parsed.data.orderId } });
   if (!order) return { ok: false, error: "Pedido não encontrado" };
   if (order.paymentStatus !== "CONFIRMED") {
     return { ok: false, error: "Só é possível estornar um pedido pago." };
   }
 
+  // O valor do estorno nunca pode passar do total do pedido.
+  let amount = parsed.data.amountCents;
+  if (amount != null) {
+    if (amount > order.totalCents) {
+      return { ok: false, error: "O valor do estorno não pode ser maior que o total do pedido." };
+    }
+    // Igual ao total = estorno integral (não envia `amount` ao Stripe).
+    if (amount >= order.totalCents) amount = undefined;
+  }
+
   // Estorna no Stripe (quando há pagamento real vinculado)
   if (order.stripePaymentIntentId && stripe.isConfigured()) {
     try {
-      await stripe.createRefund(order.stripePaymentIntentId);
+      await stripe.createRefund(order.stripePaymentIntentId, amount);
     } catch (err) {
       console.error("[refund] erro ao estornar no Stripe:", err);
       return { ok: false, error: "Falha ao estornar no Stripe. Tente novamente." };
@@ -45,20 +99,25 @@ export async function refundOrder(orderId: string): Promise<ActionResult> {
   }
 
   // Aplica no sistema (idempotente)
-  await applyRefundToOrder(id.data);
+  await applyRefundToOrder(parsed.data.orderId, amount ?? order.totalCents);
 
   const h = await headers();
   await logAudit({
     userId: user.id,
     action: "order.refunded",
     entityType: "Order",
-    entityId: id.data,
-    afterJson: { orderNumber: order.orderNumber, totalCents: order.totalCents },
+    entityId: parsed.data.orderId,
+    afterJson: {
+      orderNumber: order.orderNumber,
+      totalCents: order.totalCents,
+      refundedCents: amount ?? order.totalCents,
+      partial: amount != null,
+    },
     ip: clientIp(h),
     userAgent: h.get("user-agent") ?? undefined,
   });
 
-  revalidatePath(`/admin/pedidos/${id.data}`);
+  revalidatePath(`/admin/pedidos/${parsed.data.orderId}`);
   revalidatePath("/admin/pedidos");
   revalidatePath("/admin/financeiro");
   revalidatePath("/admin");

@@ -145,9 +145,34 @@ export const stripe = {
     return client().checkout.sessions.retrieve(sessionId);
   },
 
-  /** Estorna (refund) integral um pagamento pelo PaymentIntent. */
-  async createRefund(paymentIntentId: string) {
-    return client().refunds.create({ payment_intent: paymentIntentId });
+  /**
+   * Estorna (refund) um pagamento pelo PaymentIntent.
+   * Sem `amountCents`, devolve o valor integral; com `amountCents`, faz
+   * estorno parcial (ex.: total menos a taxa, para não sair no prejuízo).
+   */
+  async createRefund(paymentIntentId: string, amountCents?: number) {
+    return client().refunds.create({
+      payment_intent: paymentIntentId,
+      ...(amountCents && amountCents > 0 ? { amount: amountCents } : {}),
+    });
+  },
+
+  /**
+   * Busca a taxa que o Stripe reteve na venda original (via balance
+   * transaction da cobrança). Serve para sugerir o estorno do líquido
+   * (total − taxa), já que essa taxa NÃO é devolvida no estorno.
+   * Retorna null quando o dado ainda não está disponível.
+   */
+  async getPaymentFee(
+    paymentIntentId: string
+  ): Promise<{ feeCents: number; amountCents: number } | null> {
+    const pi = await client().paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge.balance_transaction"],
+    });
+    const charge = pi.latest_charge as Stripe.Charge | null;
+    const bt = charge?.balance_transaction;
+    if (!bt || typeof bt === "string") return null;
+    return { feeCents: bt.fee, amountCents: bt.amount };
   },
 
   /**

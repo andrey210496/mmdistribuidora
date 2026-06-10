@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { centsToBRL } from "./money";
 
 // ============================================================
 // Aplica o ESTORNO de um pedido no sistema (fonte única da verdade).
@@ -7,9 +8,14 @@ import { prisma } from "./prisma";
 //  - só o primeiro a virar CONFIRMED -> REFUNDED prossegue (updateMany atômico);
 //  - devolve o estoque dos itens;
 //  - reverte a receita (lançamento da venda vira REFUNDED).
+// O `refundedCents` (opcional) é só para registrar no histórico quanto foi
+// devolvido — útil no estorno parcial (ex.: total menos a taxa do Stripe).
 // ============================================================
 
-export async function applyRefundToOrder(orderId: string): Promise<boolean> {
+export async function applyRefundToOrder(
+  orderId: string,
+  refundedCents?: number
+): Promise<boolean> {
   // Lê antes para saber o status anterior (para o histórico) e os itens
   const order = await prisma.order.findUnique({
     where: { id: orderId },
@@ -43,7 +49,10 @@ export async function applyRefundToOrder(orderId: string): Promise<boolean> {
         orderId: order.id,
         fromStatus: order.status,
         toStatus: "REFUNDED",
-        notes: "Pagamento estornado",
+        notes:
+          refundedCents != null && refundedCents < order.totalCents
+            ? `Pagamento estornado — ${centsToBRL(refundedCents)} de ${centsToBRL(order.totalCents)} (estorno parcial)`
+            : "Pagamento estornado (valor integral)",
       },
     }),
   ]);

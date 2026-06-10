@@ -7,9 +7,15 @@ import {
   cancelOrder,
   issueNf,
   refundOrder,
+  getRefundSuggestion,
+  type RefundSuggestion,
 } from "../actions";
 import { ORDER_STATUS_META, nextStatusOf, canCancel } from "@/lib/orders";
+import { centsToBRL, brlToCents } from "@/lib/money";
 import type { OrderStatus, PaymentStatus } from "@prisma/client";
+
+// Formata centavos para o input editável (ex.: 2447 -> "24,47").
+const centsToInput = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
 
 type Props = {
   orderId: string;
@@ -30,6 +36,9 @@ export function OrderActions({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [refundOpen, setRefundOpen] = useState(false);
+  const [suggestion, setSuggestion] = useState<RefundSuggestion | null>(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
+  const [refundAmount, setRefundAmount] = useState("");
 
   const next = nextStatusOf(status);
   const canCancelNow = canCancel(status);
@@ -64,10 +73,42 @@ export function OrderActions({
     });
   };
 
+  const openRefund = () => {
+    if (refundOpen) {
+      setRefundOpen(false);
+      return;
+    }
+    setError(null);
+    setRefundOpen(true);
+    setLoadingSuggestion(true);
+    startTransition(async () => {
+      const s = await getRefundSuggestion(orderId);
+      setSuggestion(s);
+      // Pré-preenche com o líquido sugerido (total − taxa), sem prejuízo.
+      if (s) setRefundAmount(centsToInput(s.suggestedNetCents));
+      setLoadingSuggestion(false);
+    });
+  };
+
   const handleRefund = () => {
     setError(null);
+    let amountCents: number;
+    try {
+      amountCents = brlToCents(refundAmount);
+    } catch {
+      setError("Valor de estorno inválido");
+      return;
+    }
+    if (amountCents <= 0) {
+      setError("Informe um valor maior que zero.");
+      return;
+    }
+    if (suggestion && amountCents > suggestion.paidCents) {
+      setError("O valor não pode ser maior que o total pago.");
+      return;
+    }
     startTransition(async () => {
-      const r = await refundOrder(orderId);
+      const r = await refundOrder(orderId, amountCents);
       if (!r.ok) setError(r.error ?? "Erro ao estornar");
       else setRefundOpen(false);
     });
@@ -132,7 +173,7 @@ export function OrderActions({
 
         {isPaid && (
           <button
-            onClick={() => setRefundOpen(!refundOpen)}
+            onClick={openRefund}
             disabled={pending}
             className="inline-flex items-center gap-2 text-red-600 hover:text-red-800 font-bold text-xs uppercase tracking-wider"
           >
@@ -155,26 +196,87 @@ export function OrderActions({
 
       {refundOpen && (
         <div className="mt-4 pt-4 border-t border-cocoa/10">
-          <div className="text-sm text-cocoa mb-2">
-            <strong>Estornar este pagamento?</strong> O valor é devolvido ao cliente
-            pelo Stripe, o pedido fica como <strong>Estornado</strong>, o estoque
-            retorna e a receita é revertida no financeiro. Esta ação não pode ser desfeita.
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleRefund}
-              disabled={pending}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition disabled:opacity-50"
-            >
-              {pending ? "Estornando..." : "Confirmar estorno"}
-            </button>
-            <button
-              onClick={() => setRefundOpen(false)}
-              className="text-cocoa/60 hover:text-cocoa text-xs px-3"
-            >
-              Voltar
-            </button>
-          </div>
+          {loadingSuggestion ? (
+            <div className="text-sm text-cocoa/60">Calculando valores…</div>
+          ) : (
+            <>
+              <div className="text-sm text-cocoa mb-3">
+                <strong>Estornar este pagamento.</strong> O valor é devolvido ao
+                cliente pelo Stripe, o pedido fica como <strong>Estornado</strong>,
+                o estoque retorna e a receita é revertida no financeiro. Esta ação
+                não pode ser desfeita.
+              </div>
+
+              {suggestion && (
+                <div className="rounded-xl bg-cream/60 border border-cocoa/10 p-3 mb-3 text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-cocoa/70">Total pago</span>
+                    <span className="font-semibold text-cocoa">{centsToBRL(suggestion.paidCents)}</span>
+                  </div>
+                  {suggestion.hasStripe && (
+                    <div className="flex justify-between">
+                      <span className="text-cocoa/70">Taxa do Stripe (não devolvida)</span>
+                      <span className="font-semibold text-caramel">− {centsToBRL(suggestion.feeCents)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-cocoa/15 pt-1.5 mt-1.5">
+                    <span className="font-bold text-cocoa">Líquido (sem prejuízo)</span>
+                    <span className="font-display font-bold text-olive">{centsToBRL(suggestion.suggestedNetCents)}</span>
+                  </div>
+                </div>
+              )}
+
+              {suggestion && (
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => setRefundAmount(centsToInput(suggestion.suggestedNetCents))}
+                    className="px-3 py-1.5 rounded-full border border-olive/40 text-olive text-xs font-bold hover:bg-olive/10 transition"
+                  >
+                    Líquido — {centsToBRL(suggestion.suggestedNetCents)}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRefundAmount(centsToInput(suggestion.paidCents))}
+                    className="px-3 py-1.5 rounded-full border border-cocoa/20 text-cocoa/70 text-xs font-bold hover:bg-cocoa/5 transition"
+                  >
+                    Total — {centsToBRL(suggestion.paidCents)}
+                  </button>
+                </div>
+              )}
+
+              <label className="text-xs font-bold uppercase tracking-wider text-cocoa/70 block mb-1.5">
+                Valor a estornar
+              </label>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-cocoa/60 text-sm">R$</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  className="w-40 px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                  placeholder="0,00"
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleRefund}
+                  disabled={pending}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition disabled:opacity-50"
+                >
+                  {pending ? "Estornando…" : "Confirmar estorno"}
+                </button>
+                <button
+                  onClick={() => setRefundOpen(false)}
+                  className="text-cocoa/60 hover:text-cocoa text-xs px-3"
+                >
+                  Voltar
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
