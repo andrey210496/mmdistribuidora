@@ -10,6 +10,7 @@ import {
   Crown,
   ArrowRight,
 } from "lucide-react";
+import { COMPANY } from "@/lib/company";
 import { CartButton } from "@/components/cart/CartButton";
 import { CategoryNav, type NavItem } from "@/components/storefront/CategoryNav";
 import { MobileMenu } from "@/components/storefront/MobileMenu";
@@ -50,7 +51,7 @@ export async function Header() {
           <div className="flex items-center gap-5">
             <span className="hidden sm:flex items-center gap-2">
               <Phone size={13} className="text-gold" />
-              <strong className="font-bold">(12) 99734-7896</strong>
+              <strong className="font-bold">{COMPANY.phoneDisplay}</strong>
             </span>
             <div className="flex items-center gap-2">
               {[
@@ -67,7 +68,7 @@ export async function Header() {
                 </Link>
               ))}
               <Link
-                href="https://wa.me/5512997347896"
+                href={`https://wa.me/${COMPANY.whatsapp}`}
                 aria-label="WhatsApp"
                 className="w-7 h-7 rounded-full bg-[#25D366] flex items-center justify-center hover:bg-[#1da851] transition"
               >

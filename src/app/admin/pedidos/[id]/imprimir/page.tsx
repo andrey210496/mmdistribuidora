@@ -4,6 +4,7 @@ import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { env } from "@/lib/env";
+import { COMPANY } from "@/lib/company";
 import { PrintTrigger } from "./PrintTrigger";
 
 export const metadata = { robots: { index: false } };
@@ -81,7 +82,7 @@ export default async function PrintOrderPage({
                 Distribuidora · Doces & Embalagens
               </div>
               <div className="text-[8pt] text-cocoa/65 mt-2">
-                CNPJ 00.000.000/0001-00 · (12) 99734-7896 · contato@doceencanto.com.br
+                CNPJ {COMPANY.cnpj} · {COMPANY.phoneDisplay} · {COMPANY.email}
               </div>
               </div>
             </div>

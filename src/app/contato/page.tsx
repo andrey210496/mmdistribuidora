@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Phone, MapPin, Clock, MessageCircle, Instagram, ArrowRight } from "lucide-react";
+import { COMPANY } from "@/lib/company";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 
@@ -26,7 +27,7 @@ export default function ContatoPage() {
           {/* Canais */}
           <div className="space-y-4">
             <a
-              href="https://wa.me/5512997347896"
+              href={`https://wa.me/${COMPANY.whatsapp}`}
               className="flex items-center gap-4 bg-[#25D366] text-white rounded-2xl p-5 hover:brightness-105 transition"
             >
               <MessageCircle size={28} />
@@ -41,7 +42,7 @@ export default function ContatoPage() {
               <Phone size={24} className="text-rose-brand" />
               <div>
                 <div className="font-bold text-cocoa">Telefone</div>
-                <div className="text-cocoa/70 text-sm">(12) 99734-7896</div>
+                <div className="text-cocoa/70 text-sm">{COMPANY.phoneDisplay}</div>
               </div>
             </div>
 

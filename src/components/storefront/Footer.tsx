@@ -78,7 +78,7 @@ export function Footer() {
             {[
               { Icon: Instagram, label: "Instagram", href: "#" },
               { Icon: Facebook, label: "Facebook", href: "#" },
-              { Icon: Mail, label: "E-mail", href: "mailto:contato@doceencanto.com.br" },
+              { Icon: Mail, label: "E-mail", href: `mailto:${COMPANY.email}` },
             ].map(({ Icon, label, href }) => (
               <Link
                 key={label}

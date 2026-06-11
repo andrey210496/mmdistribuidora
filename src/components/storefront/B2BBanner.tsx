@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { COMPANY } from "@/lib/company";
 
 export function B2BBanner() {
   return (
@@ -52,7 +53,7 @@ export function B2BBanner() {
                 />
               </Link>
               <Link
-                href="https://wa.me/5511000000000"
+                href={`https://wa.me/${COMPANY.whatsapp}`}
                 className="text-espresso text-[12px] font-medium uppercase tracking-[0.2em] border-b border-espresso/40 pb-1 hover:border-espresso transition"
               >
                 Falar no WhatsApp

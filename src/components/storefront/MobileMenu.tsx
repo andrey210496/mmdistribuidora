@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X, Search, User, Crown, Phone, ChevronRight } from "lucide-react";
 import type { NavItem } from "./CategoryNav";
+import { COMPANY } from "@/lib/company";
 
 export function MobileMenu({
   items,
@@ -146,7 +147,7 @@ export function MobileMenu({
 
         {/* Rodapé */}
         <a
-          href="https://wa.me/5512997347896"
+          href={`https://wa.me/${COMPANY.whatsapp}`}
           className="flex items-center justify-center gap-2 bg-[#25D366] text-white font-bold py-3.5 text-sm"
         >
           <Phone size={16} /> Falar no WhatsApp

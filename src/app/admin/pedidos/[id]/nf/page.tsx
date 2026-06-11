@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
+import { COMPANY } from "@/lib/company";
 import { PrintTrigger } from "../imprimir/PrintTrigger";
 
 export const metadata = { robots: { index: false } };
@@ -85,13 +86,13 @@ export default async function NfPage({
                 Distribuidora · Doces & Embalagens
               </div>
               <div className="text-[8pt] text-cocoa/65 mt-3 leading-relaxed">
-                CNPJ 00.000.000/0001-00
+                CNPJ {COMPANY.cnpj}
                 <br />
                 IE: ISENTO
                 <br />
                 Av. Exemplo, 100 · São José dos Campos/SP
                 <br />
-                contato@doceencanto.com.br · (12) 99734-7896
+                {COMPANY.email} · {COMPANY.phoneDisplay}
               </div>
               </div>
             </div>
@@ -244,7 +245,7 @@ export default async function NfPage({
             <br />
             Este comprovante substitui o cupom fiscal apenas para fins de conferência interna.
             <br />
-            Em caso de dúvidas: contato@doceencanto.com.br
+            Em caso de dúvidas: {COMPANY.email}
           </footer>
         </div>
       </main>
