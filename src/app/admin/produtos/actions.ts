@@ -10,6 +10,7 @@ import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { brlToCents } from "@/lib/money";
 import { slugify } from "@/lib/utils";
+import { deleteUpload } from "@/lib/upload";
 
 export type ProductActionState = {
   ok?: boolean;
@@ -234,6 +235,55 @@ export async function toggleProductActive(productId: string): Promise<{ ok: bool
     entityId: product.id,
     beforeJson: { active: product.active },
     afterJson: { active: !product.active },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath("/admin/produtos");
+  revalidatePath("/produtos");
+  return { ok: true };
+}
+
+// ============================================================
+// Exclui um produto DE VEZ — só permitido se ele NUNCA foi vendido.
+// Produtos com vendas têm o histórico/financeiro vinculado: nesse caso
+// a exclusão é bloqueada e o admin deve DESATIVAR (preserva relatórios).
+// Remove também as imagens (linhas em cascata + arquivos no disco).
+// ============================================================
+export async function deleteProduct(productId: string): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireArea("produtos");
+  const id = z.string().min(1).safeParse(productId);
+  if (!id.success) return { ok: false, error: "Produto inválido" };
+
+  const product = await prisma.product.findUnique({
+    where: { id: id.data },
+    include: { images: true },
+  });
+  if (!product) return { ok: false, error: "Produto não encontrado" };
+
+  // Proteção: não apaga produto que já tem vendas (quebraria pedidos/relatórios)
+  const soldCount = await prisma.orderItem.count({ where: { productId: id.data } });
+  if (soldCount > 0) {
+    return {
+      ok: false,
+      error: "Este produto já tem vendas registradas e não pode ser excluído. Desative-o no lugar (ele sai da loja, mas o histórico fica preservado).",
+    };
+  }
+
+  // Remove os arquivos físicos das imagens (as linhas somem em cascata)
+  for (const img of product.images) {
+    await deleteUpload(img.url);
+  }
+
+  await prisma.product.delete({ where: { id: id.data } });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "product.deleted",
+    entityType: "Product",
+    entityId: product.id,
+    beforeJson: { name: product.name, sku: product.sku },
     ip: clientIp(h),
     userAgent: h.get("user-agent") ?? undefined,
   });

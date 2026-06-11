@@ -1,5 +1,5 @@
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import { join, basename } from "path";
 import { randomUUID } from "crypto";
 
 // ============================================================
@@ -76,5 +76,21 @@ export async function saveImage(file: File): Promise<UploadResult> {
   } catch (err) {
     console.error("[upload] erro ao salvar:", err);
     return { ok: false, error: "Falha ao salvar o arquivo." };
+  }
+}
+
+/**
+ * Remove o arquivo físico de um upload a partir da URL pública (/uploads/x).
+ * Best-effort: ignora se o arquivo já não existir. Protegido contra
+ * path traversal (só aceita nomes de arquivo válidos).
+ */
+export async function deleteUpload(url: string): Promise<void> {
+  if (!url.startsWith("/uploads/")) return;
+  const name = basename(url);
+  if (name.includes("..") || !/^[a-zA-Z0-9._-]+\.(jpg|jpeg|png|webp)$/i.test(name)) return;
+  try {
+    await unlink(join(uploadDir(), name));
+  } catch {
+    // arquivo já removido — segue
   }
 }
