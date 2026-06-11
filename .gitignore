@@ -23,8 +23,8 @@ Thumbs.db
 
 prisma/migrations/dev.db*
 storage/
-public/uploads/*
-!public/uploads/.gitkeep
+uploads/*
+!uploads/.gitkeep
 *.pem
 *.key
 *.crt

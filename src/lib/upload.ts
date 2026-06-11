@@ -4,10 +4,11 @@ import { randomUUID } from "crypto";
 
 // ============================================================
 // Upload de imagens — salva em disco com validação rígida.
-// Diretório físico:
-//   - Dev:  ./public/uploads  (Next serve em /uploads)
-//   - Prod: /opt/doce-encanto/uploads (Nginx serve em /uploads)
-// A URL pública é sempre /uploads/<arquivo>.
+// Diretório físico (UPLOAD_DIR):
+//   - Dev:  ./uploads
+//   - Prod: /app/uploads  (volume persistente no EasyPanel)
+// A URL pública é sempre /uploads/<arquivo>, servida pela rota
+// src/app/uploads/[file]/route.ts (lê do UPLOAD_DIR).
 // ============================================================
 
 const ALLOWED_TYPES: Record<string, string> = {
@@ -38,7 +39,7 @@ function detectByMagic(buf: Buffer): "jpg" | "png" | "webp" | null {
 }
 
 function uploadDir(): string {
-  return process.env.UPLOAD_DIR || "./public/uploads";
+  return process.env.UPLOAD_DIR || "./uploads";
 }
 
 export type UploadResult =

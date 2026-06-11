@@ -25,9 +25,8 @@ Thumbs.db
 deploy/release
 deploy/doce-encanto.tar.gz
 
-# Uploads locais de dev — em produção fica em volume separado
-public/uploads/*
-!public/uploads/.gitkeep
+# Uploads locais de dev — em produção fica em volume persistente
+uploads/
 
 # Arquivos do meu workflow local
 *.md.bak
