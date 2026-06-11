@@ -1,10 +1,8 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
 import { isCurrentCustomerActiveMember } from "./customer";
-import {
-  SHIPPING_FREE_THRESHOLD_CENTS,
-  computeShippingCents,
-} from "./shipping";
+import { computeShippingCents } from "./shipping";
+import { getStoreSettings } from "./settings";
 
 // ============================================================
 // Lib do carrinho — toda lógica de preço é executada NO SERVIDOR.
@@ -123,13 +121,14 @@ export async function getCart(): Promise<CartSummary> {
   const session = await getCustomerSession();
   const items = session.cart ?? [];
   const zip = session.shippingZip ?? null;
+  const settings = await getStoreSettings();
 
   if (items.length === 0) {
     return {
       lines: [],
       subtotalCents: 0,
       shippingCents: 0,
-      freeShippingThresholdCents: SHIPPING_FREE_THRESHOLD_CENTS,
+      freeShippingThresholdCents: settings.shippingFreeThresholdCents,
       discountCents: 0,
       totalCents: 0,
       totalItems: 0,
@@ -153,14 +152,18 @@ export async function getCart(): Promise<CartSummary> {
   });
 
   const priced = priceCartLines(items, products, isClubMember);
-  const shippingCents = computeShippingCents(priced.subtotalCents);
+  const shippingCents = computeShippingCents(
+    priced.subtotalCents,
+    settings.shippingFreeThresholdCents,
+    settings.shippingFlatRateCents
+  );
   const totalCents = priced.subtotalCents + shippingCents;
 
   return {
     lines: priced.lines,
     subtotalCents: priced.subtotalCents,
     shippingCents,
-    freeShippingThresholdCents: SHIPPING_FREE_THRESHOLD_CENTS,
+    freeShippingThresholdCents: settings.shippingFreeThresholdCents,
     discountCents: priced.clubSavingsCents,
     totalCents,
     totalItems: priced.totalItems,

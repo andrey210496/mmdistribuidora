@@ -3,6 +3,7 @@ import { Plus, Search, Eye, Edit3, Package } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
+import { getStoreSettings } from "@/lib/settings";
 import { ToggleProductActiveButton } from "./ToggleProductActiveButton";
 
 export const metadata = { title: "Produtos · Admin" };
@@ -19,12 +20,20 @@ export default async function AdminProdutosPage({
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const filter = (typeof sp.filter === "string" ? sp.filter : "all") as
-    | "all" | "active" | "inactive" | "low_stock";
+    | "all" | "active" | "inactive" | "low_stock" | "expiring";
+
+  const { lowStockThreshold, expiryWarningDays } = await getStoreSettings();
+  const now = new Date();
+  const expiryHorizon = new Date(now.getTime() + expiryWarningDays * 86_400_000);
 
   const where: Record<string, unknown> = {};
   if (filter === "active") where.active = true;
   if (filter === "inactive") where.active = false;
-  if (filter === "low_stock") where.stock = { lte: 5 };
+  if (filter === "low_stock") where.stock = { lte: lowStockThreshold };
+  if (filter === "expiring") {
+    where.active = true;
+    where.expiryDate = { not: null, lte: expiryHorizon };
+  }
   if (q) {
     where.OR = [
       { name: { contains: q, mode: "insensitive" } },
@@ -44,11 +53,12 @@ export default async function AdminProdutosPage({
       prisma.product.count(),
       prisma.product.count({ where: { active: true } }),
       prisma.product.count({ where: { active: false } }),
-      prisma.product.count({ where: { stock: { lte: 5 } } }),
+      prisma.product.count({ where: { stock: { lte: lowStockThreshold } } }),
+      prisma.product.count({ where: { active: true, expiryDate: { not: null, lte: expiryHorizon } } }),
     ]),
   ]);
 
-  const [totalAll, totalActive, totalInactive, totalLowStock] = totals;
+  const [totalAll, totalActive, totalInactive, totalLowStock, totalExpiring] = totals;
 
   return (
     <div className="p-6 lg:p-8">
@@ -84,6 +94,7 @@ export default async function AdminProdutosPage({
             { value: "active", label: "Ativos", count: totalActive },
             { value: "inactive", label: "Inativos", count: totalInactive },
             { value: "low_stock", label: "Estoque baixo", count: totalLowStock },
+            { value: "expiring", label: "Vencendo", count: totalExpiring },
           ].map((f) => {
             const params = new URLSearchParams();
             params.set("filter", f.value);
