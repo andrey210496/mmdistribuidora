@@ -112,6 +112,7 @@ export default async function OrderDetailPage({
             paymentStatus={order.paymentStatus}
             nfIssuedAt={order.nfIssuedAt}
             nfNumber={order.nfNumber}
+            hasStripePayment={!!order.stripePaymentIntentId}
           />
 
           {/* Avisar cliente sobre o estorno */}

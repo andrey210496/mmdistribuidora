@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowRight, X, FileText, Check, AlertCircle, RotateCcw } from "lucide-react";
+import { ArrowRight, X, FileText, Check, AlertCircle, RotateCcw, RefreshCw } from "lucide-react";
 import {
   advanceOrderStatus,
   cancelOrder,
   issueNf,
   refundOrder,
   getRefundSuggestion,
+  syncOrderWithStripe,
   type RefundSuggestion,
 } from "../actions";
 import { ORDER_STATUS_META, nextStatusOf, canCancel } from "@/lib/orders";
@@ -23,6 +24,7 @@ type Props = {
   paymentStatus: PaymentStatus;
   nfIssuedAt: Date | null;
   nfNumber: string | null;
+  hasStripePayment: boolean;
 };
 
 export function OrderActions({
@@ -30,9 +32,11 @@ export function OrderActions({
   status,
   paymentStatus,
   nfIssuedAt,
+  hasStripePayment,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [refundOpen, setRefundOpen] = useState(false);
@@ -43,6 +47,16 @@ export function OrderActions({
   const next = nextStatusOf(status);
   const canCancelNow = canCancel(status);
   const isPaid = paymentStatus === "CONFIRMED";
+
+  const handleSync = () => {
+    setError(null);
+    setInfo(null);
+    startTransition(async () => {
+      const r = await syncOrderWithStripe(orderId);
+      if (!r.ok) setError(r.error ?? "Erro ao sincronizar");
+      else setInfo(r.message ?? "Sincronizado com o Stripe.");
+    });
+  };
 
   const handleAdvance = () => {
     setError(null);
@@ -135,6 +149,13 @@ export function OrderActions({
         </div>
       )}
 
+      {info && (
+        <div className="bg-olive/10 border border-olive/30 text-olive rounded-lg p-3 text-sm mb-4 flex items-start gap-2">
+          <Check size={15} className="shrink-0 mt-0.5" />
+          {info}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {next && isPaid && (
           <button
@@ -179,6 +200,18 @@ export function OrderActions({
           >
             <RotateCcw size={14} />
             Estornar pagamento
+          </button>
+        )}
+
+        {hasStripePayment && (
+          <button
+            onClick={handleSync}
+            disabled={pending}
+            title="Conferir o status real no Stripe e atualizar o sistema"
+            className="inline-flex items-center gap-2 text-cocoa/70 hover:text-cocoa font-bold text-xs uppercase tracking-wider"
+          >
+            <RefreshCw size={14} />
+            Sincronizar com Stripe
           </button>
         )}
 

@@ -271,6 +271,26 @@ export const stripe = {
   },
 
   /**
+   * Consulta o status REAL de um pagamento no Stripe — usado para
+   * reconciliar pedidos que ficaram dessincronizados (ex.: estorno feito
+   * no painel sem o webhook ativo).
+   */
+  async getPaymentStatus(
+    paymentIntentId: string
+  ): Promise<{ status: string; amountRefundedCents: number; refunded: boolean } | null> {
+    const pi = await client().paymentIntents.retrieve(paymentIntentId, {
+      expand: ["latest_charge"],
+    });
+    const charge = pi.latest_charge as Stripe.Charge | null;
+    const amountRefundedCents = charge?.amount_refunded ?? 0;
+    return {
+      status: pi.status,
+      amountRefundedCents,
+      refunded: Boolean(charge?.refunded) || amountRefundedCents > 0,
+    };
+  },
+
+  /**
    * Valida e constrói o evento do webhook a partir do corpo bruto + assinatura.
    * Lança erro se a assinatura não bater (proteção contra falsificação).
    */

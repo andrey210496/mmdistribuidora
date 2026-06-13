@@ -125,6 +125,76 @@ export async function refundOrder(orderId: string, amountCents?: number): Promis
 }
 
 // ============================================================
+// Sincroniza o status do pedido com o estado REAL no Stripe.
+// Útil para reconciliar pedidos que ficaram dessincronizados (ex.: estorno
+// feito no painel do Stripe sem o webhook ativo). NÃO cria novo estorno —
+// apenas lê o Stripe e ajusta o sistema (estoque/receita) de forma idempotente.
+// ============================================================
+export async function syncOrderWithStripe(orderId: string): Promise<ActionResult & { message?: string }> {
+  const user = await requireArea("pedidos");
+  const id = idSchema.safeParse(orderId);
+  if (!id.success) return { ok: false, error: "Pedido inválido" };
+
+  const order = await prisma.order.findUnique({ where: { id: id.data } });
+  if (!order) return { ok: false, error: "Pedido não encontrado" };
+  if (!order.stripePaymentIntentId || !stripe.isConfigured()) {
+    return { ok: false, error: "Pedido sem pagamento do Stripe vinculado." };
+  }
+
+  let st: Awaited<ReturnType<typeof stripe.getPaymentStatus>>;
+  try {
+    st = await stripe.getPaymentStatus(order.stripePaymentIntentId);
+  } catch (err) {
+    console.error("[sync] erro ao consultar Stripe:", err);
+    return { ok: false, error: "Falha ao consultar o Stripe. Tente novamente." };
+  }
+  if (!st) return { ok: false, error: "Não foi possível ler o status no Stripe." };
+
+  let message = "Pagamento confirmado no Stripe — nada a alterar.";
+
+  if (st.refunded) {
+    // Estornado no Stripe → reflete aqui (idempotente: só age se ainda CONFIRMED)
+    const applied = await applyRefundToOrder(order.id, st.amountRefundedCents);
+    message = applied
+      ? "Estorno sincronizado: pedido marcado como Estornado e receita revertida."
+      : "Este pedido já estava como estornado no sistema.";
+  } else if (st.status === "canceled" && order.paymentStatus !== "CONFIRMED" && order.status !== "CANCELED") {
+    await prisma.$transaction([
+      prisma.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: "FAILED", status: "CANCELED" },
+      }),
+      prisma.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          fromStatus: order.status,
+          toStatus: "CANCELED",
+          notes: "Cancelamento sincronizado com o Stripe",
+        },
+      }),
+    ]);
+    message = "Cancelamento sincronizado: pedido marcado como Cancelado.";
+  }
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "order.synced",
+    entityType: "Order",
+    entityId: order.id,
+    afterJson: { stripeStatus: st.status, refunded: st.refunded, amountRefundedCents: st.amountRefundedCents },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath(`/admin/pedidos/${order.id}`);
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/admin");
+  return { ok: true, message };
+}
+
+// ============================================================
 // Avança status do pedido para o próximo na linha do tempo
 // ============================================================
 export async function advanceOrderStatus(orderId: string): Promise<ActionResult> {
