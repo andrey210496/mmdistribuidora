@@ -11,7 +11,7 @@ import {
   categoryLabel,
 } from "@/lib/finance";
 import { NewEntryForm } from "./NewEntryForm";
-import { markEntryPaid, cancelEntry, deleteEntry } from "./actions";
+import { markEntryPaid, cancelEntry, deleteEntry, reopenEntry } from "./actions";
 
 export const metadata = { title: "Financeiro · Admin" };
 export const dynamic = "force-dynamic";
@@ -383,6 +383,12 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
                                 <button type="submit" title="Cancelar" className="p-1.5 rounded text-cocoa/50 hover:bg-cocoa/5"><Ban size={15} /></button>
                               </form>
                             </>
+                          )}
+                          {e.status === "PAID" && !e.orderId && (
+                            <form action={reopenEntry}>
+                              <input type="hidden" name="id" value={e.id} />
+                              <button type="submit" title="Reabrir (desfazer liquidação)" className="p-1.5 rounded text-caramel hover:bg-caramel/10"><RotateCcw size={15} /></button>
+                            </form>
                           )}
                           {!e.orderId && (
                             <form action={deleteEntry}>

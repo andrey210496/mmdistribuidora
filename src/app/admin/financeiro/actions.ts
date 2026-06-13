@@ -100,6 +100,34 @@ export async function markEntryPaid(formData: FormData): Promise<void> {
 }
 
 // ============================================================
+// Reabrir liquidação — desfaz um "Liquidado" feito por engano, voltando
+// o lançamento para "Em aberto". Só lançamentos MANUAIS (sem pedido
+// vinculado): entradas de pedidos pagos refletem a venda real e devem ser
+// revertidas pelo estorno do pedido, não aqui.
+// ============================================================
+export async function reopenEntry(formData: FormData): Promise<void> {
+  const user = await requireArea("financeiro");
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+  const entry = await prisma.financialEntry.findUnique({ where: { id } });
+  if (!entry || entry.orderId || entry.status !== "PAID") return;
+  await prisma.financialEntry.update({
+    where: { id },
+    data: { status: "OPEN", paidAt: null },
+  });
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "finance.entry.reopened",
+    entityType: "FinancialEntry",
+    entityId: id,
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+  revalidatePath("/admin/financeiro");
+}
+
+// ============================================================
 // Cancelar lançamento
 // ============================================================
 export async function cancelEntry(formData: FormData): Promise<void> {
