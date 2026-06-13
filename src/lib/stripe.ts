@@ -168,10 +168,13 @@ export const stripe = {
           payment_method_options: { card: { installments: { enabled: true } } },
         });
         if (!s.client_secret) throw new Error("sem client_secret");
+        console.log(`[stripe] parcelamento HABILITADO na sessão (pedido ${input.orderNumber}, total elegível)`);
         return { id: s.id, clientSecret: s.client_secret };
       } catch (err) {
         console.error("[stripe] parcelamento indisponível (embedded), seguindo à vista:", err);
       }
+    } else {
+      console.log(`[stripe] parcelamento NÃO solicitado (pedido ${input.orderNumber}, abaixo do mínimo)`);
     }
 
     const s = await client().checkout.sessions.create(params);
