@@ -109,11 +109,25 @@ export async function reopenEntry(formData: FormData): Promise<void> {
   const user = await requireArea("financeiro");
   const id = String(formData.get("id") ?? "");
   if (!id) return;
-  const entry = await prisma.financialEntry.findUnique({ where: { id } });
-  if (!entry || entry.orderId || entry.status !== "PAID") return;
+  const entry = await prisma.financialEntry.findUnique({
+    where: { id },
+    include: { order: { select: { status: true, paymentStatus: true } } },
+  });
+  if (!entry || entry.status !== "PAID") return;
+
+  // Pedido REALMENTE pago → não desfaz aqui (use o estorno do pedido).
+  if (entry.order && entry.order.paymentStatus === "CONFIRMED") return;
+
+  // Se o lançamento é de um pedido cancelado/estornado, o estado correto é
+  // CANCELADO (a venda não aconteceu). Caso contrário (manual/pendente),
+  // volta para EM ABERTO.
+  const orderCanceled =
+    !!entry.order && (entry.order.status === "CANCELED" || entry.order.status === "REFUNDED");
+  const newStatus = orderCanceled ? "CANCELED" : "OPEN";
+
   await prisma.financialEntry.update({
     where: { id },
-    data: { status: "OPEN", paidAt: null },
+    data: { status: newStatus, paidAt: null },
   });
   const h = await headers();
   await logAudit({
@@ -121,10 +135,12 @@ export async function reopenEntry(formData: FormData): Promise<void> {
     action: "finance.entry.reopened",
     entityType: "FinancialEntry",
     entityId: id,
+    afterJson: { newStatus },
     ip: clientIp(h),
     userAgent: h.get("user-agent") ?? undefined,
   });
   revalidatePath("/admin/financeiro");
+  revalidatePath("/admin");
 }
 
 // ============================================================

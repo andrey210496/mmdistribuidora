@@ -384,10 +384,10 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
                               </form>
                             </>
                           )}
-                          {e.status === "PAID" && !e.orderId && (
+                          {e.status === "PAID" && e.orderPaymentStatus !== "CONFIRMED" && (
                             <form action={reopenEntry}>
                               <input type="hidden" name="id" value={e.id} />
-                              <button type="submit" title="Reabrir (desfazer liquidação)" className="p-1.5 rounded text-caramel hover:bg-caramel/10"><RotateCcw size={15} /></button>
+                              <button type="submit" title="Desfazer liquidação" className="p-1.5 rounded text-caramel hover:bg-caramel/10"><RotateCcw size={15} /></button>
                             </form>
                           )}
                           {!e.orderId && (

@@ -250,6 +250,9 @@ export type EntryRow = {
   paidAt: Date | null;
   orderId: string | null;
   isOverdue: boolean;
+  // Status de pagamento do pedido vinculado (quando houver) — usado para
+  // decidir se um lançamento "Liquidado" pode ser desfeito no Financeiro.
+  orderPaymentStatus?: string | null;
 };
 
 /** Contas a pagar/receber em aberto (próximos vencimentos + vencidas). */
@@ -275,11 +278,13 @@ export async function listEntries(opts: {
       ...(opts.type ? { type: opts.type } : {}),
       ...(opts.status ? { status: opts.status } : {}),
     },
+    include: { order: { select: { paymentStatus: true } } },
     orderBy: { createdAt: "desc" },
     take: opts.limit ?? 40,
   });
-  return rows.map((r) => ({
+  return rows.map(({ order, ...r }) => ({
     ...r,
+    orderPaymentStatus: order?.paymentStatus ?? null,
     isOverdue:
       r.status !== "PAID" &&
       r.status !== "CANCELED" &&
