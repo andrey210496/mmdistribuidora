@@ -30,6 +30,7 @@ export async function applyRefundToOrder(
       paymentStatus: "REFUNDED",
       status: "REFUNDED",
       refundedCents: refundedCents ?? order.totalCents,
+      refundedAt: new Date(),
     },
   });
   if (flipped.count === 0) return false; // já estornado por outra via

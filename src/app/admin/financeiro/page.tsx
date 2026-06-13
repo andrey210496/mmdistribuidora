@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Receipt,
-  AlertTriangle, ShoppingCart, PiggyBank, CalendarClock, Check, Ban, Trash2,
+  AlertTriangle, ShoppingCart, PiggyBank, CalendarClock, Check, Ban, Trash2, RotateCcw,
 } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { centsToBRL } from "@/lib/money";
@@ -125,7 +125,7 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
       </div>
 
       {/* KPIs secundários */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-cocoa/10 p-5 flex items-center justify-between">
           <div>
             <div className="text-cocoa/60 text-sm">A receber (em aberto)</div>
@@ -151,6 +151,21 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
             )}
           </div>
           <AlertTriangle size={20} className={summary.overduePayableCents > 0 ? "text-red-500" : "text-cocoa/30"} />
+        </div>
+
+        <div className={`rounded-2xl border p-5 flex items-center justify-between ${summary.refundedCents > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-cocoa/10"}`}>
+          <div>
+            <div className="text-cocoa/60 text-sm">Perdas (estornos)</div>
+            <div className={`font-display text-xl font-bold mt-1 ${summary.refundedCents > 0 ? "text-amber-700" : "text-cocoa"}`}>
+              {centsToBRL(summary.refundedCents)}
+            </div>
+            <div className="text-xs text-cocoa/55 mt-0.5">
+              {summary.refundedCount > 0
+                ? `${summary.refundedCount} estorno(s) · ${summary.refundRatePct.toFixed(1)}% do faturamento`
+                : "Nenhum estorno no período"}
+            </div>
+          </div>
+          <RotateCcw size={20} className={summary.refundedCents > 0 ? "text-amber-500" : "text-cocoa/30"} />
         </div>
       </div>
 

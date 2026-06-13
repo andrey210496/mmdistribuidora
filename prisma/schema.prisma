@@ -211,6 +211,8 @@ model Order {
   paidAt                DateTime?
   // Valor efetivamente devolvido no estorno (total ou parcial). Em centavos.
   refundedCents         Int?
+  // Quando o estorno foi aplicado (para métricas de perda por período).
+  refundedAt            DateTime?
 
   // Token único para QR de separação (não usar id sequencial)
   pickToken String @unique @default(cuid())

@@ -48,6 +48,10 @@ export type FinanceSummary = {
   cogsCents: number; // custo das mercadorias vendidas (CMV)
   grossProfitCents: number; // lucro bruto = receita produtos - CMV
   grossMarginPct: number;
+  // Perdas de faturamento: valor estornado no período + nº de estornos
+  refundedCents: number;
+  refundedCount: number;
+  refundRatePct: number; // estornado / (recebido + estornado)
 };
 
 export async function getFinanceSummary(period: Period): Promise<FinanceSummary> {
@@ -66,6 +70,7 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
     overdueReceivable,
     ordersAgg,
     itemsAgg,
+    refundedOrders,
   ] = await Promise.all([
     prisma.financialEntry.aggregate({
       where: { type: "RECEIVABLE", status: "PAID", paidAt: { gte: period.from, lte: period.to } },
@@ -105,6 +110,12 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
       where: { order: { paymentStatus: "CONFIRMED", paidAt: { gte: period.from, lte: period.to } } },
       _sum: { totalCents: true, costTotalCents: true },
     }),
+    // Estornos (perdas de faturamento) no período — usa o valor realmente
+    // devolvido; cai no total do pedido quando refundedCents não foi gravado.
+    prisma.order.findMany({
+      where: { status: "REFUNDED", refundedAt: { gte: period.from, lte: period.to } },
+      select: { refundedCents: true, totalCents: true },
+    }),
   ]);
 
   const receivedCents = received._sum.amountCents ?? 0;
@@ -116,6 +127,8 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
   const productRevenueCents = itemsAgg._sum.totalCents ?? 0;
   const cogsCents = itemsAgg._sum.costTotalCents ?? 0;
   const grossProfitCents = productRevenueCents - cogsCents;
+  const refundedCents = refundedOrders.reduce((s, o) => s + (o.refundedCents ?? o.totalCents), 0);
+  const refundedCount = refundedOrders.length;
 
   return {
     receivedCents,
@@ -139,6 +152,12 @@ export async function getFinanceSummary(period: Period): Promise<FinanceSummary>
     cogsCents,
     grossProfitCents,
     grossMarginPct: productRevenueCents > 0 ? (grossProfitCents / productRevenueCents) * 100 : 0,
+    refundedCents,
+    refundedCount,
+    refundRatePct:
+      receivedCents + refundedCents > 0
+        ? (refundedCents / (receivedCents + refundedCents)) * 100
+        : 0,
   };
 }
 
