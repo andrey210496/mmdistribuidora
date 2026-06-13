@@ -214,50 +214,14 @@ export async function submitCheckout(
     userAgent,
   });
 
-  // Cria sessão de Checkout no Stripe (se configurado)
-  if (stripe.isConfigured()) {
-    try {
-      const session = await stripe.createCheckoutSession({
-        orderId: order.id,
-        orderNumber,
-        customerEmail: snapshotEmail || undefined,
-        items: orderItemsData.map((i) => ({
-          name: i.productNameSnapshot,
-          description: `SKU ${i.productSkuSnapshot}`,
-          unitAmountCents: i.unitPriceCents,
-          quantity: i.quantity,
-        })),
-        shippingCents,
-        // Parcelamento liberado só a partir do mínimo configurado.
-        allowInstallments: totalCents >= settings.installmentsMinCents,
-        successUrl: `${env.APP_URL}/pedido/${orderNumber}?pago=1`,
-        cancelUrl: `${env.APP_URL}/pedido/${orderNumber}?cancelado=1`,
-      });
-
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          stripeSessionId: session.id,
-          paymentUrl: session.url,
-        },
-      });
-
-      await clearCart();
-      revalidatePath("/", "layout");
-
-      // Redireciona para a página de pagamento do Stripe
-      redirect(session.url);
-    } catch (err: unknown) {
-      // Se for um redirect do Next, propaga
-      if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
-
-      console.error("[checkout] erro Stripe:", err);
-      // Cai para fluxo de modo dev — pedido criado, pagamento manual
-    }
-  }
-
-  // Modo dev / Stripe indisponível: limpa carrinho e leva à página do pedido
   await clearCart();
   revalidatePath("/", "layout");
+
+  // Stripe configurado: o cliente paga DENTRO do site (checkout embutido).
+  // A sessão do Stripe é criada na página de pagamento. Sem Stripe (dev),
+  // vai direto pra página do pedido (com simulador de pagamento).
+  if (stripe.isConfigured()) {
+    redirect(`/checkout/pagamento/${order.orderNumber}`);
+  }
   redirect(`/pedido/${order.orderNumber}`);
 }

@@ -13,12 +13,15 @@ function buildCsp(nonce: string): string {
   const directives = [
     `default-src 'self'`,
     // Em dev o Next precisa de eval para HMR. Em prod, restringir.
-    `script-src 'self' 'nonce-${nonce}'${PROD ? "" : " 'unsafe-eval' 'unsafe-inline'"}`,
+    // js.stripe.com/checkout.stripe.com: necessários para o Checkout EMBUTIDO.
+    `script-src 'self' 'nonce-${nonce}' https://js.stripe.com https://checkout.stripe.com${PROD ? "" : " 'unsafe-eval' 'unsafe-inline'"}`,
     // Tailwind injeta estilos no build; permitimos 'unsafe-inline' apenas em estilos
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `font-src 'self' https://fonts.gstatic.com data:`,
     `img-src 'self' data: blob: https:`,
-    `connect-src 'self' https://api.stripe.com`,
+    `connect-src 'self' https://api.stripe.com https://checkout.stripe.com`,
+    // iframe do Stripe (Checkout embutido + autenticação 3DS)
+    `frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com`,
     `frame-ancestors 'none'`,
     // Permite o redirect do checkout para o Stripe
     `form-action 'self' https://checkout.stripe.com`,

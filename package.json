@@ -31,6 +31,8 @@
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.4",
+    "@stripe/react-stripe-js": "^6.6.0",
+    "@stripe/stripe-js": "^9.8.0",
     "argon2": "^0.41.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

@@ -118,6 +118,70 @@ export const stripe = {
   },
 
   /**
+   * Cria uma sessão de Checkout EMBUTIDO (ui_mode: "embedded") e retorna o
+   * client_secret para renderizar o pagamento DENTRO do nosso site.
+   * Os dados do cartão continuam no iframe seguro do Stripe (PCI-safe).
+   */
+  async createEmbeddedCheckoutSession(input: {
+    orderId: string;
+    orderNumber: string;
+    customerEmail?: string;
+    items: CheckoutItem[];
+    shippingCents: number;
+    returnUrl: string;
+    allowInstallments?: boolean;
+  }): Promise<{ id: string; clientSecret: string }> {
+    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = input.items.map((it) => ({
+      quantity: it.quantity,
+      price_data: {
+        currency: "brl",
+        unit_amount: it.unitAmountCents,
+        product_data: {
+          name: it.name,
+          ...(it.description ? { description: it.description.slice(0, 250) } : {}),
+        },
+      },
+    }));
+    if (input.shippingCents > 0) {
+      line_items.push({
+        quantity: 1,
+        price_data: { currency: "brl", unit_amount: input.shippingCents, product_data: { name: "Frete" } },
+      });
+    }
+
+    const params: Stripe.Checkout.SessionCreateParams = {
+      ui_mode: "embedded",
+      mode: "payment",
+      line_items,
+      customer_email: input.customerEmail,
+      client_reference_id: input.orderId,
+      metadata: { orderId: input.orderId, orderNumber: input.orderNumber },
+      return_url: input.returnUrl,
+      locale: "pt-BR",
+    };
+
+    // Parcelamento com fallback seguro (igual ao hosted).
+    if (input.allowInstallments) {
+      try {
+        const s = await client().checkout.sessions.create({
+          ...params,
+          payment_method_options: { card: { installments: { enabled: true } } },
+        });
+        if (!s.client_secret) throw new Error("sem client_secret");
+        return { id: s.id, clientSecret: s.client_secret };
+      } catch (err) {
+        console.error("[stripe] parcelamento indisponível (embedded), seguindo à vista:", err);
+      }
+    }
+
+    const s = await client().checkout.sessions.create(params);
+    if (!s.client_secret) {
+      throw new Error("Stripe não retornou client_secret");
+    }
+    return { id: s.id, clientSecret: s.client_secret };
+  },
+
+  /**
    * Checkout da assinatura ANUAL do Clube (pagamento único que concede 1 ano).
    * metadata.type = "club" para o webhook distinguir de pedidos.
    */

@@ -41,10 +41,15 @@ const paymentMethodLabels: Record<string, string> = {
 
 export default async function OrderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orderNumber: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { orderNumber } = await params;
+  const sp = await searchParams;
+  // Cliente acabou de voltar do pagamento (embutido = session_id; hospedado = pago).
+  const justReturnedFromPayment = !!(sp.session_id || sp.pago);
 
   const order = await prisma.order.findUnique({
     where: { orderNumber },
@@ -93,8 +98,24 @@ export default async function OrderPage({
             </div>
           </div>
 
+          {/* Acabou de pagar, mas o webhook ainda não confirmou — tranquiliza */}
+          {isPending && justReturnedFromPayment && (
+            <div className="bg-olive/10 border border-olive/30 rounded-2xl p-6 mb-8 flex items-start gap-3">
+              <Clock size={22} className="text-olive shrink-0 mt-0.5" />
+              <div>
+                <h2 className="font-display text-lg font-bold text-olive">
+                  Recebemos o seu pagamento!
+                </h2>
+                <p className="text-cocoa/80 text-sm mt-1">
+                  Estamos confirmando com a operadora — pode levar alguns instantes. Esta página
+                  atualiza sozinha; se quiser, recarregue em um minuto.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Aviso de pagamento pendente */}
-          {isPending && (
+          {isPending && !justReturnedFromPayment && (
             <div className="bg-yellow-50 border border-yellow-300 rounded-2xl p-6 mb-8">
               <div className="flex items-start gap-3 mb-4">
                 <Clock size={22} className="text-yellow-700 shrink-0 mt-0.5" />
