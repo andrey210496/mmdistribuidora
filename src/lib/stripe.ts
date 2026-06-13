@@ -38,6 +38,8 @@ type CreateCheckoutInput = {
   shippingCents: number;
   successUrl: string;
   cancelUrl: string;
+  // Libera o parcelamento no cartão (decidido pelo backend conforme o total).
+  allowInstallments?: boolean;
 };
 
 export const stripe = {
@@ -74,7 +76,7 @@ export const stripe = {
       });
     }
 
-    const session = await client().checkout.sessions.create({
+    const params: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       // Não fixamos os métodos aqui — o Stripe usa automaticamente os que
       // estiverem ATIVADOS no painel (Cartão, PIX, etc). Assim nunca quebra
@@ -89,8 +91,26 @@ export const stripe = {
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
       locale: "pt-BR",
-    });
+    };
 
+    // Parcelamento: só quando liberado pelo backend (total >= mínimo).
+    // Se a conta não tiver parcelamento ativo, tentamos sem ele (fallback)
+    // para NUNCA quebrar o checkout.
+    if (input.allowInstallments) {
+      try {
+        const session = await client().checkout.sessions.create({
+          ...params,
+          payment_method_options: { card: { installments: { enabled: true } } },
+        });
+        if (!session.url) throw new Error("Stripe não retornou URL de checkout");
+        return { id: session.id, url: session.url };
+      } catch (err) {
+        console.error("[stripe] parcelamento indisponível, seguindo à vista:", err);
+        // cai para o checkout normal abaixo
+      }
+    }
+
+    const session = await client().checkout.sessions.create(params);
     if (!session.url) {
       throw new Error("Stripe não retornou URL de checkout");
     }

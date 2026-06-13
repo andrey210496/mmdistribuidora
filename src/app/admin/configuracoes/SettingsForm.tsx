@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Save, Check, AlertCircle, PackageX, CalendarClock, Truck } from "lucide-react";
+import { Save, Check, AlertCircle, PackageX, CalendarClock, Truck, CreditCard } from "lucide-react";
 import { saveSettings } from "./actions";
 
 type Initial = {
@@ -9,6 +9,7 @@ type Initial = {
   expiryWarningDays: number;
   shippingFreeReais: string;
   shippingFlatReais: string;
+  installmentsMinReais: string;
 };
 
 export function SettingsForm({ initial }: { initial: Initial }) {
@@ -16,6 +17,7 @@ export function SettingsForm({ initial }: { initial: Initial }) {
   const [expiryDays, setExpiryDays] = useState(String(initial.expiryWarningDays));
   const [shipFree, setShipFree] = useState(initial.shippingFreeReais);
   const [shipFlat, setShipFlat] = useState(initial.shippingFlatReais);
+  const [installMin, setInstallMin] = useState(initial.installmentsMinReais);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -27,6 +29,7 @@ export function SettingsForm({ initial }: { initial: Initial }) {
         expiryWarningDays: Number(expiryDays),
         shippingFreeReais: shipFree,
         shippingFlatReais: shipFlat,
+        installmentsMinReais: installMin,
       });
       setMsg(
         r.ok
@@ -113,6 +116,32 @@ export function SettingsForm({ initial }: { initial: Initial }) {
               placeholder="19,90"
             />
             <p className="text-xs text-cocoa/50 mt-1">Cobrado quando o subtotal está abaixo do limite acima.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Pagamento / parcelamento */}
+      <section className="bg-white rounded-2xl border border-cocoa/10 p-6">
+        <h2 className="font-display text-xl font-bold text-cocoa mb-1 flex items-center gap-2">
+          <CreditCard size={18} className="text-rose-brand" /> Parcelamento
+        </h2>
+        <p className="text-cocoa/60 text-sm mb-5">
+          Valor mínimo da compra para liberar o parcelamento no cartão. Abaixo disso, só à vista.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <div>
+            <label className="text-sm font-semibold text-cocoa mb-1.5 block">Compra mínima para parcelar (R$)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={installMin}
+              onChange={(e) => setInstallMin(e.target.value)}
+              className={inputCls}
+              placeholder="100,00"
+            />
+            <p className="text-xs text-cocoa/50 mt-1">
+              Ex.: 100,00 — pedidos de R$ 100 ou mais podem ser parcelados.
+            </p>
           </div>
         </div>
       </section>

@@ -16,6 +16,7 @@ const schema = z.object({
   expiryWarningDays: z.coerce.number().int().min(1).max(3650),
   shippingFreeReais: z.string().min(1),
   shippingFlatReais: z.string().min(1),
+  installmentsMinReais: z.string().min(1),
 });
 
 export async function saveSettings(input: z.infer<typeof schema>): Promise<ActionResult> {
@@ -26,11 +27,13 @@ export async function saveSettings(input: z.infer<typeof schema>): Promise<Actio
 
   let shippingFreeThresholdCents: number;
   let shippingFlatRateCents: number;
+  let installmentsMinCents: number;
   try {
     shippingFreeThresholdCents = brlToCents(parsed.data.shippingFreeReais);
     shippingFlatRateCents = brlToCents(parsed.data.shippingFlatReais);
+    installmentsMinCents = brlToCents(parsed.data.installmentsMinReais);
   } catch {
-    return { ok: false, error: "Valor de frete inválido." };
+    return { ok: false, error: "Valor monetário inválido." };
   }
 
   await saveStoreSettings({
@@ -38,6 +41,7 @@ export async function saveSettings(input: z.infer<typeof schema>): Promise<Actio
     expiryWarningDays: parsed.data.expiryWarningDays,
     shippingFreeThresholdCents,
     shippingFlatRateCents,
+    installmentsMinCents,
   });
 
   const h = await headers();

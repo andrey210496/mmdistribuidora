@@ -10,6 +10,7 @@ export const SETTINGS_KEYS = {
   expiryWarningDays: "inventory.expiry_warning_days",
   shippingFreeThresholdCents: "shipping.free_threshold_cents",
   shippingFlatRateCents: "shipping.flat_rate_cents",
+  installmentsMinCents: "payments.installments_min_cents",
 } as const;
 
 export type StoreSettings = {
@@ -17,6 +18,7 @@ export type StoreSettings = {
   expiryWarningDays: number; // validade dentro de N dias = "vencendo"
   shippingFreeThresholdCents: number; // frete grátis a partir deste subtotal
   shippingFlatRateCents: number; // valor do frete fixo
+  installmentsMinCents: number; // total mínimo para liberar parcelamento no cartão
 };
 
 export const STORE_SETTINGS_DEFAULTS: StoreSettings = {
@@ -24,6 +26,7 @@ export const STORE_SETTINGS_DEFAULTS: StoreSettings = {
   expiryWarningDays: 30,
   shippingFreeThresholdCents: 20000,
   shippingFlatRateCents: 1990,
+  installmentsMinCents: 10000, // R$ 100,00
 };
 
 function clampInt(v: string | undefined, def: number, min: number, max: number): number {
@@ -44,6 +47,7 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     expiryWarningDays: clampInt(map.get(SETTINGS_KEYS.expiryWarningDays), d.expiryWarningDays, 1, 3650),
     shippingFreeThresholdCents: clampInt(map.get(SETTINGS_KEYS.shippingFreeThresholdCents), d.shippingFreeThresholdCents, 0, 100_000_000),
     shippingFlatRateCents: clampInt(map.get(SETTINGS_KEYS.shippingFlatRateCents), d.shippingFlatRateCents, 0, 100_000_000),
+    installmentsMinCents: clampInt(map.get(SETTINGS_KEYS.installmentsMinCents), d.installmentsMinCents, 0, 100_000_000),
   };
 }
 
@@ -54,6 +58,7 @@ export async function saveStoreSettings(s: StoreSettings): Promise<void> {
     [SETTINGS_KEYS.expiryWarningDays, String(Math.round(s.expiryWarningDays))],
     [SETTINGS_KEYS.shippingFreeThresholdCents, String(Math.round(s.shippingFreeThresholdCents))],
     [SETTINGS_KEYS.shippingFlatRateCents, String(Math.round(s.shippingFlatRateCents))],
+    [SETTINGS_KEYS.installmentsMinCents, String(Math.round(s.installmentsMinCents))],
   ];
   await prisma.$transaction(
     entries.map(([key, value]) =>

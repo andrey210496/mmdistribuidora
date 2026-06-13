@@ -13,6 +13,7 @@ import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
 import { getCurrentCustomer } from "@/lib/customer";
 import { computeShippingCents } from "@/lib/shipping";
+import { getStoreSettings } from "@/lib/settings";
 import { Prisma, type OrderStatus } from "@prisma/client";
 
 export type CheckoutState = {
@@ -122,7 +123,13 @@ export async function submitCheckout(
 
   const discountCents = Math.max(0, normalSubtotalCents - subtotalCents);
 
-  const shippingCents = computeShippingCents(subtotalCents);
+  // Frete usa as configurações da loja (mesma fonte do carrinho — nunca divergem).
+  const settings = await getStoreSettings();
+  const shippingCents = computeShippingCents(
+    subtotalCents,
+    settings.shippingFreeThresholdCents,
+    settings.shippingFlatRateCents
+  );
   const totalCents = subtotalCents + shippingCents;
 
   // Atualiza dados de contato do cliente logado se vierem novos no formulário.
@@ -221,6 +228,8 @@ export async function submitCheckout(
           quantity: i.quantity,
         })),
         shippingCents,
+        // Parcelamento liberado só a partir do mínimo configurado.
+        allowInstallments: totalCents >= settings.installmentsMinCents,
         successUrl: `${env.APP_URL}/pedido/${orderNumber}?pago=1`,
         cancelUrl: `${env.APP_URL}/pedido/${orderNumber}?cancelado=1`,
       });
