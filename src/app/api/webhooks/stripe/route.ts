@@ -214,6 +214,48 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "payment_intent.canceled": {
+        // Pagamento cancelado no painel do Stripe (pagamento ainda não capturado).
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const orderId = pi.metadata?.orderId ?? null;
+        let order = orderId
+          ? await prisma.order.findUnique({ where: { id: orderId } })
+          : null;
+        if (!order) {
+          order = await prisma.order.findFirst({ where: { stripePaymentIntentId: pi.id } });
+        }
+        // Só cancela se ainda NÃO foi pago (pago = vira estorno, não cancelamento)
+        // e ainda não está cancelado/estornado.
+        if (
+          order &&
+          order.paymentStatus !== "CONFIRMED" &&
+          order.status !== "CANCELED" &&
+          order.status !== "REFUNDED"
+        ) {
+          await prisma.$transaction([
+            prisma.order.update({
+              where: { id: order.id },
+              data: { paymentStatus: "FAILED", status: "CANCELED" },
+            }),
+            prisma.orderStatusHistory.create({
+              data: {
+                orderId: order.id,
+                fromStatus: order.status,
+                toStatus: "CANCELED",
+                notes: "Pagamento cancelado no Stripe",
+              },
+            }),
+          ]);
+          await logAudit({
+            action: "order.canceled",
+            entityType: "Order",
+            entityId: order.id,
+            afterJson: { via: "stripe.webhook", reason: "payment_intent.canceled" },
+          });
+        }
+        break;
+      }
+
       case "charge.refunded": {
         // Estorno feito no painel do Stripe (ou via nossa ação) — reflete no sistema
         const charge = event.data.object as Stripe.Charge;

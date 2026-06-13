@@ -88,6 +88,11 @@ export const stripe = {
         orderId: input.orderId,
         orderNumber: input.orderNumber,
       },
+      // Propaga o orderId pro PaymentIntent — permite mapear eventos de
+      // cancelamento/estorno (payment_intent.*) de volta ao pedido.
+      payment_intent_data: {
+        metadata: { orderId: input.orderId, orderNumber: input.orderNumber },
+      },
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
       locale: "pt-BR",
@@ -156,6 +161,9 @@ export const stripe = {
       customer_email: input.customerEmail,
       client_reference_id: input.orderId,
       metadata: { orderId: input.orderId, orderNumber: input.orderNumber },
+      payment_intent_data: {
+        metadata: { orderId: input.orderId, orderNumber: input.orderNumber },
+      },
       return_url: input.returnUrl,
       locale: "pt-BR",
     };
