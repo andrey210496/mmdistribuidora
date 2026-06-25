@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
 import { isCurrentCustomerActiveMember } from "./customer";
-import { resolveShippingCents } from "./shipping";
+import { resolveShipping } from "./shipping";
 import { buildStoneItems } from "./stone-entrega";
 import { getStoreSettings } from "./settings";
 
@@ -39,6 +39,10 @@ export type CartSummary = {
   totalCents: number;
   totalItems: number;
   shippingZip: string | null;
+  // De onde veio o frete: grátis, cotação Stone, fixo, ou carrinho vazio
+  shippingSource: "free" | "stone" | "flat" | "none";
+  shippingCarrier: string | null; // transportadora (quando vier do Stone)
+  shippingService: string | null; // "Mais rápida" | "Mais Barata"
   // Cliente logado é membro ativo do clube? (decidido no backend)
   isClubMember: boolean;
   // Quanto o cliente está economizando com o preço de membro neste carrinho
@@ -134,6 +138,9 @@ export async function getCart(): Promise<CartSummary> {
       totalCents: 0,
       totalItems: 0,
       shippingZip: zip,
+      shippingSource: "none",
+      shippingCarrier: null,
+      shippingService: null,
       isClubMember: false,
       clubSavingsCents: 0,
       potentialClubSavingsCents: 0,
@@ -159,23 +166,26 @@ export async function getCart(): Promise<CartSummary> {
     width: settings.boxWidthCm,
     depth: settings.boxDepthCm,
   });
-  const shippingCents = await resolveShippingCents({
+  const ship = await resolveShipping({
     subtotalCents: priced.subtotalCents,
     deliveryZip: zip,
     items: stoneItems,
     settings,
   });
-  const totalCents = priced.subtotalCents + shippingCents;
+  const totalCents = priced.subtotalCents + ship.cents;
 
   return {
     lines: priced.lines,
     subtotalCents: priced.subtotalCents,
-    shippingCents,
+    shippingCents: ship.cents,
     freeShippingThresholdCents: settings.shippingFreeThresholdCents,
     discountCents: priced.clubSavingsCents,
     totalCents,
     totalItems: priced.totalItems,
     shippingZip: zip,
+    shippingSource: ship.source,
+    shippingCarrier: ship.carrier,
+    shippingService: ship.service,
     isClubMember,
     clubSavingsCents: priced.clubSavingsCents,
     potentialClubSavingsCents: priced.potentialClubSavingsCents,

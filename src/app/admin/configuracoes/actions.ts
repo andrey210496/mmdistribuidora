@@ -4,7 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { requireArea } from "@/lib/auth";
-import { saveStoreSettings } from "@/lib/settings";
+import { getStoreSettings, saveStoreSettings } from "@/lib/settings";
+import { stoneDiagnose, buildStoneItems } from "@/lib/stone-entrega";
 import { brlToCents } from "@/lib/money";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
@@ -75,4 +76,33 @@ export async function saveSettings(input: z.infer<typeof schema>): Promise<Actio
   revalidatePath("/carrinho");
   revalidatePath("/checkout");
   return { ok: true };
+}
+
+export type StoneTestResult = {
+  configured: boolean;
+  baseUrl: string;
+  pickupZip: string;
+  ok: boolean;
+  error?: string;
+  options: { cents: number; carrier: string; service: string; classification: string; etaSeconds: number }[];
+};
+
+/**
+ * Diagnóstico do Stone Entrega: cota um item-amostra (origem = CEP de coleta
+ * salvo) para o CEP informado e devolve as opções ou o erro real (sem fallback).
+ */
+export async function testStoneQuote(deliveryZip: string): Promise<StoneTestResult> {
+  await requireArea("configuracoes");
+  const settings = await getStoreSettings();
+  const items = buildStoneItems(
+    [{ productId: "amostra", quantity: 1, unitPriceCents: 5000 }],
+    new Map([["amostra", 500]]),
+    { height: settings.boxHeightCm, width: settings.boxWidthCm, depth: settings.boxDepthCm }
+  );
+  const r = await stoneDiagnose({
+    pickupZip: settings.stonePickupZip,
+    deliveryZip: (deliveryZip || "").replace(/\D/g, ""),
+    items,
+  });
+  return { ...r, pickupZip: settings.stonePickupZip };
 }

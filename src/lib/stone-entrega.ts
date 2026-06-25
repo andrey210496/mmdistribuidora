@@ -76,10 +76,42 @@ export type StoneQuote = {
   id: string;
   cost: number; // reais
   eta: number; // segundos
-  slaWorkingDays: number;
+  slaWorkingDays?: number;
+  service?: string; // "Mais rápida" | "Mais Barata"
   carrier?: { name?: string; service?: string };
   classification?: string; // "fastest" | "cheapest"
 };
+
+// Opção de frete já normalizada (centavos + metadados) para uso interno.
+export type StoneOption = {
+  cents: number;
+  carrier: string; // ex.: "uber", "stoneLog"
+  service: string; // ex.: "Mais rápida", "Mais Barata"
+  classification: string; // "fastest" | "cheapest"
+  etaSeconds: number;
+};
+
+// A resposta pode ser um array, um objeto único, ou { options: [...] }.
+function parseQuotes(data: unknown): StoneQuote[] {
+  const list: StoneQuote[] = Array.isArray(data)
+    ? (data as StoneQuote[])
+    : data && typeof data === "object" && Array.isArray((data as { options?: unknown }).options)
+      ? (data as { options: StoneQuote[] }).options
+      : data && typeof data === "object" && (data as { id?: string }).id
+        ? [data as StoneQuote]
+        : [];
+  return list.filter((q) => typeof q?.cost === "number");
+}
+
+function toOption(q: StoneQuote): StoneOption {
+  return {
+    cents: Math.round(q.cost * 100),
+    carrier: q.carrier?.name ?? "",
+    service: q.service ?? "",
+    classification: q.classification ?? "",
+    etaSeconds: typeof q.eta === "number" ? q.eta : 0,
+  };
+}
 
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
@@ -130,16 +162,7 @@ export async function stoneSimulate(input: {
       }),
     });
 
-    // A resposta pode ser um array de opções, um objeto único, ou { options: [...] }.
-    const list: StoneQuote[] = Array.isArray(data)
-      ? (data as StoneQuote[])
-      : data && typeof data === "object" && Array.isArray((data as { options?: unknown }).options)
-        ? ((data as { options: StoneQuote[] }).options)
-        : data && typeof data === "object" && (data as { id?: string }).id
-          ? [data as StoneQuote]
-          : [];
-
-    return list.filter((q) => typeof q?.cost === "number");
+    return parseQuotes(data);
   } catch (err) {
     console.error("[stone] simulate falhou (usando frete fixo):", err);
     return null;
@@ -147,15 +170,76 @@ export async function stoneSimulate(input: {
 }
 
 /**
- * Retorna o frete MAIS BARATO em centavos, ou null se indisponível.
+ * Retorna a opção de frete MAIS BARATA (centavos + transportadora), ou null.
  */
-export async function stoneCheapestShippingCents(input: {
+export async function stoneCheapestOption(input: {
   pickupZip: string;
   deliveryZip: string;
   items: StoneItem[];
-}): Promise<number | null> {
+}): Promise<StoneOption | null> {
   const quotes = await stoneSimulate(input);
   if (!quotes || quotes.length === 0) return null;
   const cheapest = quotes.reduce((min, q) => (q.cost < min.cost ? q : min), quotes[0]!);
-  return Math.round(cheapest.cost * 100);
+  return toOption(cheapest);
+}
+
+/**
+ * Diagnóstico (usado pelo admin): NÃO engole erros — retorna a causa real
+ * (credenciais, 401, account-not-found, sem cobertura []) para aparecer na tela.
+ */
+export async function stoneDiagnose(input: {
+  pickupZip: string;
+  deliveryZip: string;
+  items: StoneItem[];
+}): Promise<{
+  configured: boolean;
+  baseUrl: string;
+  ok: boolean;
+  error?: string;
+  options: StoneOption[];
+}> {
+  const base = baseUrl();
+  if (!isStoneConfigured()) {
+    return {
+      configured: false,
+      baseUrl: base,
+      ok: false,
+      error:
+        "Credenciais ausentes: defina STONE_EMAIL, STONE_PASSWORD e STONE_LOGISTIC_ACCOUNT_ID nas variáveis de ambiente.",
+      options: [],
+    };
+  }
+  if (!input.pickupZip) {
+    return { configured: true, baseUrl: base, ok: false, error: "CEP de coleta (origem) não preenchido em Configurações.", options: [] };
+  }
+  if (!input.deliveryZip) {
+    return { configured: true, baseUrl: base, ok: false, error: "Informe um CEP de entrega para testar.", options: [] };
+  }
+  try {
+    const token = await getToken();
+    const data = await fetchJson(
+      "/deliveries/simulate",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          logisticAccountId: env.STONE_LOGISTIC_ACCOUNT_ID,
+          pickupAddress: { zipCode: onlyDigits(input.pickupZip) },
+          deliveryAddress: { zipCode: onlyDigits(input.deliveryZip) },
+          items: input.items,
+        }),
+      },
+      12000
+    );
+    const options = parseQuotes(data).map(toOption).sort((a, b) => a.cents - b.cents);
+    return { configured: true, baseUrl: base, ok: true, options };
+  } catch (err) {
+    return {
+      configured: true,
+      baseUrl: base,
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+      options: [],
+    };
+  }
 }

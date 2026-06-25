@@ -3,7 +3,7 @@
 // Usado pelo carrinho (exibição) e pelo checkout (cobrança) para
 // nunca divergirem.
 // ============================================================
-import { isStoneConfigured, stoneCheapestShippingCents, type StoneItem } from "./stone-entrega";
+import { isStoneConfigured, stoneCheapestOption, type StoneItem } from "./stone-entrega";
 import type { StoreSettings } from "./settings";
 
 // Defaults — usados quando não há configuração salva (ver lib/settings.ts).
@@ -28,24 +28,41 @@ export function computeShippingCents(
  * Ordem: 1) grátis acima do limite (promo da loja); 2) cotação real do Stone
  * Entrega (mais barata) quando configurado e há CEP; 3) frete fixo (fallback).
  */
+export type ResolvedShipping = {
+  cents: number;
+  source: "free" | "stone" | "flat";
+  carrier: string | null; // transportadora (quando vier do Stone)
+  service: string | null; // "Mais rápida" | "Mais Barata"
+};
+
+export async function resolveShipping(opts: {
+  subtotalCents: number;
+  deliveryZip: string | null;
+  items: StoneItem[];
+  settings: StoreSettings;
+}): Promise<ResolvedShipping> {
+  const { subtotalCents, deliveryZip, items, settings } = opts;
+  if (subtotalCents <= 0) return { cents: 0, source: "free", carrier: null, service: null };
+  if (subtotalCents >= settings.shippingFreeThresholdCents) {
+    return { cents: 0, source: "free", carrier: null, service: null };
+  }
+
+  if (isStoneConfigured() && deliveryZip && settings.stonePickupZip && items.length > 0) {
+    const opt = await stoneCheapestOption({ pickupZip: settings.stonePickupZip, deliveryZip, items });
+    if (opt != null) {
+      return { cents: opt.cents, source: "stone", carrier: opt.carrier || null, service: opt.service || null };
+    }
+  }
+
+  return { cents: settings.shippingFlatRateCents, source: "flat", carrier: null, service: null };
+}
+
+/** Conveniência: só os centavos (o checkout usa isto). */
 export async function resolveShippingCents(opts: {
   subtotalCents: number;
   deliveryZip: string | null;
   items: StoneItem[];
   settings: StoreSettings;
 }): Promise<number> {
-  const { subtotalCents, deliveryZip, items, settings } = opts;
-  if (subtotalCents <= 0) return 0;
-  if (subtotalCents >= settings.shippingFreeThresholdCents) return 0;
-
-  if (isStoneConfigured() && deliveryZip && settings.stonePickupZip && items.length > 0) {
-    const cents = await stoneCheapestShippingCents({
-      pickupZip: settings.stonePickupZip,
-      deliveryZip,
-      items,
-    });
-    if (cents != null) return cents;
-  }
-
-  return settings.shippingFlatRateCents;
+  return (await resolveShipping(opts)).cents;
 }

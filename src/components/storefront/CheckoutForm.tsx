@@ -376,7 +376,14 @@ export function CheckoutForm({
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-cocoa/70">Frete</span>
+              <span className="text-cocoa/70">
+                Frete
+                {cart.shippingSource === "stone" && (
+                  <span className="ml-1.5 text-[11px] text-olive font-semibold">
+                    Stone Entrega{cart.shippingService ? ` · ${cart.shippingService}` : ""}
+                  </span>
+                )}
+              </span>
               <span className={`font-semibold ${cart.shippingCents === 0 ? "text-olive" : "text-cocoa"}`}>
                 {cart.shippingCents === 0 ? "Grátis" : centsToBRL(cart.shippingCents)}
               </span>
