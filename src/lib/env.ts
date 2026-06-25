@@ -18,6 +18,12 @@ const envSchema = z.object({
   STRIPE_PUBLISHABLE_KEY: z.string().optional().default(""),
   STRIPE_WEBHOOK_SECRET: z.string().optional().default(""),
 
+  // Stone Entrega — logística. Vazio = desativado (usa frete fixo).
+  STONE_BASE_URL: z.string().optional().default("https://stg-entrega.stone.com.br/api/smart-logistic-gateway"),
+  STONE_EMAIL: z.string().optional().default(""),
+  STONE_PASSWORD: z.string().optional().default(""),
+  STONE_LOGISTIC_ACCOUNT_ID: z.string().optional().default(""),
+
   RATE_LIMIT_LOGIN_PER_MIN: z.coerce.number().int().positive().default(5),
   RATE_LIMIT_CHECKOUT_PER_MIN: z.coerce.number().int().positive().default(10),
 

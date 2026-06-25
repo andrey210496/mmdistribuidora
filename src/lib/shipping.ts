@@ -3,6 +3,8 @@
 // Usado pelo carrinho (exibição) e pelo checkout (cobrança) para
 // nunca divergirem.
 // ============================================================
+import { isStoneConfigured, stoneCheapestShippingCents, type StoneItem } from "./stone-entrega";
+import type { StoreSettings } from "./settings";
 
 // Defaults — usados quando não há configuração salva (ver lib/settings.ts).
 export const SHIPPING_FREE_THRESHOLD_CENTS = 20000; // R$ 200
@@ -19,4 +21,31 @@ export function computeShippingCents(
 ): number {
   if (subtotalCents <= 0) return 0;
   return subtotalCents >= freeThresholdCents ? 0 : flatRateCents;
+}
+
+/**
+ * Frete definitivo (carrinho e checkout usam o MESMO).
+ * Ordem: 1) grátis acima do limite (promo da loja); 2) cotação real do Stone
+ * Entrega (mais barata) quando configurado e há CEP; 3) frete fixo (fallback).
+ */
+export async function resolveShippingCents(opts: {
+  subtotalCents: number;
+  deliveryZip: string | null;
+  items: StoneItem[];
+  settings: StoreSettings;
+}): Promise<number> {
+  const { subtotalCents, deliveryZip, items, settings } = opts;
+  if (subtotalCents <= 0) return 0;
+  if (subtotalCents >= settings.shippingFreeThresholdCents) return 0;
+
+  if (isStoneConfigured() && deliveryZip && settings.stonePickupZip && items.length > 0) {
+    const cents = await stoneCheapestShippingCents({
+      pickupZip: settings.stonePickupZip,
+      deliveryZip,
+      items,
+    });
+    if (cents != null) return cents;
+  }
+
+  return settings.shippingFlatRateCents;
 }

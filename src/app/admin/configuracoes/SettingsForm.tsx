@@ -10,6 +10,10 @@ type Initial = {
   shippingFreeReais: string;
   shippingFlatReais: string;
   installmentsMinReais: string;
+  stonePickupZip: string;
+  boxHeightCm: number;
+  boxWidthCm: number;
+  boxDepthCm: number;
 };
 
 export function SettingsForm({ initial }: { initial: Initial }) {
@@ -18,6 +22,10 @@ export function SettingsForm({ initial }: { initial: Initial }) {
   const [shipFree, setShipFree] = useState(initial.shippingFreeReais);
   const [shipFlat, setShipFlat] = useState(initial.shippingFlatReais);
   const [installMin, setInstallMin] = useState(initial.installmentsMinReais);
+  const [pickupZip, setPickupZip] = useState(initial.stonePickupZip);
+  const [boxH, setBoxH] = useState(String(initial.boxHeightCm));
+  const [boxW, setBoxW] = useState(String(initial.boxWidthCm));
+  const [boxD, setBoxD] = useState(String(initial.boxDepthCm));
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
@@ -30,6 +38,10 @@ export function SettingsForm({ initial }: { initial: Initial }) {
         shippingFreeReais: shipFree,
         shippingFlatReais: shipFlat,
         installmentsMinReais: installMin,
+        stonePickupZip: pickupZip,
+        boxHeightCm: Number(boxH),
+        boxWidthCm: Number(boxW),
+        boxDepthCm: Number(boxD),
       });
       setMsg(
         r.ok
@@ -144,6 +156,49 @@ export function SettingsForm({ initial }: { initial: Initial }) {
             </p>
           </div>
         </div>
+      </section>
+
+      {/* Entrega — Stone Entrega (cotação real por CEP) */}
+      <section className="bg-white rounded-2xl border border-cocoa/10 p-6">
+        <h2 className="font-display text-xl font-bold text-cocoa mb-1 flex items-center gap-2">
+          <Truck size={18} className="text-cocoa" /> Entrega (Stone Entrega)
+        </h2>
+        <p className="text-cocoa/60 text-sm mb-5">
+          Cotação real de frete por CEP. As credenciais ficam nas variáveis de ambiente; aqui você
+          define a origem da coleta e a caixa padrão. Sem configuração, usa o frete fixo acima.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-5 mb-4">
+          <div>
+            <label className="text-sm font-semibold text-cocoa mb-1.5 block">CEP de coleta (origem)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={pickupZip}
+              onChange={(e) => setPickupZip(e.target.value)}
+              className={inputCls}
+              placeholder="00000-000"
+            />
+            <p className="text-xs text-cocoa/50 mt-1">De onde os pedidos saem (sua loja/estoque).</p>
+          </div>
+        </div>
+        <label className="text-sm font-semibold text-cocoa mb-1.5 block">Caixa padrão (cm)</label>
+        <div className="grid grid-cols-3 gap-3 max-w-md">
+          <div>
+            <input type="number" min={1} value={boxH} onChange={(e) => setBoxH(e.target.value)} className={inputCls} placeholder="Altura" />
+            <p className="text-xs text-cocoa/50 mt-1 text-center">Altura</p>
+          </div>
+          <div>
+            <input type="number" min={1} value={boxW} onChange={(e) => setBoxW(e.target.value)} className={inputCls} placeholder="Largura" />
+            <p className="text-xs text-cocoa/50 mt-1 text-center">Largura</p>
+          </div>
+          <div>
+            <input type="number" min={1} value={boxD} onChange={(e) => setBoxD(e.target.value)} className={inputCls} placeholder="Profund." />
+            <p className="text-xs text-cocoa/50 mt-1 text-center">Profund.</p>
+          </div>
+        </div>
+        <p className="text-xs text-cocoa/50 mt-2">
+          O peso vem do cadastro de cada produto; as dimensões usam esta caixa padrão.
+        </p>
       </section>
 
       {msg && (

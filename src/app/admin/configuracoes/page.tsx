@@ -29,6 +29,10 @@ export default async function ConfigPage() {
           shippingFreeReais: centsToReais(s.shippingFreeThresholdCents),
           shippingFlatReais: centsToReais(s.shippingFlatRateCents),
           installmentsMinReais: centsToReais(s.installmentsMinCents),
+          stonePickupZip: s.stonePickupZip,
+          boxHeightCm: s.boxHeightCm,
+          boxWidthCm: s.boxWidthCm,
+          boxDepthCm: s.boxDepthCm,
         }}
       />
     </div>

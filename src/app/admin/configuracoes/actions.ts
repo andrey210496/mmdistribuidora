@@ -17,6 +17,10 @@ const schema = z.object({
   shippingFreeReais: z.string().min(1),
   shippingFlatReais: z.string().min(1),
   installmentsMinReais: z.string().min(1),
+  stonePickupZip: z.string().optional().default(""),
+  boxHeightCm: z.coerce.number().int().min(1).max(200),
+  boxWidthCm: z.coerce.number().int().min(1).max(200),
+  boxDepthCm: z.coerce.number().int().min(1).max(200),
 });
 
 export async function saveSettings(input: z.infer<typeof schema>): Promise<ActionResult> {
@@ -42,6 +46,10 @@ export async function saveSettings(input: z.infer<typeof schema>): Promise<Actio
     shippingFreeThresholdCents,
     shippingFlatRateCents,
     installmentsMinCents,
+    stonePickupZip: parsed.data.stonePickupZip ?? "",
+    boxHeightCm: parsed.data.boxHeightCm,
+    boxWidthCm: parsed.data.boxWidthCm,
+    boxDepthCm: parsed.data.boxDepthCm,
   });
 
   const h = await headers();

@@ -1,7 +1,8 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
 import { isCurrentCustomerActiveMember } from "./customer";
-import { computeShippingCents } from "./shipping";
+import { resolveShippingCents } from "./shipping";
+import { buildStoneItems } from "./stone-entrega";
 import { getStoreSettings } from "./settings";
 
 // ============================================================
@@ -152,11 +153,18 @@ export async function getCart(): Promise<CartSummary> {
   });
 
   const priced = priceCartLines(items, products, isClubMember);
-  const shippingCents = computeShippingCents(
-    priced.subtotalCents,
-    settings.shippingFreeThresholdCents,
-    settings.shippingFlatRateCents
-  );
+  const weightByProduct = new Map(products.map((p) => [p.id, p.weightGrams]));
+  const stoneItems = buildStoneItems(priced.lines, weightByProduct, {
+    height: settings.boxHeightCm,
+    width: settings.boxWidthCm,
+    depth: settings.boxDepthCm,
+  });
+  const shippingCents = await resolveShippingCents({
+    subtotalCents: priced.subtotalCents,
+    deliveryZip: zip,
+    items: stoneItems,
+    settings,
+  });
   const totalCents = priced.subtotalCents + shippingCents;
 
   return {

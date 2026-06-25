@@ -12,7 +12,8 @@ import { logAudit } from "@/lib/audit";
 import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
 import { getCurrentCustomer } from "@/lib/customer";
-import { computeShippingCents } from "@/lib/shipping";
+import { resolveShippingCents } from "@/lib/shipping";
+import { buildStoneItems } from "@/lib/stone-entrega";
 import { getStoreSettings } from "@/lib/settings";
 import { Prisma, type OrderStatus } from "@prisma/client";
 
@@ -123,13 +124,20 @@ export async function submitCheckout(
 
   const discountCents = Math.max(0, normalSubtotalCents - subtotalCents);
 
-  // Frete usa as configurações da loja (mesma fonte do carrinho — nunca divergem).
+  // Frete usa a MESMA função do carrinho (Stone Entrega + fallback fixo).
   const settings = await getStoreSettings();
-  const shippingCents = computeShippingCents(
+  const weightByProduct = new Map(products.map((p) => [p.id, p.weightGrams]));
+  const stoneItems = buildStoneItems(orderItemsData, weightByProduct, {
+    height: settings.boxHeightCm,
+    width: settings.boxWidthCm,
+    depth: settings.boxDepthCm,
+  });
+  const shippingCents = await resolveShippingCents({
     subtotalCents,
-    settings.shippingFreeThresholdCents,
-    settings.shippingFlatRateCents
-  );
+    deliveryZip: data.shippingAddress.zip,
+    items: stoneItems,
+    settings,
+  });
   const totalCents = subtotalCents + shippingCents;
 
   // Atualiza dados de contato do cliente logado se vierem novos no formulário.
