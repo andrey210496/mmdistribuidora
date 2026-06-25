@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState, useEffect, useRef } from "react";
+import { useActionState, useState, useEffect, useRef, useTransition } from "react";
 import { ShieldCheck, Lock, CreditCard, Crown, ArrowRight, X } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { submitCheckout, type CheckoutState } from "@/app/actions/checkout";
+import { quoteShipping } from "@/app/actions/cart";
 import type { CartSummary } from "@/lib/cart";
 
 const initial: CheckoutState = {};
@@ -56,7 +57,7 @@ const formatPhone = (v: string) => {
 };
 
 export function CheckoutForm({
-  cart,
+  cart: initialCart,
   customer,
   checkoutUpsell = null,
 }: {
@@ -65,6 +66,9 @@ export function CheckoutForm({
   checkoutUpsell?: CheckoutUpsell;
 }) {
   const [state, formAction, pending] = useActionState(submitCheckout, initial);
+  const [cart, setCart] = useState(initialCart);
+  const [quoting, startQuote] = useTransition();
+  const lastQuoted = useRef(initialCart.shippingZip ?? "");
   const [cpfCnpj, setCpfCnpj] = useState(
     customer.cpfCnpj ? formatCpfCnpj(customer.cpfCnpj) : ""
   );
@@ -87,6 +91,19 @@ export function CheckoutForm({
       window.location.href = state.redirectTo;
     }
   }, [state.redirectTo]);
+
+  // Recota o frete quando o CEP fica completo (8 dígitos). O preço vem do backend.
+  useEffect(() => {
+    const digits = cep.replace(/\D/g, "");
+    if (digits.length === 8 && digits !== lastQuoted.current) {
+      lastQuoted.current = digits;
+      startQuote(async () => setCart(await quoteShipping(digits)));
+    }
+  }, [cep]);
+
+  const chooseOption = (key: string) => {
+    startQuote(async () => setCart(await quoteShipping(null, key)));
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (shouldUpsell && !upsellPassed) {
@@ -385,9 +402,49 @@ export function CheckoutForm({
                 )}
               </span>
               <span className={`font-semibold ${cart.shippingCents === 0 ? "text-olive" : "text-cocoa"}`}>
-                {cart.shippingCents === 0 ? "Grátis" : centsToBRL(cart.shippingCents)}
+                {quoting ? "calculando…" : cart.shippingCents === 0 ? "Grátis" : centsToBRL(cart.shippingCents)}
               </span>
             </div>
+
+            {/* Opções do Stone — cliente escolhe; preço recotado no backend */}
+            {cart.shippingOptions.length > 0 && (
+              <div className="space-y-1.5">
+                {cart.shippingOptions.map((o) => {
+                  const selected = cart.shippingOptionKey === o.key;
+                  return (
+                    <label
+                      key={o.key}
+                      className={`flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2 cursor-pointer transition ${
+                        selected ? "border-rose-brand bg-rose-brand/5" : "border-cocoa/15 hover:border-cocoa/30"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 min-w-0">
+                        <input
+                          type="radio"
+                          name="shipopt"
+                          checked={selected}
+                          onChange={() => chooseOption(o.key)}
+                          disabled={quoting}
+                          className="accent-rose-brand"
+                        />
+                        <span className="min-w-0">
+                          <span className="text-xs text-cocoa font-medium block truncate">
+                            {o.service || o.carrier || "Entrega"}
+                          </span>
+                          <span className="text-[10px] text-cocoa/50 block">
+                            {o.etaSeconds ? `~${Math.round(o.etaSeconds / 3600)}h` : ""}
+                            {o.carrier ? ` · ${o.carrier}` : ""}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="font-bold text-cocoa text-xs whitespace-nowrap">
+                        {centsToBRL(o.cents)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
             <div className="border-t border-cocoa/10 pt-3 flex justify-between items-baseline">
               <span className="font-bold text-cocoa">Total</span>
               <span className="font-display text-2xl font-bold text-cocoa">

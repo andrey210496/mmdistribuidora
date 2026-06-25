@@ -96,3 +96,23 @@ export async function setCartShippingOption(key: string): Promise<ActionResult> 
   revalidatePath("/checkout");
   return { ok: true };
 }
+
+/**
+ * Recota o frete no checkout: grava o CEP e/ou a opção escolhida na sessão e
+ * devolve o carrinho atualizado (a UI reflete sem recarregar a página).
+ * O PREÇO continua sendo derivado no backend (anti-fraude).
+ */
+export async function quoteShipping(
+  zip: string | null,
+  optionKey?: string | null
+): Promise<CartSummary> {
+  if (zip != null) {
+    const cleaned = zip.replace(/\D/g, "");
+    if (cleaned.length === 8) await setShippingZip(cleaned);
+  }
+  if (optionKey) {
+    const valid = z.string().min(1).max(60).safeParse(optionKey);
+    if (valid.success) await setShippingOption(valid.data);
+  }
+  return getCart();
+}
