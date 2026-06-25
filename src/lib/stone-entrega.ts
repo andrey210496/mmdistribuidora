@@ -11,7 +11,8 @@ import { env } from "./env";
 // ============================================================
 
 function baseUrl(): string {
-  return env.STONE_BASE_URL || "https://stg-entrega.stone.com.br/api/smart-logistic-gateway";
+  // Produção. (Homologação: https://stg-entrega.stone.com.br/api/smart-logistic-gateway)
+  return env.STONE_BASE_URL || "https://entrega.stone.com.br/api/smart-logistic-gateway";
 }
 
 export function isStoneConfigured(): boolean {
@@ -119,7 +120,10 @@ export async function stoneSimulate(input: {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        sender: { logisticAccountId: env.STONE_LOGISTIC_ACCOUNT_ID },
+        // A conta logística vai no TOPO do payload. Dentro de "sender" a API de
+        // produção responde "business:account-not-found" (confirmado em testes).
+        // Endereços: SÓ zipCode — enviar rua/cidade dispara bloqueio do WAF (403).
+        logisticAccountId: env.STONE_LOGISTIC_ACCOUNT_ID,
         pickupAddress: { zipCode: onlyDigits(input.pickupZip) },
         deliveryAddress: { zipCode: onlyDigits(input.deliveryZip) },
         items: input.items,
