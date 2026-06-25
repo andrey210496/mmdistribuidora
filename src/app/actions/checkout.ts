@@ -12,7 +12,7 @@ import { logAudit } from "@/lib/audit";
 import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
 import { getCurrentCustomer } from "@/lib/customer";
-import { resolveShippingCents } from "@/lib/shipping";
+import { resolveShipping } from "@/lib/shipping";
 import { buildStoneItems } from "@/lib/stone-entrega";
 import { getStoreSettings } from "@/lib/settings";
 import { Prisma, type OrderStatus } from "@prisma/client";
@@ -132,12 +132,16 @@ export async function submitCheckout(
     width: settings.boxWidthCm,
     depth: settings.boxDepthCm,
   });
-  const shippingCents = await resolveShippingCents({
+  // Recota no servidor para o CEP do checkout e respeita a OPÇÃO escolhida
+  // (cart.shippingOptionKey) — o preço vem da cotação, nunca do front.
+  const ship = await resolveShipping({
     subtotalCents,
     deliveryZip: data.shippingAddress.zip,
     items: stoneItems,
     settings,
+    preferredKey: cart.shippingOptionKey,
   });
+  const shippingCents = ship.cents;
   const totalCents = subtotalCents + shippingCents;
 
   // Atualiza dados de contato do cliente logado se vierem novos no formulário.

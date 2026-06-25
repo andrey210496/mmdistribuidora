@@ -2,7 +2,7 @@ import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
 import { isCurrentCustomerActiveMember } from "./customer";
 import { resolveShipping } from "./shipping";
-import { buildStoneItems } from "./stone-entrega";
+import { buildStoneItems, type StoneOption } from "./stone-entrega";
 import { getStoreSettings } from "./settings";
 
 // ============================================================
@@ -43,6 +43,8 @@ export type CartSummary = {
   shippingSource: "free" | "stone" | "flat" | "none";
   shippingCarrier: string | null; // transportadora (quando vier do Stone)
   shippingService: string | null; // "Mais rápida" | "Mais Barata"
+  shippingOptions: StoneOption[]; // opções do Stone p/ o cliente escolher
+  shippingOptionKey: string | null; // opção atualmente selecionada
   // Cliente logado é membro ativo do clube? (decidido no backend)
   isClubMember: boolean;
   // Quanto o cliente está economizando com o preço de membro neste carrinho
@@ -141,6 +143,8 @@ export async function getCart(): Promise<CartSummary> {
       shippingSource: "none",
       shippingCarrier: null,
       shippingService: null,
+      shippingOptions: [],
+      shippingOptionKey: null,
       isClubMember: false,
       clubSavingsCents: 0,
       potentialClubSavingsCents: 0,
@@ -171,6 +175,7 @@ export async function getCart(): Promise<CartSummary> {
     deliveryZip: zip,
     items: stoneItems,
     settings,
+    preferredKey: session.shippingOptionKey ?? null,
   });
   const totalCents = priced.subtotalCents + ship.cents;
 
@@ -186,6 +191,8 @@ export async function getCart(): Promise<CartSummary> {
     shippingSource: ship.source,
     shippingCarrier: ship.carrier,
     shippingService: ship.service,
+    shippingOptions: ship.options,
+    shippingOptionKey: ship.selectedKey,
     isClubMember,
     clubSavingsCents: priced.clubSavingsCents,
     potentialClubSavingsCents: priced.potentialClubSavingsCents,
@@ -275,5 +282,15 @@ export async function clearCart(): Promise<void> {
 export async function setShippingZip(zip: string | null): Promise<void> {
   const session = await getCustomerSession();
   session.shippingZip = zip ?? undefined;
+  await session.save();
+}
+
+/**
+ * Guarda QUAL opção de frete o cliente escolheu (só a chave). O preço nunca
+ * vem do front — é sempre recotado/derivado no backend (anti-fraude).
+ */
+export async function setShippingOption(key: string | null): Promise<void> {
+  const session = await getCustomerSession();
+  session.shippingOptionKey = key ?? undefined;
   await session.save();
 }

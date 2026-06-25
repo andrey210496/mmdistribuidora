@@ -89,6 +89,7 @@ export type StoneQuote = {
 
 // Opção de frete já normalizada (centavos + metadados) para uso interno.
 export type StoneOption = {
+  key: string; // seletor estável (classification/carrier) — usado no chooser
   cents: number;
   carrier: string; // ex.: "uber", "stoneLog"
   service: string; // ex.: "Mais rápida", "Mais Barata"
@@ -110,6 +111,7 @@ function parseQuotes(data: unknown): StoneQuote[] {
 
 function toOption(q: StoneQuote): StoneOption {
   return {
+    key: (q.classification || q.carrier?.name || q.service || "stone").toString(),
     cents: Math.round(q.cost * 100),
     carrier: q.carrier?.name ?? "",
     service: q.service ?? "",
@@ -175,17 +177,17 @@ export async function stoneSimulate(input: {
 }
 
 /**
- * Retorna a opção de frete MAIS BARATA (centavos + transportadora), ou null.
+ * Retorna TODAS as opções de frete (ordenadas da mais barata), ou [] se
+ * indisponível/sem cobertura/erro. Defensivo — nunca lança.
  */
-export async function stoneCheapestOption(input: {
+export async function stoneQuoteOptions(input: {
   pickupZip: string;
   deliveryZip: string;
   items: StoneItem[];
-}): Promise<StoneOption | null> {
+}): Promise<StoneOption[]> {
   const quotes = await stoneSimulate(input);
-  if (!quotes || quotes.length === 0) return null;
-  const cheapest = quotes.reduce((min, q) => (q.cost < min.cost ? q : min), quotes[0]!);
-  return toOption(cheapest);
+  if (!quotes || quotes.length === 0) return [];
+  return quotes.map(toOption).sort((a, b) => a.cents - b.cents);
 }
 
 /**

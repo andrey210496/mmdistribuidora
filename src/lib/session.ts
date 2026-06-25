@@ -43,6 +43,9 @@ export type CustomerSession = {
   cart?: CartItem[];
   // CEP usado pra calcular frete na sessão
   shippingZip?: string;
+  // Opção de frete escolhida (chave da opção do Stone). O PREÇO é sempre
+  // recotado/derivado no backend — o front nunca envia valor.
+  shippingOptionKey?: string;
 };
 
 export const customerSessionOptions: SessionOptions = {

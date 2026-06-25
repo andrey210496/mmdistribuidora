@@ -9,6 +9,7 @@ import {
   removeFromCart as removeFromCartLib,
   clearCart as clearCartLib,
   setShippingZip,
+  setShippingOption,
   type CartSummary,
 } from "@/lib/cart";
 
@@ -79,5 +80,19 @@ export async function setCartZip(zip: string): Promise<ActionResult> {
   if (!valid.success) return { ok: false, error: "CEP inválido" };
   await setShippingZip(cleaned);
   revalidatePath("/carrinho");
+  revalidatePath("/checkout");
+  return { ok: true };
+}
+
+/**
+ * Cliente escolhe QUAL opção de frete (Mais barata x Mais rápida). Só a chave
+ * é enviada; o backend recota no Stone e usa o preço real (anti-fraude).
+ */
+export async function setCartShippingOption(key: string): Promise<ActionResult> {
+  const valid = z.string().min(1).max(60).safeParse(key);
+  if (!valid.success) return { ok: false, error: "Opção inválida" };
+  await setShippingOption(valid.data);
+  revalidatePath("/carrinho");
+  revalidatePath("/checkout");
   return { ok: true };
 }
