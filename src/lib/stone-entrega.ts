@@ -11,8 +11,13 @@ import { env } from "./env";
 // ============================================================
 
 function baseUrl(): string {
-  // Produção. (Homologação: https://stg-entrega.stone.com.br/api/smart-logistic-gateway)
-  return env.STONE_BASE_URL || "https://entrega.stone.com.br/api/smart-logistic-gateway";
+  const PROD = "https://entrega.stone.com.br/api/smart-logistic-gateway";
+  // SEMPRE produção. Ignoramos a URL de homologação (stg-): uma env var antiga
+  // de staging não deve quebrar a cotação em produção silenciosamente (401).
+  // Só um override EXPLÍCITO e não-staging é respeitado (uso interno/futuro).
+  const v = env.STONE_BASE_URL?.trim();
+  if (!v || v.includes("stg-")) return PROD;
+  return v;
 }
 
 export function isStoneConfigured(): boolean {
