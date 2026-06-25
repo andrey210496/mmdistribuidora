@@ -25,6 +25,11 @@ const fraunces = Fraunces({
   axes: ["SOFT", "WONK", "opsz"],
 });
 
+// O app inteiro é dinâmico (sessão/cookies em toda rota). Declarar aqui também
+// impede a pré-renderização estática do /_not-found no build (output: standalone),
+// que falhava no manifest dos client components. No-op funcional (já era tudo ƒ).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://doceencantodistribuidora.com"),
   title: {
