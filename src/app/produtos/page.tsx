@@ -151,7 +151,6 @@ export default async function ProdutosPage({
                     name={p.name}
                     priceCents={p.priceCents}
                     compareAtPriceCents={p.compareAtPriceCents}
-                    clubPriceCents={p.clubPriceCents}
                     imageUrl={p.images[0]?.url}
                     outOfStock={p.stock <= 0}
                   />

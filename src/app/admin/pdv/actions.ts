@@ -37,7 +37,6 @@ export type PdvProduct = {
   sku: string;
   barcode: string | null;
   priceCents: number;
-  clubPriceCents: number | null;
   wholesalePriceCents: number | null;
   wholesaleMinQty: number;
   stock: number;
@@ -69,7 +68,6 @@ export async function searchProducts(query: string): Promise<PdvProduct[]> {
     sku: p.sku,
     barcode: p.barcode,
     priceCents: p.priceCents,
-    clubPriceCents: p.clubPriceCents,
     wholesalePriceCents: p.wholesalePriceCents,
     wholesaleMinQty: p.wholesaleMinQty,
     stock: p.stock,
@@ -86,7 +84,6 @@ export type PdvCustomer = {
   phone: string | null;
   cpfCnpj: string | null;
   isWholesale: boolean;
-  isClubMember: boolean;
   creditAvailableCents: number;
   creditOwedCents: number;
 };
@@ -107,22 +104,17 @@ export async function searchCustomers(query: string): Promise<PdvCustomer[]> {
     },
     take: 10,
     orderBy: { name: "asc" },
-    include: { clubMember: true },
   });
 
   const out: PdvCustomer[] = [];
   for (const c of customers) {
     const summary = await getCustomerCreditSummary(c.id);
-    const member =
-      c.clubMember?.status === "ACTIVE" &&
-      (!c.clubMember.expiresAt || c.clubMember.expiresAt.getTime() > Date.now());
     out.push({
       id: c.id,
       name: c.name,
       phone: c.phone,
       cpfCnpj: c.cpfCnpj,
       isWholesale: c.isWholesale,
-      isClubMember: Boolean(member),
       creditAvailableCents: summary.availableCents,
       creditOwedCents: summary.owedCents,
     });
@@ -167,7 +159,6 @@ export async function quickCreateCustomer(input: {
       phone: c.phone,
       cpfCnpj: c.cpfCnpj,
       isWholesale: false,
-      isClubMember: false,
       creditAvailableCents: 0,
       creditOwedCents: 0,
     },
@@ -310,20 +301,11 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
 
   // Resolve o cliente (Consumidor por padrão).
   let customer: Awaited<ReturnType<typeof getOrCreateWalkInCustomer>>;
-  let isClubMember = false;
   if (input.customerId) {
     const id = idSchema.safeParse(input.customerId);
     if (!id.success) return { ok: false, error: "Cliente inválido" };
-    const c = await prisma.customer.findUnique({
-      where: { id: id.data },
-      include: { clubMember: true },
-    });
+    const c = await prisma.customer.findUnique({ where: { id: id.data } });
     if (!c) return { ok: false, error: "Cliente não encontrado" };
-    isClubMember = Boolean(
-      c.clubMember &&
-        c.clubMember.status === "ACTIVE" &&
-        (!c.clubMember.expiresAt || c.clubMember.expiresAt.getTime() > Date.now())
-    );
     customer = c;
   } else {
     if (input.onCredit) return { ok: false, error: "Fiado exige um cliente cadastrado." };
@@ -361,7 +343,6 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
       return { ok: false, error: `Estoque insuficiente para "${product.name}" (${product.stock}).` };
     }
     const unitPriceCents = resolveUnitPrice(product, {
-      isClubMember: Boolean(isClubMember),
       isWholesale,
       qty,
     }).unitPriceCents;

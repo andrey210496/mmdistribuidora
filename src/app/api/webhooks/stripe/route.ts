@@ -3,7 +3,6 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { logAudit } from "@/lib/audit";
-import { addOneYear } from "@/lib/club";
 import { applyRefundToOrder } from "@/lib/refunds";
 import type { OrderStatus, PaymentMethod } from "@prisma/client";
 
@@ -68,67 +67,6 @@ export async function POST(req: NextRequest) {
 
         // Só confirma se o pagamento realmente foi pago
         if (session.payment_status !== "paid") {
-          break;
-        }
-
-        // ---- Assinatura do CLUBE (pagamento anual) ----
-        if (session.metadata?.type === "club") {
-          const customerId = session.metadata?.customerId ?? session.client_reference_id;
-          if (!customerId) break;
-
-          const customer = await prisma.customer.findUnique({ where: { id: customerId } });
-          if (!customer) break;
-
-          // Idempotência: se já ativamos por esta sessão, não repete
-          const existing = await prisma.clubMember.findUnique({ where: { customerId } });
-          if (existing?.stripeSessionId === session.id) break;
-
-          const now = new Date();
-          // Renovação: estende a partir do vencimento atual se ainda estiver no prazo
-          const base =
-            existing?.expiresAt && existing.expiresAt > now ? existing.expiresAt : now;
-          const expiresAt = addOneYear(base);
-          const pricePaidCents = session.amount_total ?? undefined;
-
-          await prisma.clubMember.upsert({
-            where: { customerId },
-            update: {
-              status: "ACTIVE",
-              expiresAt,
-              pricePaidCents,
-              stripeSessionId: session.id,
-              canceledAt: null,
-            },
-            create: {
-              customerId,
-              tier: "OURO",
-              status: "ACTIVE",
-              joinedAt: now,
-              expiresAt,
-              pricePaidCents,
-              stripeSessionId: session.id,
-            },
-          });
-
-          // Registra a receita da assinatura no financeiro
-          await prisma.financialEntry.create({
-            data: {
-              type: "RECEIVABLE",
-              status: "PAID",
-              category: "clube",
-              description: `Assinatura anual do Clube — ${customer.name}`,
-              amountCents: session.amount_total ?? pricePaidCents ?? 0,
-              dueDate: now,
-              paidAt: now,
-            },
-          });
-
-          await logAudit({
-            action: "club.member.activated",
-            entityType: "Customer",
-            entityId: customerId,
-            afterJson: { via: "stripe", expiresAt, pricePaidCents },
-          });
           break;
         }
 

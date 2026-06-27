@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { isCurrentCustomerActiveMember } from "@/lib/customer";
 import type { AnnouncementAudience } from "@prisma/client";
 
 export type PublicAnnouncement = {
@@ -31,7 +30,7 @@ function matchAudience(audience: AnnouncementAudience, isMember: boolean): boole
  */
 export async function fetchActiveAnnouncements(): Promise<PublicAnnouncement[]> {
   const now = new Date();
-  const isMember = await isCurrentCustomerActiveMember();
+  const isMember = false; // clube removido — ninguém é membro
 
   const list = await prisma.announcement.findMany({
     where: {
@@ -76,7 +75,7 @@ export type CheckoutUpsell = {
  */
 export async function fetchCheckoutUpsell(): Promise<CheckoutUpsell | null> {
   const now = new Date();
-  const isMember = await isCurrentCustomerActiveMember();
+  const isMember = false; // clube removido — ninguém é membro
 
   const a = await prisma.announcement.findFirst({
     where: {

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Crown } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { AddToCartButton } from "./AddToCartButton";
 
@@ -9,7 +8,6 @@ type Props = {
   name: string;
   priceCents: number;
   compareAtPriceCents?: number | null;
-  clubPriceCents?: number | null;
   imageUrl?: string | null;
   outOfStock?: boolean;
   ranking?: number;
@@ -22,7 +20,6 @@ export function ProductCard({
   name,
   priceCents,
   compareAtPriceCents,
-  clubPriceCents,
   imageUrl,
   outOfStock,
   ranking,
@@ -32,12 +29,6 @@ export function ProductCard({
     compareAtPriceCents != null && compareAtPriceCents > priceCents;
   const discountPct = hasDiscount
     ? Math.round(((compareAtPriceCents! - priceCents) / compareAtPriceCents!) * 100)
-    : 0;
-
-  // Produto do clube: tem preço de membro menor que o normal
-  const hasClubPrice = clubPriceCents != null && clubPriceCents < priceCents;
-  const clubDiscountPct = hasClubPrice
-    ? Math.round(((priceCents - clubPriceCents!) / priceCents) * 100)
     : 0;
 
   const installmentValue = Math.round(priceCents / 6);
@@ -81,16 +72,11 @@ export function ProductCard({
           ) : null}
 
           {/* Selo de desconto — topo direito */}
-          {hasClubPrice && !outOfStock ? (
-            <div className="absolute top-3 right-3 bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-              <Crown size={11} fill="currentColor" strokeWidth={1.5} />
-              {clubDiscountPct}%
-            </div>
-          ) : hasDiscount && !outOfStock ? (
+          {hasDiscount && !outOfStock && (
             <div className="absolute top-3 right-3 bg-rose-brand text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-md">
               −{discountPct}%
             </div>
-          ) : null}
+          )}
 
           {outOfStock && (
             <div className="absolute inset-0 bg-cream/80 backdrop-blur-[1px] flex items-center justify-center">
@@ -111,40 +97,19 @@ export function ProductCard({
         </Link>
 
         <div className="mt-2 flex-1">
-          {hasClubPrice ? (
-            /* ---- Produto do Clube: preço normal riscado + preço de membro ---- */
-            <div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-display text-[22px] font-bold text-cocoa leading-none">
-                  {centsToBRL(priceCents)}
-                </span>
+          <div>
+            {hasDiscount && (
+              <div className="text-[11.5px] text-cocoa/40 line-through leading-tight">
+                {centsToBRL(compareAtPriceCents!)}
               </div>
-              <div className="mt-2 rounded-xl bg-gradient-to-br from-[#faf3e6] to-[#f4e6d0] ring-1 ring-[#d4a574]/40 px-3 py-2">
-                <div className="flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wider text-[#a07640]">
-                  <Crown size={11} fill="currentColor" strokeWidth={1.5} />
-                  Preço de membro
-                </div>
-                <div className="font-display text-[22px] font-bold text-[#8a5a1e] leading-none mt-0.5">
-                  {centsToBRL(clubPriceCents!)}
-                </div>
-              </div>
+            )}
+            <div className="font-display text-[26px] font-bold text-cocoa leading-none">
+              {centsToBRL(priceCents)}
             </div>
-          ) : (
-            /* ---- Produto normal ---- */
-            <div>
-              {hasDiscount && (
-                <div className="text-[11.5px] text-cocoa/40 line-through leading-tight">
-                  {centsToBRL(compareAtPriceCents!)}
-                </div>
-              )}
-              <div className="font-display text-[26px] font-bold text-cocoa leading-none">
-                {centsToBRL(priceCents)}
-              </div>
-              <div className="text-[11px] text-cocoa/60 mt-1.5">
-                ou 6x de <strong className="text-cocoa/80">{centsToBRL(installmentValue)}</strong>
-              </div>
+            <div className="text-[11px] text-cocoa/60 mt-1.5">
+              ou 6x de <strong className="text-cocoa/80">{centsToBRL(installmentValue)}</strong>
             </div>
-          )}
+          </div>
         </div>
 
         {productId ? (

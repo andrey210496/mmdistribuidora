@@ -7,7 +7,6 @@ import { SECTION_TYPE_META, DEFAULT_SECTIONS } from "@/lib/home-sections";
 import type { HomeSectionType } from "@prisma/client";
 
 const VALID_TYPES: HomeSectionType[] = [
-  "CLUB_NEAR_EXPIRY",
   "BEST_SELLERS",
   "NEW_ARRIVALS",
   "BEST_OFFERS",

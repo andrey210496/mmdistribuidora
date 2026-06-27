@@ -10,7 +10,7 @@ export const metadata = { title: "Finalizar compra" };
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
-  // Checkout SEMPRE exige cliente logado (validação de membro do clube).
+  // Checkout SEMPRE exige cliente logado.
   const customer = await requireCustomer("/checkout");
 
   const cart = await getCart();
@@ -18,8 +18,8 @@ export default async function CheckoutPage() {
     redirect("/carrinho");
   }
 
-  // Card do clube no checkout — só para quem NÃO é membro
-  const checkoutUpsell = customer.isClubMember ? null : await fetchCheckoutUpsell();
+  // Card promocional no checkout (interstitial), se houver anúncio ativo.
+  const checkoutUpsell = await fetchCheckoutUpsell();
 
   return (
     <>
@@ -35,7 +35,6 @@ export default async function CheckoutPage() {
             email: customer.email,
             cpfCnpj: customer.cpfCnpj,
             phone: customer.phone,
-            isClubMember: customer.isClubMember,
           }}
           checkoutUpsell={checkoutUpsell}
         />

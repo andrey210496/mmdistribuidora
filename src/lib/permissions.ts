@@ -13,7 +13,6 @@ export type AreaKey =
   | "categorias"
   | "secoes"
   | "clientes"
-  | "clube"
   | "anuncios"
   | "financeiro"
   | "configuracoes";
@@ -26,7 +25,6 @@ export const ADMIN_AREAS: { key: AreaKey; label: string; href: string; desc: str
   { key: "categorias", label: "Categorias", href: "/admin/categorias", desc: "Organizar categorias do catálogo" },
   { key: "secoes", label: "Seções da Home", href: "/admin/secoes", desc: "Configurar as vitrines da página inicial" },
   { key: "clientes", label: "Clientes", href: "/admin/clientes", desc: "Consultar a base de clientes" },
-  { key: "clube", label: "Clube", href: "/admin/clube", desc: "Configurar o clube e gerir membros" },
   { key: "anuncios", label: "Anúncios", href: "/admin/anuncios", desc: "Criar pop-ups e campanhas" },
   { key: "financeiro", label: "Financeiro", href: "/admin/financeiro", desc: "Contas a receber/pagar" },
   { key: "configuracoes", label: "Configurações", href: "/admin/configuracoes", desc: "Ajustes gerais da loja" },
@@ -41,13 +39,13 @@ export const AREA_LABEL: Record<AreaKey, string> = ADMIN_AREAS.reduce(
 export const ROLE_PRESETS: { label: string; areas: AreaKey[] }[] = [
   {
     label: "Gerente",
-    areas: ["dashboard", "pdv", "pedidos", "produtos", "categorias", "secoes", "clientes", "clube", "anuncios", "financeiro"],
+    areas: ["dashboard", "pdv", "pedidos", "produtos", "categorias", "secoes", "clientes", "anuncios", "financeiro"],
   },
   { label: "Separação / Estoque", areas: ["pedidos", "produtos"] },
   { label: "Financeiro", areas: ["dashboard", "pedidos", "financeiro", "clientes"] },
   { label: "Caixa / Balcão", areas: ["pdv", "pedidos", "clientes"] },
-  { label: "Atendimento", areas: ["pedidos", "clientes", "clube"] },
-  { label: "Marketing", areas: ["secoes", "anuncios", "clube", "produtos"] },
+  { label: "Atendimento", areas: ["pedidos", "clientes"] },
+  { label: "Marketing", areas: ["secoes", "anuncios", "produtos"] },
 ];
 
 type PermCheckUser = { role: string; permissions: string[] };

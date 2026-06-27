@@ -43,11 +43,11 @@ export default function SobrePage() {
           </p>
           <p>
             Trabalhamos com seleção de produtos de qualidade, atendimento próximo e entrega na
-            região. E para quem compra com frequência, criamos o{" "}
-            <Link href="/clube" className="text-rose-brand font-semibold hover:underline">
-              Clube MM Distribuidora
-            </Link>
-            , com preços exclusivos de membro o ano inteiro.
+            região. Para quem compra em volume, temos{" "}
+            <Link href="/produtos" className="text-rose-brand font-semibold hover:underline">
+              preços de atacado
+            </Link>{" "}
+            o ano inteiro.
           </p>
         </div>
 

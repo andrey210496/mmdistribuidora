@@ -68,7 +68,6 @@ model Customer {
 
   addresses          Address[]
   orders             Order[]
-  clubMember         ClubMember?
   creditTransactions CreditTransaction[]
 
   @@index([email])
@@ -120,9 +119,6 @@ model Product {
   // Atacado: preço especial a partir de uma quantidade mínima.
   wholesalePriceCents Int?
   wholesaleMinQty     Int       @default(0)
-  // Preço exclusivo para membros do Clube. Se preenchido, o produto entra
-  // na vitrine do Clube exibindo "preço normal" + "preço de membro".
-  clubPriceCents      Int?
   // Custo do produto (uso interno) — base para margem/lucro no financeiro.
   costCents           Int?      @default(0)
   stock               Int       @default(0)
@@ -143,7 +139,6 @@ model Product {
   @@index([categoryId])
   @@index([slug])
   @@index([active])
-  @@index([clubPriceCents])
   @@index([expiryDate])
   @@index([barcode])
 }
@@ -403,61 +398,7 @@ model CreditTransaction {
 }
 
 // ============================================================
-// CLUBE DE VANTAGENS
-// ============================================================
-enum ClubTier {
-  BRONZE
-  PRATA
-  OURO
-}
-
-enum ClubStatus {
-  ACTIVE
-  PAUSED
-  EXPIRED
-  CANCELED
-}
-
-model ClubMember {
-  id              String     @id @default(cuid())
-  customerId      String     @unique
-  tier            ClubTier   @default(OURO)
-  status          ClubStatus @default(ACTIVE)
-  // Assinatura ANUAL: valor pago e data de expiração (joinedAt + 1 ano).
-  // monthlyFeeCents é legado (mantido p/ compatibilidade) — não usar.
-  monthlyFeeCents Int?
-  pricePaidCents  Int?
-  joinedAt        DateTime   @default(now())
-  expiresAt       DateTime?
-  // Vínculo com o pagamento da assinatura no Stripe (idempotência/auditoria)
-  stripeSessionId String?    @unique
-  lastBilledAt    DateTime?
-  nextBillingAt   DateTime?
-  canceledAt      DateTime?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @default(now()) @updatedAt
-
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([expiresAt])
-}
-
-model ClubBenefit {
-  id              String   @id @default(cuid())
-  tier            ClubTier
-  name            String
-  description     String   @db.Text
-  discountPercent Int      @default(0) // 0–100
-  freeShipping    Boolean  @default(false)
-  active          Boolean  @default(true)
-  createdAt       DateTime @default(now())
-
-  @@index([tier, active])
-}
-
-// ============================================================
-// ANÚNCIOS / POP-UPS — divulgação do Clube e campanhas
+// ANÚNCIOS / POP-UPS — campanhas
 // Frequência e limite de exibições são controlados no cliente
 // (localStorage), mas o conteúdo e as regras vêm do admin.
 // ============================================================
@@ -504,7 +445,6 @@ model Announcement {
 // Os produtos exibidos são selecionados automaticamente pela regra do tipo.
 // ============================================================
 enum HomeSectionType {
-  CLUB_NEAR_EXPIRY // Destaque do Clube: produtos com validade próxima
   BEST_SELLERS // Mais vendidos: inteligência baseada em vendas pagas
   NEW_ARRIVALS // Acabou de chegar: novidades por data de cadastro
   BEST_OFFERS // Ofertas: maior desconto sobre o preço cheio

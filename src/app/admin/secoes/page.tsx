@@ -16,7 +16,6 @@ export const metadata = { title: "Seções da Home · Admin" };
 export const dynamic = "force-dynamic";
 
 const TYPE_OPTIONS: HomeSectionType[] = [
-  "CLUB_NEAR_EXPIRY",
   "BEST_SELLERS",
   "NEW_ARRIVALS",
   "BEST_OFFERS",
@@ -24,7 +23,6 @@ const TYPE_OPTIONS: HomeSectionType[] = [
 ];
 
 const ruleHint: Record<HomeSectionType, string> = {
-  CLUB_NEAR_EXPIRY: "Mostra produtos com validade próxima (não revelado ao cliente).",
   BEST_SELLERS: "Mostra os mais vendidos com base nos pedidos pagos.",
   NEW_ARRIVALS: "Mostra os produtos cadastrados mais recentemente.",
   BEST_OFFERS: "Mostra os produtos com maior desconto sobre o preço cheio.",
@@ -142,8 +140,6 @@ export default async function AdminSecoesPage() {
                         <span>
                           Nenhum produto atende à regra agora, então esta seção
                           <strong> não aparece na home</strong>.
-                          {s.type === "CLUB_NEAR_EXPIRY" &&
-                            " Defina a validade dos produtos (em Produtos) dentro do prazo configurado."}
                           {s.type === "BEST_OFFERS" &&
                             " Cadastre o preço 'de' (riscado) nos produtos em promoção."}
                           {s.type === "FEATURED" &&
@@ -201,12 +197,6 @@ export default async function AdminSecoesPage() {
                     <input name="productLimit" type="number" min={1} max={30} defaultValue={s.productLimit} className="w-full px-3 py-2 rounded-lg border border-cocoa/15 text-cocoa text-sm" />
                   </div>
 
-                  {s.type === "CLUB_NEAR_EXPIRY" && (
-                    <div>
-                      <label className="block text-[11px] font-bold text-cocoa/60 uppercase mb-1">Validade em até (dias)</label>
-                      <input name="expiryDays" type="number" min={1} max={365} defaultValue={s.expiryDays} className="w-full px-3 py-2 rounded-lg border border-cocoa/15 text-cocoa text-sm" />
-                    </div>
-                  )}
                   {s.type === "BEST_SELLERS" && (
                     <div>
                       <label className="block text-[11px] font-bold text-cocoa/60 uppercase mb-1">Período de análise (dias, 0=sempre)</label>

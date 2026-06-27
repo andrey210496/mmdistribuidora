@@ -49,12 +49,11 @@ export default function TermosPage() {
         navegador. Reservamo-nos o direito de cancelar pedidos com suspeita de fraude ou erro evidente de preço.
       </p>
 
-      <h2>5. Clube MM Distribuidora</h2>
+      <h2>5. Atacado</h2>
       <p>
-        O <Link href="/clube">Clube MM Distribuidora</Link> é uma assinatura <strong>anual</strong> que dá
-        acesso a preços exclusivos de membro durante 12 meses. Os preços de membro só são aplicados
-        para clientes com assinatura ativa, validados no servidor. A renovação e as condições são
-        informadas na página do Clube.
+        Oferecemos <strong>preços de atacado</strong> em produtos selecionados, aplicados
+        automaticamente a partir da quantidade mínima de cada item (ou para clientes cadastrados
+        como atacadistas). Os valores são sempre validados no servidor.
       </p>
 
       <h2>6. Entrega</h2>

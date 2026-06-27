@@ -72,7 +72,7 @@ export async function saveAnnouncement(
     ...parsed.data,
     imageUrl: parsed.data.imageUrl ?? null,
     ctaText: parsed.data.ctaText ?? null,
-    ctaHref: parsed.data.ctaHref || "/clube",
+    ctaHref: parsed.data.ctaHref || "/produtos",
     placement,
     audience,
     active: formData.get("active") === "on",

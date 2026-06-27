@@ -24,8 +24,7 @@ const statusLabels: Record<string, string> = {
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function ContaPage({ searchParams }: { searchParams: SearchParams }) {
-  const sp = await searchParams;
-  const justSubscribed = sp.clube === "ativando";
+  await searchParams;
   const customer = await requireCustomer("/conta");
 
   const orders = await prisma.order.findMany({
@@ -41,7 +40,6 @@ export default async function ContaPage({ searchParams }: { searchParams: Search
     },
   });
 
-  const member = customer.clubMember;
   const firstName = customer.name.split(/\s+/)[0];
 
   return (
@@ -65,58 +63,7 @@ export default async function ContaPage({ searchParams }: { searchParams: Search
           </form>
         </div>
 
-        {justSubscribed && !customer.isClubMember && (
-          <div className="mb-6 rounded-2xl bg-[#faf3e6] border border-[#d4a574]/40 px-5 py-4 text-[#8a5a1e] text-sm">
-            <strong>Estamos confirmando seu pagamento.</strong> Seu acesso de membro
-            será ativado em instantes — atualize a página em alguns segundos.
-          </div>
-        )}
-
-        <div className="grid lg:grid-cols-[340px_1fr] gap-6">
-          {/* Card do Clube */}
-          {customer.isClubMember && member ? (
-            <div className="rounded-2xl bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream p-6 h-fit">
-              <div className="flex items-center gap-2 text-[#e6c089] font-bold uppercase tracking-widest text-xs mb-3">
-                <Crown size={16} fill="currentColor" /> Membro do Clube
-              </div>
-              <p className="text-cream/85 text-sm">
-                Você tem acesso aos preços de membro em todo o catálogo.
-              </p>
-              {member.expiresAt && (
-                <p className="text-cream/60 text-xs mt-3">
-                  Válido até{" "}
-                  <strong className="text-cream">
-                    {member.expiresAt.toLocaleDateString("pt-BR")}
-                  </strong>
-                </p>
-              )}
-              <Link
-                href="/produtos"
-                className="mt-4 inline-flex items-center gap-1.5 bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] px-4 py-2 rounded-full font-bold text-sm"
-              >
-                Aproveitar ofertas <ArrowRight size={15} />
-              </Link>
-            </div>
-          ) : (
-            <div className="rounded-2xl border-2 border-dashed border-[#d4a574]/50 bg-[#faf3e6] p-6 h-fit">
-              <div className="flex items-center gap-2 text-[#a07640] font-bold uppercase tracking-widest text-xs mb-2">
-                <Crown size={16} /> Clube MM Distribuidora
-              </div>
-              <p className="text-cocoa text-sm mb-1 font-semibold">
-                Você ainda não é membro.
-              </p>
-              <p className="text-cocoa/65 text-sm">
-                Assine o clube anual e desbloqueie preços exclusivos em todo o catálogo.
-              </p>
-              <Link
-                href="/clube"
-                className="mt-4 inline-flex items-center gap-1.5 bg-rose-brand hover:bg-[#A81E1E] text-white px-4 py-2 rounded-full font-bold text-sm transition"
-              >
-                Quero ser membro <ArrowRight size={15} />
-              </Link>
-            </div>
-          )}
-
+        <div>
           {/* Pedidos */}
           <div>
             <h2 className="font-display text-xl font-bold text-cocoa mb-4 flex items-center gap-2">

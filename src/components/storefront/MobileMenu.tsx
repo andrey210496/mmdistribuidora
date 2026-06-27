@@ -2,18 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, X, Search, User, Crown, Phone, ChevronRight } from "lucide-react";
+import { Menu, X, Search, User, Phone, ChevronRight } from "lucide-react";
 import type { NavItem } from "./CategoryNav";
 import { COMPANY } from "@/lib/company";
 
 export function MobileMenu({
   items,
   customerName,
-  isMember,
 }: {
   items: NavItem[];
   customerName?: string;
-  isMember?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -93,35 +91,14 @@ export function MobileMenu({
             onClick={() => setOpen(false)}
             className="mx-4 mb-3 flex items-center gap-3 bg-white rounded-xl px-4 py-3 ring-1 ring-cocoa/10"
           >
-            <div className="relative">
-              <User size={22} className="text-cocoa" />
-              {isMember && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gradient-to-br from-[#f4d8a8] to-[#a07640] flex items-center justify-center">
-                  <Crown size={9} className="text-[#5a2b17]" fill="currentColor" />
-                </span>
-              )}
-            </div>
+            <User size={22} className="text-cocoa" />
             <div className="flex-1">
               <div className="font-bold text-cocoa text-sm">{customerName ?? "Entrar"}</div>
               <div className="text-[11px] text-cocoa/60">
-                {customerName ? (isMember ? "Membro do Clube" : "Minha conta") : "ou cadastrar"}
+                {customerName ? "Minha conta" : "ou cadastrar"}
               </div>
             </div>
             <ChevronRight size={16} className="text-cocoa/40" />
-          </Link>
-
-          {/* Clube */}
-          <Link
-            href="/clube"
-            onClick={() => setOpen(false)}
-            className="mx-4 mb-4 flex items-center gap-3 rounded-xl px-4 py-3 bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream"
-          >
-            <Crown size={20} className="text-gold" fill="currentColor" />
-            <div className="flex-1">
-              <div className="font-bold text-gold text-sm">Clube MM Distribuidora</div>
-              <div className="text-[11px] text-cream/70">Preços exclusivos de membro</div>
-            </div>
-            <ChevronRight size={16} className="text-cream/50" />
           </Link>
 
           {/* Categorias */}

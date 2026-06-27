@@ -14,7 +14,6 @@ type CheckoutCustomer = {
   email: string | null;
   cpfCnpj: string | null;
   phone: string | null;
-  isClubMember: boolean;
 };
 
 type CheckoutUpsell = {
@@ -81,7 +80,7 @@ export function CheckoutForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [showUpsell, setShowUpsell] = useState(false);
   const [upsellPassed, setUpsellPassed] = useState(false);
-  const shouldUpsell = !customer.isClubMember && !!checkoutUpsell;
+  const shouldUpsell = !!checkoutUpsell;
 
   const fe = state.fieldErrors ?? {};
 
@@ -155,19 +154,8 @@ export function CheckoutForm({
               </h3>
               <p className="text-cocoa/70 text-sm whitespace-pre-line">{checkoutUpsell.body}</p>
 
-              {cart.potentialClubSavingsCents > 0 && (
-                <div className="mt-4 rounded-xl bg-[#faf3e6] border border-[#d4a574]/40 px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-wider text-[#a07640] font-bold">
-                    Sendo membro, nesta compra você economizaria
-                  </div>
-                  <div className="font-display text-3xl font-bold text-[#8a5a1e] leading-none mt-1">
-                    {centsToBRL(cart.potentialClubSavingsCents)}
-                  </div>
-                </div>
-              )}
-
               <a
-                href={checkoutUpsell.ctaHref || "/clube"}
+                href={checkoutUpsell.ctaHref || "/produtos"}
                 className="mt-5 inline-flex items-center justify-center gap-2 w-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] font-bold py-3 rounded-full shadow-md hover:-translate-y-0.5 transition-all"
               >
                 <Crown size={16} fill="currentColor" />
@@ -369,24 +357,15 @@ export function CheckoutForm({
             ))}
           </div>
 
-          {cart.isClubMember && cart.clubSavingsCents > 0 && (
-            <div className="mx-6 mt-4 rounded-lg bg-[#faf3e6] border border-[#d4a574]/40 px-3 py-2 flex items-center gap-2 text-[#8a5a1e]">
-              <Crown size={14} fill="currentColor" />
-              <span className="text-xs font-bold">
-                Preço de membro aplicado — você economiza {centsToBRL(cart.clubSavingsCents)}
-              </span>
-            </div>
-          )}
-
           <div className="px-6 py-5 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-cocoa/70">Subtotal</span>
               <span className="text-cocoa font-semibold">{centsToBRL(cart.subtotalCents)}</span>
             </div>
-            {cart.isClubMember && cart.clubSavingsCents > 0 && (
+            {cart.discountCents > 0 && (
               <div className="flex justify-between">
-                <span className="text-cocoa/70">Desconto de membro</span>
-                <span className="text-olive font-semibold">−{centsToBRL(cart.clubSavingsCents)}</span>
+                <span className="text-cocoa/70">Desconto</span>
+                <span className="text-olive font-semibold">−{centsToBRL(cart.discountCents)}</span>
               </div>
             )}
             <div className="flex justify-between">

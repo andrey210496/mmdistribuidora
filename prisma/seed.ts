@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole, ClubTier } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
 import argon2 from "argon2";
 
 const prisma = new PrismaClient();
@@ -70,11 +70,11 @@ async function main() {
     // CHOCOLATES
     { name: "Chocolate ao Leite Premium 1kg", slug: "chocolate-ao-leite-premium-1kg",
       description: "Barra de chocolate ao leite premium, ideal para confeitaria. Alto teor de cacau, sabor cremoso e textura perfeita para receitas.",
-      sku: "CHOC-AL-1KG", priceCents: 4990, compareAtPriceCents: 6990, clubPriceCents: 4290, stock: 50, weightGrams: 1000,
+      sku: "CHOC-AL-1KG", priceCents: 4990, compareAtPriceCents: 6990, stock: 50, weightGrams: 1000,
       categoryId: choc?.id, featured: true, image: IMG.chocAoLeite },
     { name: "Chocolate Meio Amargo 1kg", slug: "chocolate-meio-amargo-1kg",
       description: "Chocolate meio amargo 50% cacau, refinado, ideal para receitas premium. Sabor intenso e equilibrado.",
-      sku: "CHOC-MA-1KG", priceCents: 5490, compareAtPriceCents: 7490, clubPriceCents: 4690, stock: 35, weightGrams: 1000,
+      sku: "CHOC-MA-1KG", priceCents: 5490, compareAtPriceCents: 7490, stock: 35, weightGrams: 1000,
       categoryId: choc?.id, featured: true, image: IMG.chocAmargo },
     { name: "Chocolate Branco Nobre 1kg", slug: "chocolate-branco-nobre-1kg",
       description: "Chocolate branco premium com manteiga de cacau, perfeito para coberturas e decorações finas.",
@@ -88,7 +88,7 @@ async function main() {
     // DOCES FINOS
     { name: "Granulado Chocolate Premium 500g", slug: "granulado-chocolate-premium-500g",
       description: "Granulado de chocolate de alta qualidade para cobertura de brigadeiros, bolos e doces finos.",
-      sku: "GRAN-CHOC-500", priceCents: 1890, compareAtPriceCents: 2490, clubPriceCents: 1590, stock: 80, weightGrams: 500,
+      sku: "GRAN-CHOC-500", priceCents: 1890, compareAtPriceCents: 2490, stock: 80, weightGrams: 500,
       categoryId: doces?.id, featured: true, image: IMG.granulado },
     { name: "Confeito Bombom Sortido 1kg", slug: "confeito-bombom-sortido-1kg",
       description: "Mix de bombons sortidos para revenda ou montagem de cestas. Cores vibrantes, sabor inigualável.",
@@ -130,7 +130,7 @@ async function main() {
     // FESTAS / DOCES PRONTOS
     { name: "Brigadeiros Gourmet 24un", slug: "brigadeiros-gourmet-24un",
       description: "24 brigadeiros gourmet sortidos. Tradicional, beijinho, café, nozes, dois amores.",
-      sku: "BRIG-GOUR-24", priceCents: 4990, compareAtPriceCents: 6490, clubPriceCents: 3990, stock: 30, weightGrams: 480,
+      sku: "BRIG-GOUR-24", priceCents: 4990, compareAtPriceCents: 6490, stock: 30, weightGrams: 480,
       categoryId: festas?.id, featured: true, image: IMG.brigadeiro },
     { name: "Beijinhos Premium 24un", slug: "beijinhos-premium-24un",
       description: "24 beijinhos cremosos cobertos com coco fresco. Doce tradicional brasileiro.",
@@ -153,7 +153,6 @@ async function main() {
         description: productData.description,
         priceCents: productData.priceCents,
         compareAtPriceCents: productData.compareAtPriceCents,
-        clubPriceCents: (productData as { clubPriceCents?: number }).clubPriceCents ?? null,
         stock: productData.stock,
         weightGrams: productData.weightGrams,
         categoryId: productData.categoryId,
@@ -176,27 +175,10 @@ async function main() {
   }
   console.log(`✓ ${produtos.length} produtos criados (com imagens)`);
 
-  // ---------- Benefícios do clube ----------
-  const beneficios = [
-    { tier: ClubTier.BRONZE, name: "5% de desconto em todos os produtos",
-      description: "Desconto aplicado automaticamente no checkout.", discountPercent: 5, freeShipping: false },
-    { tier: ClubTier.PRATA, name: "10% de desconto + frete grátis acima de R$ 200",
-      description: "Frete grátis para pedidos acima de R$ 200 e 10% off.", discountPercent: 10, freeShipping: false },
-    { tier: ClubTier.OURO, name: "15% de desconto + frete grátis sempre",
-      description: "Frete grátis em todos os pedidos e 15% off no catálogo.", discountPercent: 15, freeShipping: true },
-  ];
-  for (const b of beneficios) {
-    const exists = await prisma.clubBenefit.findFirst({ where: { tier: b.tier, name: b.name } });
-    if (!exists) await prisma.clubBenefit.create({ data: b });
-  }
-
   // ---------- Configurações ----------
   const settings = [
-    { key: "store.name", value: "Doce Encanto" },
+    { key: "store.name", value: "MM Distribuidora" },
     { key: "store.tagline", value: "Distribuidora de Doces & Embalagens" },
-    { key: "club.bronze.fee_cents", value: "1990" },
-    { key: "club.prata.fee_cents", value: "3990" },
-    { key: "club.ouro.fee_cents", value: "6990" },
     { key: "shipping.free_threshold_cents", value: "20000" },
     { key: "shipping.flat_rate_cents", value: "1990" },
   ];

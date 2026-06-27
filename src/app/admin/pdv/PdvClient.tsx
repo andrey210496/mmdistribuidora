@@ -185,7 +185,6 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
     let total = 0;
     const lines = cart.map((l) => {
       const r = resolveUnitPrice(l.product, {
-        isClubMember: customer?.isClubMember ?? false,
         isWholesale: customer?.isWholesale ?? false,
         qty: l.qty,
       });
@@ -327,7 +326,6 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
                         {l.source === "wholesale" && (
                           <span className="text-caramel font-bold uppercase">atacado</span>
                         )}
-                        {l.source === "club" && <span className="text-[#8a5a1e] font-bold uppercase">clube</span>}
                       </div>
                     </div>
                     <div className="flex items-center border border-cocoa/15 rounded-full">
@@ -577,7 +575,6 @@ function CustomerPicker({ customer, onChange }: { customer: PdvCustomer | null; 
       {customer && (
         <div className="text-[11px] text-cocoa/55 mt-1 flex gap-2 flex-wrap">
           {customer.isWholesale && <span className="text-caramel font-bold uppercase">atacado</span>}
-          {customer.isClubMember && <span className="text-[#8a5a1e] font-bold uppercase">clube</span>}
           {customer.creditOwedCents > 0 && <span className="text-red-600">devendo {centsToBRL(customer.creditOwedCents)}</span>}
         </div>
       )}

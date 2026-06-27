@@ -7,8 +7,6 @@ import {
   Phone,
   Instagram,
   Facebook,
-  Crown,
-  ArrowRight,
 } from "lucide-react";
 import { COMPANY } from "@/lib/company";
 import { CartButton } from "@/components/cart/CartButton";
@@ -32,7 +30,6 @@ export async function Header() {
       href: `/produtos?categoria=${c.slug}`,
     })),
     { label: "Promoções", href: "/produtos?ofertas=1" },
-    { label: "Clube", href: "/clube" },
     { label: "Contato", href: "/contato" },
   ];
 
@@ -84,71 +81,6 @@ export async function Header() {
         </div>
       </div>
 
-      {/* CLUB INCENTIVE — banner premium com medalhão, glow e CTA dourado */}
-      <Link
-        href="/clube"
-        className="block group relative overflow-hidden bg-gradient-to-r from-[#1a0703] via-cocoa to-[#1a0703] text-cream"
-      >
-        {/* Glows decorativos */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-[600px] h-32 bg-[#d4a574]/40 blur-[80px] pointer-events-none" />
-        <div className="absolute -bottom-8 left-1/4 w-64 h-16 bg-rose-brand/25 blur-[60px] pointer-events-none" />
-
-        {/* Brilho passando — sutil */}
-        <div
-          className="absolute inset-0 opacity-50 mix-blend-overlay pointer-events-none"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent 0%, rgba(212,165,116,0.25) 50%, transparent 100%)",
-            backgroundSize: "200% 100%",
-            animation: "shimmer-bg 8s ease-in-out infinite",
-          }}
-        />
-
-        <div className="container-wide relative flex items-center justify-between gap-4 py-1.5">
-          {/* Esquerda: Medalhão + Texto (compacto, 1 linha) */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* Medalhão dourado da coroa */}
-            <div className="relative shrink-0">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] flex items-center justify-center shadow-[0_2px_10px_rgba(212,165,116,0.5)] ring-1 ring-[#d4a574]/40">
-                <Crown size={14} className="text-[#5a2b17]" fill="currentColor" strokeWidth={1.5} />
-              </div>
-            </div>
-
-            {/* Texto numa linha só */}
-            <div className="min-w-0 flex items-center gap-2 text-cream truncate">
-              <span className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.18em] text-[#e6c089] shrink-0">
-                Clube MM Distribuidora
-              </span>
-              <span className="hidden sm:inline-block w-4 h-px bg-[#d4a574]/40 shrink-0" />
-              <span className="hidden sm:inline text-[12px] lg:text-[13px] font-medium truncate">
-                Descontos exclusivos pra quem é membro
-              </span>
-            </div>
-          </div>
-
-          {/* Direita: CTA dourado compacto */}
-          <span className="inline-flex items-center gap-1.5 bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] px-4 py-1.5 rounded-full font-bold text-[11px] uppercase tracking-[0.08em] shadow-[0_4px_14px_-4px_rgba(212,165,116,0.6)] group-hover:-translate-y-0.5 transition-all shrink-0">
-            Participar
-            <ArrowRight
-              size={13}
-              strokeWidth={2.5}
-              className="group-hover:translate-x-0.5 transition-transform"
-            />
-          </span>
-        </div>
-      </Link>
-
-      {/* Keyframes pro shimmer */}
-      <style>{`
-        @keyframes shimmer-bg {
-          0%, 100% { background-position: -100% 0; }
-          50% { background-position: 200% 0; }
-        }
-        @keyframes ping-soft {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.4); }
-        }
-      `}</style>
 
       {/* Main header — logo + busca + ações */}
       <div className="bg-cream border-b border-cocoa/10">
@@ -190,19 +122,10 @@ export async function Header() {
                 href="/conta"
                 className="hidden md:flex items-center gap-2.5 hover:text-rose-brand transition group"
               >
-                <div className="relative">
-                  <User size={26} strokeWidth={1.5} className="text-cocoa" />
-                  {customer.isClubMember && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] flex items-center justify-center ring-1 ring-cream">
-                      <Crown size={9} className="text-[#5a2b17]" fill="currentColor" />
-                    </span>
-                  )}
-                </div>
+                <User size={26} strokeWidth={1.5} className="text-cocoa" />
                 <div className="leading-tight text-cocoa">
                   <div className="font-bold text-[13px]">{firstName}</div>
-                  <div className="text-[11px] text-cocoa/60">
-                    {customer.isClubMember ? "Membro do Clube" : "Minha conta"}
-                  </div>
+                  <div className="text-[11px] text-cocoa/60">Minha conta</div>
                 </div>
               </Link>
             ) : (
@@ -218,11 +141,7 @@ export async function Header() {
               </Link>
             )}
             <CartButton />
-            <MobileMenu
-              items={NAV_ITEMS}
-              customerName={firstName}
-              isMember={customer?.isClubMember}
-            />
+            <MobileMenu items={NAV_ITEMS} customerName={firstName} />
           </div>
         </div>
 

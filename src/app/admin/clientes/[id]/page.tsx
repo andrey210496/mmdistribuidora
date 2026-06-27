@@ -37,7 +37,6 @@ export default async function ClienteDetailPage({
         orderBy: { createdAt: "desc" },
         include: { items: { select: { id: true } } },
       },
-      clubMember: true,
     },
   });
 
@@ -238,24 +237,6 @@ export default async function ClienteDetailPage({
                     <span className="font-mono text-xs">CEP {addr.zip}</span>
                   </div>
                 ))}
-              </div>
-            </section>
-          )}
-
-          {/* Clube */}
-          {customer.clubMember && (
-            <section className="bg-gradient-to-br from-[#d4a574] to-[#a07640] rounded-2xl p-5 text-white">
-              <h3 className="text-[11px] font-bold uppercase tracking-widest opacity-90 mb-2">
-                ✦ Membro do Clube
-              </h3>
-              <div className="font-display text-2xl font-bold">
-                Plano {customer.clubMember.tier.charAt(0) + customer.clubMember.tier.slice(1).toLowerCase()}
-              </div>
-              <div className="text-sm opacity-90 mt-1">
-                {customer.clubMember.status === "ACTIVE" ? "Ativo" : customer.clubMember.status}
-              </div>
-              <div className="text-xs opacity-80 mt-2">
-                Desde {customer.clubMember.joinedAt.toLocaleDateString("pt-BR")}
               </div>
             </section>
           )}

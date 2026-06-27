@@ -18,7 +18,6 @@ type Product = {
   barcode: string | null;
   priceCents: number;
   compareAtPriceCents: number | null;
-  clubPriceCents: number | null;
   wholesalePriceCents: number | null;
   wholesaleMinQty: number;
   costCents: number | null;
@@ -216,25 +215,6 @@ export function ProductForm({
                   />
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <label className="label" htmlFor="clubPrice">
-                  👑 Preço de membro do Clube
-                </label>
-                <div className="flex">
-                  <span className="px-3 py-3 bg-[#f4e6d0] border border-r-0 border-[#d4a574]/50 rounded-l-full text-[#8a5a1e] text-sm font-bold">R$</span>
-                  <input
-                    id="clubPrice"
-                    name="clubPrice"
-                    defaultValue={product?.clubPriceCents ? formatBrl(product.clubPriceCents) : ""}
-                    inputMode="decimal"
-                    className="input-field rounded-l-none border-[#d4a574]/50"
-                    placeholder="0,00 (deixe vazio se não for do clube)"
-                  />
-                </div>
-                <p className="text-[11px] text-cocoa/55 mt-1">
-                  Se preenchido, o produto aparece na <strong>vitrine do Clube</strong> na home, mostrando o preço normal e este preço de membro.
-                </p>
-              </div>
               <div>
                 <label className="label" htmlFor="wholesalePrice">
                   📦 Preço de atacado
@@ -324,8 +304,7 @@ export function ProductForm({
                   className="input-field"
                 />
                 <p className="text-[11px] text-cocoa/55 mt-1">
-                  Usado para destacar automaticamente itens com validade próxima na seção
-                  <strong> Destaque do Clube</strong>. Não é exibido ao cliente.
+                  Uso interno: ajuda a acompanhar itens com validade próxima. Não é exibido ao cliente.
                 </p>
               </div>
             </div>

@@ -64,7 +64,7 @@ export function AnnouncementForm({ editing }: { editing?: EditingAnnouncement })
         </div>
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Link do botão</label>
-          <input name="ctaHref" defaultValue={e?.ctaHref ?? "/clube"} className={field} placeholder="/clube" />
+          <input name="ctaHref" defaultValue={e?.ctaHref ?? "/produtos"} className={field} placeholder="/produtos" />
         </div>
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Texto do botão</label>

@@ -26,7 +26,6 @@ const productFormSchema = z.object({
   barcode: z.string().max(60).nullable().optional(),
   priceCents: z.number().int().positive(),
   compareAtPriceCents: z.number().int().positive().nullable().optional(),
-  clubPriceCents: z.number().int().positive().nullable().optional(),
   wholesalePriceCents: z.number().int().positive().nullable().optional(),
   wholesaleMinQty: z.number().int().nonnegative(),
   costCents: z.number().int().nonnegative().nullable().optional(),
@@ -66,7 +65,6 @@ function parseFormData(formData: FormData) {
   };
 
   const compareAt = parseMoney(formData.get("compareAtPrice"));
-  const clubPrice = parseMoney(formData.get("clubPrice"));
   const wholesalePrice = parseMoney(formData.get("wholesalePrice"));
   const cost = parseMoney(formData.get("cost"));
   const barcode = String(formData.get("barcode") ?? "").trim();
@@ -79,7 +77,6 @@ function parseFormData(formData: FormData) {
     barcode: barcode || null,
     priceCents: parseMoney(formData.get("price")) ?? 0,
     compareAtPriceCents: compareAt && compareAt > 0 ? compareAt : null,
-    clubPriceCents: clubPrice && clubPrice > 0 ? clubPrice : null,
     wholesalePriceCents: wholesalePrice && wholesalePrice > 0 ? wholesalePrice : null,
     wholesaleMinQty: Math.max(0, Number(formData.get("wholesaleMinQty") ?? 0) || 0),
     costCents: cost && cost > 0 ? cost : 0,

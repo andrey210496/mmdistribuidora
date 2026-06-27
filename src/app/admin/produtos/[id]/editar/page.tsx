@@ -39,7 +39,6 @@ export default async function EditarProdutoPage({
           barcode: product.barcode,
           priceCents: product.priceCents,
           compareAtPriceCents: product.compareAtPriceCents,
-          clubPriceCents: product.clubPriceCents,
           wholesalePriceCents: product.wholesalePriceCents,
           wholesaleMinQty: product.wholesaleMinQty,
           costCents: product.costCents,

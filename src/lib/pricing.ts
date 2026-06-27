@@ -1,29 +1,25 @@
 // ============================================================
 // Precificação unitária — fonte única da verdade de preço.
-// Resolve o MENOR preço aplicável entre: normal, clube e atacado.
+// Resolve o MENOR preço aplicável entre: normal e atacado.
 // Função PURA (sem DB/sessão) — usada no PDV, no carrinho e no checkout,
 // e fácil de testar. Backend é sempre a fonte da verdade do preço.
 // ============================================================
 
 export type PriceableProduct = {
   priceCents: number;
-  // Preço de membro do clube (opcional). Só conta se < normal.
-  clubPriceCents?: number | null;
   // Preço de atacado (opcional) + quantidade mínima para liberá-lo.
   wholesalePriceCents?: number | null;
   wholesaleMinQty?: number | null;
 };
 
 export type PriceContext = {
-  // Cliente é membro ATIVO do clube? (decidido no servidor — anti-burla)
-  isClubMember?: boolean;
   // Cliente é atacadista? (flag no cadastro) — recebe preço de atacado.
   isWholesale?: boolean;
   // Quantidade desta linha — habilita atacado por volume (qty >= mínimo).
   qty?: number;
 };
 
-export type PriceSource = "normal" | "club" | "wholesale";
+export type PriceSource = "normal" | "wholesale";
 
 export type ResolvedPrice = {
   unitPriceCents: number; // preço aplicado por unidade
@@ -35,11 +31,8 @@ export type ResolvedPrice = {
 /**
  * Retorna o menor preço aplicável para o produto dado o contexto do cliente.
  *
- * Regras (todas exigem que o preço alternativo seja MENOR que o normal):
- * - Clube: aplica quando `isClubMember` e há `clubPriceCents`.
- * - Atacado: aplica quando há `wholesalePriceCents` e
- *     (o cliente é atacadista) OU (há mínimo definido e `qty` o atinge).
- * - Vence sempre o menor entre os candidatos elegíveis.
+ * Atacado (exige preço de atacado MENOR que o normal) aplica quando:
+ *   (o cliente é atacadista) OU (há mínimo definido e `qty` o atinge).
  */
 export function resolveUnitPrice(
   product: PriceableProduct,
@@ -52,14 +45,6 @@ export function resolveUnitPrice(
   const candidates: { source: PriceSource; cents: number }[] = [
     { source: "normal", cents: normal },
   ];
-
-  if (
-    ctx.isClubMember &&
-    product.clubPriceCents != null &&
-    product.clubPriceCents < normal
-  ) {
-    candidates.push({ source: "club", cents: product.clubPriceCents });
-  }
 
   const wholesaleEligible =
     product.wholesalePriceCents != null &&

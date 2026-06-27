@@ -81,8 +81,7 @@ export async function submitCheckout(
   const data = parsed.data;
 
   // Recalcula tudo do banco — preço enviado/exibido nunca é fonte da verdade.
-  // Clube/atacado só valem conforme o cadastro real do cliente (anti-burla).
-  const isClubMember = customer.isClubMember;
+  // Atacado só vale conforme o cadastro real do cliente (anti-burla).
   const isWholesale = customer.isWholesale;
   const productIds = data.items.map((i) => i.productId);
   const products = await prisma.product.findMany({
@@ -103,7 +102,6 @@ export async function submitCheckout(
       return { error: `Estoque insuficiente para "${product.name}".` };
     }
     const unitPriceCents = resolveUnitPrice(product, {
-      isClubMember,
       isWholesale,
       qty: item.quantity,
     }).unitPriceCents;

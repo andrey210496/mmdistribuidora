@@ -7,7 +7,6 @@ type Product = {
   name: string;
   priceCents: number;
   compareAtPriceCents: number | null;
-  clubPriceCents?: number | null;
   stock: number;
   images: { url: string }[];
 };
@@ -61,7 +60,6 @@ export function ProductShelf({
               name={p.name}
               priceCents={p.priceCents}
               compareAtPriceCents={p.compareAtPriceCents}
-              clubPriceCents={p.clubPriceCents}
               imageUrl={p.images[0]?.url}
               outOfStock={p.stock <= 0}
               ranking={showRanking ? i + 1 : undefined}

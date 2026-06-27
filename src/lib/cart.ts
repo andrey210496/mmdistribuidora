@@ -1,6 +1,6 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
-import { isCurrentCustomerActiveMember, isCurrentCustomerWholesale } from "./customer";
+import { isCurrentCustomerWholesale } from "./customer";
 import { resolveUnitPrice } from "./pricing";
 import { resolveShipping } from "./shipping";
 import { getStoreSettings } from "./settings";
@@ -21,10 +21,8 @@ export type CartLine = {
   quantity: number;
   unitPriceCents: number;
   totalCents: number;
-  // Preço normal (sem clube/atacado) — usado para exibir o "de/por".
+  // Preço normal (sem atacado) — usado para exibir o "de/por".
   normalUnitPriceCents: number;
-  // true quando o preço de membro foi aplicado nesta linha
-  clubPriceApplied: boolean;
   // true quando o preço de atacado foi aplicado nesta linha
   wholesalePriceApplied: boolean;
   stock: number;
@@ -36,18 +34,12 @@ export type CartSummary = {
   subtotalCents: number;
   shippingCents: number;
   freeShippingThresholdCents: number;
-  discountCents: number;
+  discountCents: number; // economia total vs. preço normal (ex.: atacado)
   totalCents: number;
   totalItems: number;
   shippingZip: string | null;
   // De onde veio o frete: grátis, fixo, ou carrinho vazio
   shippingSource: "free" | "flat" | "none";
-  // Cliente logado é membro ativo do clube? (decidido no backend)
-  isClubMember: boolean;
-  // Quanto o cliente está economizando com o preço de membro neste carrinho
-  clubSavingsCents: number;
-  // Quanto ele ECONOMIZARIA se fosse membro (vale também para não-membros)
-  potentialClubSavingsCents: number;
 };
 
 export type PricingProduct = {
@@ -55,7 +47,6 @@ export type PricingProduct = {
   name: string;
   slug: string;
   priceCents: number;
-  clubPriceCents: number | null;
   wholesalePriceCents: number | null;
   wholesaleMinQty: number;
   stock: number;
@@ -66,27 +57,23 @@ export type PricedCart = {
   lines: CartLine[];
   subtotalCents: number;
   totalItems: number;
-  clubSavingsCents: number;
-  potentialClubSavingsCents: number;
+  savingsCents: number;
 };
 
 /**
  * Precificação PURA do carrinho (sem sessão/DB) — fácil de testar.
  * Usa resolveUnitPrice (fonte única): aplica o MENOR preço aplicável
- * entre normal, clube e atacado.
- * ANTI-BURLA: clube só com isClubMember; atacado só com isWholesale (ou
- * quando a quantidade atinge o mínimo do produto).
- * Clampa a quantidade ao estoque e ao máximo por item.
+ * entre normal e atacado.
+ * ANTI-BURLA: atacado só com isWholesale (ou quando a quantidade atinge
+ * o mínimo do produto). Clampa a quantidade ao estoque e ao máximo por item.
  */
 export function priceCartLines(
   items: CartItem[],
   products: PricingProduct[],
-  isClubMember: boolean,
   isWholesale = false
 ): PricedCart {
   const lines: CartLine[] = [];
-  let clubSavingsCents = 0;
-  let potentialClubSavingsCents = 0;
+  let savingsCents = 0;
 
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId);
@@ -95,15 +82,11 @@ export function priceCartLines(
     if (qty <= 0) continue;
 
     const normalUnit = product.priceCents;
-    const resolved = resolveUnitPrice(product, { isClubMember, isWholesale, qty });
+    const resolved = resolveUnitPrice(product, { isWholesale, qty });
     const unit = resolved.unitPriceCents;
-    const clubPriceApplied = resolved.source === "club";
     const wholesalePriceApplied = resolved.source === "wholesale";
 
-    const hasClubPrice =
-      product.clubPriceCents != null && product.clubPriceCents < normalUnit;
-    if (hasClubPrice) potentialClubSavingsCents += (normalUnit - product.clubPriceCents!) * qty;
-    if (clubPriceApplied) clubSavingsCents += (normalUnit - unit) * qty;
+    savingsCents += (normalUnit - unit) * qty;
 
     lines.push({
       productId: product.id,
@@ -114,7 +97,6 @@ export function priceCartLines(
       unitPriceCents: unit,
       totalCents: unit * qty,
       normalUnitPriceCents: normalUnit,
-      clubPriceApplied,
       wholesalePriceApplied,
       stock: product.stock,
       available: true,
@@ -123,7 +105,7 @@ export function priceCartLines(
 
   const subtotalCents = lines.reduce((s, l) => s + l.totalCents, 0);
   const totalItems = lines.reduce((s, l) => s + l.quantity, 0);
-  return { lines, subtotalCents, totalItems, clubSavingsCents, potentialClubSavingsCents };
+  return { lines, subtotalCents, totalItems, savingsCents };
 }
 
 /**
@@ -147,18 +129,12 @@ export async function getCart(): Promise<CartSummary> {
       totalItems: 0,
       shippingZip: zip,
       shippingSource: "none",
-      isClubMember: false,
-      clubSavingsCents: 0,
-      potentialClubSavingsCents: 0,
     };
   }
 
-  // ANTI-BURLA: clube/atacado só valem se o cliente logado realmente os tiver.
+  // ANTI-BURLA: atacado só vale se o cliente logado realmente for atacadista.
   // Isso é decidido aqui, no servidor — o frontend não influi.
-  const [isClubMember, isWholesale] = await Promise.all([
-    isCurrentCustomerActiveMember(),
-    isCurrentCustomerWholesale(),
-  ]);
+  const isWholesale = await isCurrentCustomerWholesale();
 
   const products = await prisma.product.findMany({
     where: {
@@ -168,7 +144,7 @@ export async function getCart(): Promise<CartSummary> {
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
 
-  const priced = priceCartLines(items, products, isClubMember, isWholesale);
+  const priced = priceCartLines(items, products, isWholesale);
   const ship = resolveShipping({ subtotalCents: priced.subtotalCents, settings });
   const totalCents = priced.subtotalCents + ship.cents;
 
@@ -177,14 +153,11 @@ export async function getCart(): Promise<CartSummary> {
     subtotalCents: priced.subtotalCents,
     shippingCents: ship.cents,
     freeShippingThresholdCents: settings.shippingFreeThresholdCents,
-    discountCents: priced.clubSavingsCents,
+    discountCents: priced.savingsCents,
     totalCents,
     totalItems: priced.totalItems,
     shippingZip: zip,
     shippingSource: ship.source,
-    isClubMember,
-    clubSavingsCents: priced.clubSavingsCents,
-    potentialClubSavingsCents: priced.potentialClubSavingsCents,
   };
 }
 

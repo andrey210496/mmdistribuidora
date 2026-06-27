@@ -49,8 +49,7 @@ export function Footer() {
               </h4>
               <ul className="space-y-3 text-[14px]">
                 <li><Link href="/sobre" className="text-cocoa/70 hover:text-espresso transition">Sobre</Link></li>
-                <li><Link href="/clube" className="text-cocoa/70 hover:text-espresso transition">Clube de Vantagens</Link></li>
-                <li><Link href="/atacado" className="text-cocoa/70 hover:text-espresso transition">Atacado</Link></li>
+                <li><Link href="/produtos" className="text-cocoa/70 hover:text-espresso transition">Atacado</Link></li>
                 <li><Link href="/blog" className="text-cocoa/70 hover:text-espresso transition">Conteúdo</Link></li>
               </ul>
             </div>

@@ -5,7 +5,6 @@ import { CategoryTiles } from "@/components/storefront/CategoryTiles";
 import { BenefitsBar } from "@/components/storefront/BenefitsBar";
 import { ProductShelf } from "@/components/storefront/ProductShelf";
 import { PromoQuad } from "@/components/storefront/PromoQuad";
-import { ClubBanner } from "@/components/storefront/ClubBanner";
 import {
   getHomeSections,
   resolveSectionProducts,
@@ -30,13 +29,9 @@ export default async function HomePage() {
       {/* Categorias reais do catálogo */}
       <CategoryTiles />
 
-      {/* DESTAQUE DO CLUBE — logo no início pra chamar atenção */}
-      <ClubBanner />
-
       {/* Seções configuráveis pelo admin */}
       {withProducts.map(({ section, products }, i) => {
         const meta = SECTION_TYPE_META[section.type];
-        const isClub = section.type === "CLUB_NEAR_EXPIRY";
         const bgClass = meta.bg ?? (i % 2 === 0 ? "bg-cream" : "bg-white");
         return (
           <ProductShelf
@@ -48,7 +43,7 @@ export default async function HomePage() {
             badge={section.type === "NEW_ARRIVALS" ? "new" : undefined}
             showRanking={section.type === "BEST_SELLERS"}
             bgClass={bgClass}
-            ctaLabel={isClub ? "Conhecer o Clube" : "Ver mais"}
+            ctaLabel="Ver mais"
           />
         );
       })}

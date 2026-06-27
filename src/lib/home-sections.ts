@@ -23,13 +23,6 @@ export const SECTION_TYPE_META: Record<
   HomeSectionType,
   { label: string; defaultTitle: string; defaultSubtitle: string; moreHref: string; bg?: string }
 > = {
-  CLUB_NEAR_EXPIRY: {
-    label: "Destaque do Clube",
-    defaultTitle: "Destaque do Clube",
-    defaultSubtitle: "Preços de membro imperdíveis por tempo limitado",
-    moreHref: "/clube",
-    bg: "bg-pink-soft",
-  },
   BEST_SELLERS: {
     label: "Mais vendidos",
     defaultTitle: "Mais vendidos",
@@ -59,23 +52,12 @@ export const SECTION_TYPE_META: Record<
 // Seções padrão (usadas enquanto o admin não criar as dele)
 export const DEFAULT_SECTIONS: HomeSectionConfig[] = [
   {
-    id: "default-club",
-    type: "CLUB_NEAR_EXPIRY",
-    title: SECTION_TYPE_META.CLUB_NEAR_EXPIRY.defaultTitle,
-    subtitle: SECTION_TYPE_META.CLUB_NEAR_EXPIRY.defaultSubtitle,
-    enabled: true,
-    sortOrder: 0,
-    productLimit: 10,
-    expiryDays: 30,
-    salesWindowDays: 90,
-  },
-  {
     id: "default-bestsellers",
     type: "BEST_SELLERS",
     title: SECTION_TYPE_META.BEST_SELLERS.defaultTitle,
     subtitle: SECTION_TYPE_META.BEST_SELLERS.defaultSubtitle,
     enabled: true,
-    sortOrder: 1,
+    sortOrder: 0,
     productLimit: 10,
     expiryDays: 30,
     salesWindowDays: 90,
@@ -86,7 +68,7 @@ export const DEFAULT_SECTIONS: HomeSectionConfig[] = [
     title: SECTION_TYPE_META.NEW_ARRIVALS.defaultTitle,
     subtitle: SECTION_TYPE_META.NEW_ARRIVALS.defaultSubtitle,
     enabled: true,
-    sortOrder: 2,
+    sortOrder: 1,
     productLimit: 10,
     expiryDays: 30,
     salesWindowDays: 90,
@@ -99,7 +81,6 @@ const productSelect = {
   name: true,
   priceCents: true,
   compareAtPriceCents: true,
-  clubPriceCents: true,
   stock: true,
   images: { take: 1, orderBy: { sortOrder: "asc" as const } },
 };
@@ -110,7 +91,6 @@ export type SectionProduct = {
   name: string;
   priceCents: number;
   compareAtPriceCents: number | null;
-  clubPriceCents: number | null;
   stock: number;
   images: { url: string }[];
 };
@@ -143,20 +123,6 @@ export async function resolveSectionProducts(
   const now = new Date();
 
   switch (section.type) {
-    case "CLUB_NEAR_EXPIRY": {
-      const until = new Date(now.getTime() + section.expiryDays * 86_400_000);
-      return prisma.product.findMany({
-        where: {
-          active: true,
-          stock: { gt: 0 },
-          expiryDate: { gte: now, lte: until },
-        },
-        select: productSelect,
-        orderBy: { expiryDate: "asc" },
-        take: limit,
-      });
-    }
-
     case "BEST_SELLERS": {
       const since =
         section.salesWindowDays > 0
