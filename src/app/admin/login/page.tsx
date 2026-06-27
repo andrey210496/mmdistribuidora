@@ -12,16 +12,15 @@ export default async function LoginPage() {
     <main className="min-h-screen bg-brand-gradient flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo.png"
-            alt="MM Distribuidora"
-            className="inline-block w-20 h-20 object-contain mb-3"
-          />
-          <h1 className="font-display text-3xl text-gold font-bold">
-            MM Distribuidora
-          </h1>
-          <p className="text-cream/70 text-sm mt-1">Painel administrativo</p>
+          <span className="inline-block bg-white rounded-2xl px-5 py-3 shadow-lg mb-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt="MM Distribuidora"
+              className="h-12 w-auto object-contain"
+            />
+          </span>
+          <p className="text-cream/70 text-sm">Painel administrativo</p>
         </div>
 
         <div className="card p-8">

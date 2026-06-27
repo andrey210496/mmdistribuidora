@@ -65,22 +65,15 @@ export default async function AdminLayout({
     <div className="min-h-screen flex bg-cream/30">
       {/* Sidebar */}
       <aside className="w-64 bg-espresso text-cream flex flex-col shrink-0 sticky top-0 h-screen">
-        <div className="p-6 border-b border-cream/10">
+        <div className="p-5 border-b border-cream/10">
           <Link href={firstAllowedPath(user)} className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logo.png"
-              alt="MM Distribuidora"
-              className="w-11 h-11 object-contain shrink-0"
-            />
-            <div>
-              <div className="font-display font-bold text-gold leading-none">
-                MM Distribuidora
-              </div>
-              <div className="text-[10px] tracking-widest uppercase text-cream/60">
-                Admin
-              </div>
-            </div>
+            <span className="bg-white rounded-lg px-2.5 py-1.5 shrink-0 shadow-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="MM Distribuidora" className="h-7 w-auto object-contain" />
+            </span>
+            <span className="text-[10px] tracking-[0.3em] uppercase text-cream/60 font-bold">
+              Admin
+            </span>
           </Link>
         </div>
 
@@ -93,7 +86,7 @@ export default async function AdminLayout({
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cream/80 hover:bg-cream/10 hover:text-gold transition"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-cream/80 hover:bg-rose-brand/20 hover:text-white transition"
             >
               <Icon size={18} />
               {label}
