@@ -31,8 +31,6 @@ export function ProductCard({
     ? Math.round(((compareAtPriceCents! - priceCents) / compareAtPriceCents!) * 100)
     : 0;
 
-  const installmentValue = Math.round(priceCents / 6);
-
   const badgeText =
     badge === "bestseller" ? "Mais vendido" :
     badge === "new" ? "Novidade" :
@@ -106,9 +104,7 @@ export function ProductCard({
             <div className="font-display text-[26px] font-bold text-cocoa leading-none">
               {centsToBRL(priceCents)}
             </div>
-            <div className="text-[11px] text-cocoa/60 mt-1.5">
-              ou 6x de <strong className="text-cocoa/80">{centsToBRL(installmentValue)}</strong>
-            </div>
+            <div className="text-[11px] text-cocoa/60 mt-1.5">à vista</div>
           </div>
         </div>
 

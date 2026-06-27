@@ -23,7 +23,7 @@ const benefits = [
     Icon: CreditCard,
     title: "Pagamento",
     titleBold: "Facilitado",
-    desc: "Parcele em até 6x no cartão para atacado",
+    desc: "Pix, dinheiro, débito ou crédito à vista",
   },
   {
     Icon: ShieldCheck,

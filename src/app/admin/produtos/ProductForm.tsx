@@ -18,6 +18,9 @@ type Product = {
   barcode: string | null;
   priceCents: number;
   compareAtPriceCents: number | null;
+  priceCashCents: number | null;
+  pricePixCents: number | null;
+  priceCardCents: number | null;
   wholesalePriceCents: number | null;
   wholesaleMinQty: number;
   costCents: number | null;
@@ -77,6 +80,19 @@ export function ProductForm({
 
   const formatBrl = (cents: number) =>
     (cents / 100).toFixed(2).replace(".", ",");
+
+  // Preço/custo controlados p/ exibir margem ao vivo.
+  const parseBrl = (s: string): number => {
+    const raw = s.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".");
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
+  };
+  const [priceStr, setPriceStr] = useState(product ? formatBrl(product.priceCents) : "");
+  const [costStr, setCostStr] = useState(product?.costCents ? formatBrl(product.costCents) : "");
+  const priceC = parseBrl(priceStr);
+  const costC = parseBrl(costStr);
+  const profitC = priceC - costC;
+  const marginPct = priceC > 0 ? ((priceC - costC) / priceC) * 100 : 0;
 
   return (
     <form action={formAction} className="space-y-6 max-w-4xl">
@@ -193,13 +209,19 @@ export function ProductForm({
                     id="price"
                     name="price"
                     required
-                    defaultValue={product ? formatBrl(product.priceCents) : ""}
+                    value={priceStr}
+                    onChange={(e) => setPriceStr(e.target.value)}
                     inputMode="decimal"
                     className="input-field rounded-l-none"
                     placeholder="0,00"
                   />
                 </div>
                 {fe.priceCents && <p className="text-red-600 text-xs mt-1">{fe.priceCents[0]}</p>}
+                {priceC > 0 && costC > 0 && (
+                  <p className={`text-[11px] mt-1 font-semibold ${profitC >= 0 ? "text-olive" : "text-red-600"}`}>
+                    Margem: {marginPct.toFixed(0)}% · Lucro: R$ {formatBrl(profitC)}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="label" htmlFor="compareAtPrice">Preço &ldquo;de&rdquo; (riscado)</label>
@@ -249,6 +271,34 @@ export function ProductForm({
                   Atacadistas (cadastro) pagam atacado sempre. <strong>0 = só atacadista.</strong>
                 </p>
               </div>
+
+              <div className="md:col-span-2 border-t border-cocoa/10 pt-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-cocoa/55 mb-2">
+                  Preço por forma de pagamento <span className="font-normal normal-case">(opcional — vazio usa o preço de venda)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: "priceCash", label: "💵 Dinheiro", val: product?.priceCashCents },
+                    { id: "pricePix", label: "⚡ Pix", val: product?.pricePixCents },
+                    { id: "priceCard", label: "💳 Cartão", val: product?.priceCardCents },
+                  ].map((f) => (
+                    <div key={f.id}>
+                      <label className="label" htmlFor={f.id}>{f.label}</label>
+                      <div className="flex">
+                        <span className="px-3 py-3 bg-cocoa/5 border border-r-0 border-cocoa/15 rounded-l-full text-cocoa/70 text-sm font-bold">R$</span>
+                        <input
+                          id={f.id}
+                          name={f.id}
+                          defaultValue={f.val ? formatBrl(f.val) : ""}
+                          inputMode="decimal"
+                          className="input-field rounded-l-none"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="md:col-span-2">
                 <label className="label" htmlFor="cost">
                   Custo do produto <span className="text-cocoa/45 font-normal">(uso interno)</span>
@@ -258,7 +308,8 @@ export function ProductForm({
                   <input
                     id="cost"
                     name="cost"
-                    defaultValue={product?.costCents ? formatBrl(product.costCents) : ""}
+                    value={costStr}
+                    onChange={(e) => setCostStr(e.target.value)}
                     inputMode="decimal"
                     className="input-field rounded-l-none"
                     placeholder="0,00"

@@ -30,7 +30,6 @@ export default async function ConfigPage() {
           expiryWarningDays: s.expiryWarningDays,
           shippingFreeReais: centsToReais(s.shippingFreeThresholdCents),
           shippingFlatReais: centsToReais(s.shippingFlatRateCents),
-          installmentsMinReais: centsToReais(s.installmentsMinCents),
         }}
       />
 

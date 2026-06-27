@@ -26,6 +26,9 @@ const productFormSchema = z.object({
   barcode: z.string().max(60).nullable().optional(),
   priceCents: z.number().int().positive(),
   compareAtPriceCents: z.number().int().positive().nullable().optional(),
+  priceCashCents: z.number().int().positive().nullable().optional(),
+  pricePixCents: z.number().int().positive().nullable().optional(),
+  priceCardCents: z.number().int().positive().nullable().optional(),
   wholesalePriceCents: z.number().int().positive().nullable().optional(),
   wholesaleMinQty: z.number().int().nonnegative(),
   costCents: z.number().int().nonnegative().nullable().optional(),
@@ -65,6 +68,9 @@ function parseFormData(formData: FormData) {
   };
 
   const compareAt = parseMoney(formData.get("compareAtPrice"));
+  const priceCash = parseMoney(formData.get("priceCash"));
+  const pricePix = parseMoney(formData.get("pricePix"));
+  const priceCard = parseMoney(formData.get("priceCard"));
   const wholesalePrice = parseMoney(formData.get("wholesalePrice"));
   const cost = parseMoney(formData.get("cost"));
   const barcode = String(formData.get("barcode") ?? "").trim();
@@ -77,6 +83,9 @@ function parseFormData(formData: FormData) {
     barcode: barcode || null,
     priceCents: parseMoney(formData.get("price")) ?? 0,
     compareAtPriceCents: compareAt && compareAt > 0 ? compareAt : null,
+    priceCashCents: priceCash && priceCash > 0 ? priceCash : null,
+    pricePixCents: pricePix && pricePix > 0 ? pricePix : null,
+    priceCardCents: priceCard && priceCard > 0 ? priceCard : null,
     wholesalePriceCents: wholesalePrice && wholesalePrice > 0 ? wholesalePrice : null,
     wholesaleMinQty: Math.max(0, Number(formData.get("wholesaleMinQty") ?? 0) || 0),
     costCents: cost && cost > 0 ? cost : 0,

@@ -6,7 +6,6 @@ import { Footer } from "@/components/storefront/Footer";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
 import { stripe } from "@/lib/stripe";
-import { getStoreSettings } from "@/lib/settings";
 import { getCurrentCustomer } from "@/lib/customer";
 import { getAdminSession } from "@/lib/session";
 import { centsToBRL } from "@/lib/money";
@@ -39,14 +38,14 @@ export default async function PagamentoPage({
     redirect(`/pedido/${order.orderNumber}`);
   }
 
-  const settings = await getStoreSettings();
   const lineItems = order.items.map((i) => ({
     name: i.productNameSnapshot,
     description: `SKU ${i.productSkuSnapshot}`,
     unitAmountCents: i.unitPriceCents,
     quantity: i.quantity,
   }));
-  const allowInstallments = order.totalCents >= settings.installmentsMinCents;
+  // MM não trabalha parcelado — somente à vista.
+  const allowInstallments = false;
 
   // Sem chave publicável não dá pra renderizar o embutido — cai no hospedado.
   const canEmbed = Boolean(env.STRIPE_PUBLISHABLE_KEY);
