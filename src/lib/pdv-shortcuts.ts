@@ -7,11 +7,13 @@
 
 export type PdvAction = "focusSearch" | "finalize" | "credit" | "clearSale";
 
+// Obs.: F1–F4 são reservados às formas de pagamento no PDV (dinheiro/débito/
+// crédito/Pix), então os atalhos abaixo evitam essas teclas.
 export const PDV_ACTIONS: { key: PdvAction; label: string; default: string }[] = [
-  { key: "focusSearch", label: "Focar a busca de produto", default: "F2" },
-  { key: "finalize", label: "Finalizar venda (à vista)", default: "F4" },
+  { key: "focusSearch", label: "Focar a busca de produto", default: "F6" },
+  { key: "finalize", label: "Finalizar venda (à vista)", default: "F9" },
   { key: "credit", label: "Vender no fiado", default: "F8" },
-  { key: "clearSale", label: "Limpar a venda atual", default: "F6" },
+  { key: "clearSale", label: "Limpar a venda atual", default: "Escape" },
 ];
 
 export type ShortcutMap = Record<PdvAction, string>;

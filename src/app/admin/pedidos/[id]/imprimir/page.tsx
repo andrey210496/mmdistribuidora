@@ -189,6 +189,9 @@ export default async function PrintOrderPage({
                           ({item.product.weightGrams}g)
                         </span>
                       )}
+                      {item.note && (
+                        <div className="text-[9pt] font-bold mt-0.5">→ {item.note}</div>
+                      )}
                     </td>
                     <td className="py-2.5 text-center font-display font-bold text-base">
                       {item.quantity}×

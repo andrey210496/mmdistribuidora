@@ -44,8 +44,8 @@ describe("alwaysFires", () => {
 });
 
 describe("matchAction", () => {
-  it("F4 dispara finalize mesmo digitando", () => {
-    expect(matchAction({ key: "F4" }, DEFAULT_SHORTCUTS, true)).toBe("finalize");
+  it("F9 dispara finalize mesmo digitando", () => {
+    expect(matchAction({ key: "F9" }, DEFAULT_SHORTCUTS, true)).toBe("finalize");
   });
   it("tecla simples não dispara enquanto digita", () => {
     const map = { ...DEFAULT_SHORTCUTS, finalize: "K" };
@@ -53,7 +53,7 @@ describe("matchAction", () => {
     expect(matchAction({ key: "k" }, map, false)).toBe("finalize");
   });
   it("sem correspondência retorna null", () => {
-    expect(matchAction({ key: "F9" }, DEFAULT_SHORTCUTS, false)).toBe(null);
+    expect(matchAction({ key: "F12" }, DEFAULT_SHORTCUTS, false)).toBe(null);
   });
 });
 

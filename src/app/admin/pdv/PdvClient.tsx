@@ -20,10 +20,17 @@ import {
 type Movement = { id: string; type: string; amountCents: number; reason: string | null; createdAt: string };
 type Session = { id: string; openingFloatCents: number; openedAt: string; movements: Movement[] };
 
-type CartLine = { product: PdvProduct; qty: number };
+type CartLine = { product: PdvProduct; qty: number; note?: string };
 
 const PAY_METHODS = ["CASH", "PIX", "DEBIT_CARD", "CREDIT_CARD"] as const;
 type PayKey = (typeof PAY_METHODS)[number];
+
+type PriceMode = "CASH" | "PIX" | "CARD";
+const PRICE_MODES: { key: PriceMode; label: string }[] = [
+  { key: "CASH", label: "Dinheiro" },
+  { key: "PIX", label: "Pix" },
+  { key: "CARD", label: "Cartão" },
+];
 
 function safeCents(brl: string): number {
   if (!brl.trim()) return 0;
@@ -101,6 +108,7 @@ function OpenCashForm() {
 function Pos({ storeName, session, recon, shortcuts }: { storeName: string; session: Session; recon: CashReconciliation; shortcuts: ShortcutMap }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   // Busca de produtos
   const [query, setQuery] = useState("");
@@ -116,16 +124,23 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
 
   // Pagamento
   const [pay, setPay] = useState<Record<PayKey, string>>({ CASH: "", PIX: "", DEBIT_CARD: "", CREDIT_CARD: "" });
+  // Modo de preço (preço por forma de pgto) e cupom fiscal
+  const [priceMode, setPriceMode] = useState<PriceMode>("CASH");
+  const [fiscal, setFiscal] = useState(false);
 
-  // Cupom
-  const [receipt, setReceipt] = useState<null | {
+  // Cupom / última venda (p/ reimprimir e cancelar)
+  type Receipt = {
+    orderId: string;
     orderNumber: string;
-    items: CartLine[];
+    items: { name: string; qty: number; note?: string }[];
     totalCents: number;
     changeCents: number;
     onCredit: boolean;
+    fiscal: boolean;
     customerName: string;
-  }>(null);
+  };
+  const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [lastSale, setLastSale] = useState<Receipt | null>(null);
 
   // --- busca com debounce ---
   useEffect(() => {
@@ -180,6 +195,9 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
 
   const removeLine = (id: string) => setCart((prev) => prev.filter((l) => l.product.id !== id));
 
+  const setNote = (id: string, note: string) =>
+    setCart((prev) => prev.map((l) => (l.product.id === id ? { ...l, note } : l)));
+
   // --- precificação (mesma regra do backend) ---
   const priced = useMemo(() => {
     let total = 0;
@@ -187,13 +205,15 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
       const r = resolveUnitPrice(l.product, {
         isWholesale: customer?.isWholesale ?? false,
         qty: l.qty,
+        paymentMode: priceMode,
+        customerPriceCents: customer?.productPrices?.[l.product.id] ?? null,
       });
       const lineTotal = r.unitPriceCents * l.qty;
       total += lineTotal;
       return { ...l, unitPriceCents: r.unitPriceCents, source: r.source, lineTotal };
     });
     return { lines, total };
-  }, [cart, customer]);
+  }, [cart, customer, priceMode]);
 
   const payments: PaymentInput[] = PAY_METHODS.map((m) => ({ method: m, amountCents: safeCents(pay[m]) }));
   const breakdown = computePaymentBreakdown(priced.total, payments);
@@ -205,6 +225,8 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
     setCart([]);
     setCustomer(null);
     setPay({ CASH: "", PIX: "", DEBIT_CARD: "", CREDIT_CARD: "" });
+    setPriceMode("CASH");
+    setFiscal(false);
     setQuery("");
     setResults([]);
   };
@@ -215,32 +237,76 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
       setError("Carrinho vazio.");
       return;
     }
+    const snapshot = priced; // congela p/ o cupom
     start(async () => {
       const r = await finalizeSale({
-        items: cart.map((l) => ({ productId: l.product.id, quantity: l.qty })),
+        items: cart.map((l) => ({ productId: l.product.id, quantity: l.qty, note: l.note ?? null })),
         customerId: customer?.id ?? null,
         payments: onCredit ? [] : payments,
         onCredit,
+        paymentMode: priceMode,
+        fiscal,
       });
       if (!r.ok) {
         setError(r.error ?? "Erro ao finalizar venda");
         return;
       }
-      setReceipt({
+      const rec: Receipt = {
+        orderId: r.orderId!,
         orderNumber: r.orderNumber!,
-        items: cart,
-        totalCents: priced.total,
+        items: snapshot.lines.map((l) => ({ name: l.product.name, qty: l.qty, note: l.note })),
+        totalCents: snapshot.total,
         changeCents: r.changeCents ?? 0,
         onCredit,
+        fiscal,
         customerName: customer?.name ?? "Consumidor",
-      });
+      };
+      setReceipt(rec);
+      setLastSale(rec);
       resetSale();
     });
   };
 
-  // Atalhos de teclado (config em /admin/configuracoes).
+  // F1–F4: preenche o restante na forma de pagamento (operar por teclado).
+  const quickPay = (method: PayKey) => {
+    setPay((prev) => {
+      const others = PAY_METHODS.filter((m) => m !== method).reduce((s, m) => s + safeCents(prev[m]), 0);
+      const remaining = Math.max(0, priced.total - others);
+      return { ...prev, [method]: (remaining / 100).toFixed(2).replace(".", ",") };
+    });
+  };
+
+  const cancelLast = () => {
+    if (!lastSale) return;
+    const reason = window.prompt("Motivo do cancelamento da última venda?", "");
+    if (reason === null) return;
+    start(async () => {
+      const { cancelPdvSale } = await import("./actions");
+      const r = await cancelPdvSale(lastSale.orderId, reason);
+      if (!r.ok) setError(r.error ?? "Erro ao cancelar");
+      else {
+        setInfo(`Venda ${lastSale.orderNumber} cancelada.`);
+        setLastSale(null);
+      }
+    });
+  };
+
+  // Atalhos de teclado. F1–F4 = formas de pagamento (sempre, conforme o
+  // pedido do cliente); demais ações vêm da config (/admin/configuracoes).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // F1 dinheiro · F2 débito · F3 crédito · F4 Pix (preenche o restante)
+      const fixed: Record<string, PayKey> = {
+        F1: "CASH",
+        F2: "DEBIT_CARD",
+        F3: "CREDIT_CARD",
+        F4: "PIX",
+      };
+      if (fixed[e.key]) {
+        e.preventDefault();
+        quickPay(fixed[e.key]!);
+        return;
+      }
       const el = document.activeElement as HTMLElement | null;
       const isTyping =
         !!el &&
@@ -258,7 +324,7 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [shortcuts, submit, resetSale]);
+  }, [shortcuts, submit, resetSale, quickPay]);
 
   return (
     <div className="p-4 lg:p-6">
@@ -318,29 +384,43 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
             ) : (
               <div className="divide-y divide-cocoa/8">
                 {priced.lines.map((l) => (
-                  <div key={l.product.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-cocoa font-medium truncate">{l.product.name}</div>
-                      <div className="text-[11px] text-cocoa/55 flex items-center gap-1.5">
-                        {centsToBRL(l.unitPriceCents)} cada
-                        {l.source === "wholesale" && (
-                          <span className="text-caramel font-bold uppercase">atacado</span>
-                        )}
+                  <div key={l.product.id} className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-cocoa font-medium truncate">{l.product.name}</div>
+                        <div className="text-[11px] text-cocoa/55 flex items-center gap-1.5">
+                          {centsToBRL(l.unitPriceCents)} cada
+                          {l.source === "wholesale" && (
+                            <span className="text-caramel font-bold uppercase">atacado</span>
+                          )}
+                          {l.source === "customer" && (
+                            <span className="text-rose-brand font-bold uppercase">preço do cliente</span>
+                          )}
+                          {l.source === "payment" && (
+                            <span className="text-cocoa/50 uppercase">{priceMode === "CASH" ? "dinheiro" : priceMode === "PIX" ? "pix" : "cartão"}</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center border border-cocoa/15 rounded-full">
-                      <button onClick={() => setQty(l.product.id, l.qty - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5">
-                        <Minus size={13} />
+                      <div className="flex items-center border border-cocoa/15 rounded-full">
+                        <button onClick={() => setQty(l.product.id, l.qty - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5">
+                          <Minus size={13} />
+                        </button>
+                        <span className="w-9 text-center text-sm font-bold">{l.qty}</span>
+                        <button onClick={() => setQty(l.product.id, l.qty + 1)} disabled={l.qty >= l.product.stock} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5 disabled:opacity-30">
+                          <Plus size={13} />
+                        </button>
+                      </div>
+                      <div className="w-20 text-right font-bold text-cocoa text-sm">{centsToBRL(l.lineTotal)}</div>
+                      <button onClick={() => removeLine(l.product.id)} className="text-cocoa/30 hover:text-red-500">
+                        <Trash2 size={15} />
                       </button>
-                      <span className="w-9 text-center text-sm font-bold">{l.qty}</span>
-                      <button onClick={() => setQty(l.product.id, l.qty + 1)} disabled={l.qty >= l.product.stock} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5 disabled:opacity-30">
-                        <Plus size={13} />
-                      </button>
                     </div>
-                    <div className="w-20 text-right font-bold text-cocoa text-sm">{centsToBRL(l.lineTotal)}</div>
-                    <button onClick={() => removeLine(l.product.id)} className="text-cocoa/30 hover:text-red-500">
-                      <Trash2 size={15} />
-                    </button>
+                    <input
+                      value={l.note ?? ""}
+                      onChange={(e) => setNote(l.product.id, e.target.value)}
+                      placeholder="Observação p/ entrega (ex.: 3 fardos = 30 pacotes)"
+                      className="mt-2 w-full px-3 py-1.5 rounded-lg border border-cocoa/10 bg-cream/30 text-[12px] focus:outline-none focus:border-rose-brand"
+                    />
                   </div>
                 ))}
               </div>
@@ -353,17 +433,60 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
           <CustomerPicker customer={customer} onChange={setCustomer} />
 
           <div className="bg-white rounded-2xl border border-cocoa/10 p-4">
-            <div className="flex items-center justify-between mb-3">
+            {/* Modo de preço (preço por forma de pagamento) */}
+            <div className="mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cocoa/55">Tabela de preço</span>
+              <div className="flex gap-1 mt-1">
+                {PRICE_MODES.map((m) => (
+                  <button
+                    key={m.key}
+                    onClick={() => setPriceMode(m.key)}
+                    className={`flex-1 text-xs font-bold py-1.5 rounded-full transition ${
+                      priceMode === m.key ? "bg-cocoa text-white" : "bg-cocoa/5 text-cocoa/70 hover:bg-cocoa/10"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Cupom fiscal ou não */}
+            <div className="mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cocoa/55">Documento</span>
+              <div className="flex gap-1 mt-1">
+                <button
+                  onClick={() => setFiscal(false)}
+                  className={`flex-1 text-xs font-bold py-1.5 rounded-full transition ${!fiscal ? "bg-cocoa text-white" : "bg-cocoa/5 text-cocoa/70 hover:bg-cocoa/10"}`}
+                >
+                  Não-fiscal
+                </button>
+                <button
+                  onClick={() => setFiscal(true)}
+                  className={`flex-1 text-xs font-bold py-1.5 rounded-full transition ${fiscal ? "bg-rose-brand text-white" : "bg-cocoa/5 text-cocoa/70 hover:bg-cocoa/10"}`}
+                >
+                  Cupom fiscal
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mb-3 border-t border-cocoa/10 pt-3">
               <span className="text-sm text-cocoa/70">Total</span>
               <span className="font-display text-3xl font-bold text-cocoa">{centsToBRL(priced.total)}</span>
             </div>
 
-            {/* Formas de pagamento */}
+            {/* Formas de pagamento (F1 dinheiro · F2 débito · F3 crédito · F4 Pix) */}
             <div className="space-y-2">
-              {PAY_METHODS.map((m) => (
+              {([
+                ["CASH", "F1"],
+                ["DEBIT_CARD", "F2"],
+                ["CREDIT_CARD", "F3"],
+                ["PIX", "F4"],
+              ] as [PayKey, string][]).map(([m, fkey]) => (
                 <div key={m} className="flex items-center gap-2">
                   <span className="w-28 text-xs text-cocoa/70 flex items-center gap-1.5">
-                    {m === "CASH" ? <Banknote size={14} /> : <CreditCard size={14} />}
+                    {m === "CASH" ? <Banknote size={14} /> : m === "PIX" ? <Banknote size={14} /> : <CreditCard size={14} />}
+                    <span className="font-mono text-[10px] bg-cocoa/10 rounded px-1">{fkey}</span>
                     {PAYMENT_METHOD_LABELS[m]}
                   </span>
                   <div className="flex flex-1">
@@ -416,7 +539,25 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
             </div>
 
             {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+            {info && <p className="text-olive text-sm mt-3 inline-flex items-center gap-1"><Check size={14} /> {info}</p>}
           </div>
+
+          {/* Última venda: reimprimir / cancelar */}
+          {lastSale && (
+            <div className="bg-white rounded-2xl border border-cocoa/10 p-3 flex items-center justify-between gap-2">
+              <span className="text-xs text-cocoa/70 min-w-0 truncate">
+                Última: <strong>{lastSale.orderNumber}</strong> · {centsToBRL(lastSale.totalCents)}
+              </span>
+              <div className="flex gap-1.5 shrink-0">
+                <button onClick={() => setReceipt(lastSale)} className="inline-flex items-center gap-1 text-cocoa/70 hover:text-cocoa border border-cocoa/15 rounded-full px-3 py-1.5 text-xs font-bold">
+                  <Printer size={13} /> Reimprimir
+                </button>
+                <button onClick={cancelLast} disabled={pending} className="inline-flex items-center gap-1 text-red-600 hover:bg-red-50 border border-red-200 rounded-full px-3 py-1.5 text-xs font-bold disabled:opacity-50">
+                  <X size={13} /> Cancelar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -610,7 +751,7 @@ function CustomerPicker({ customer, onChange }: { customer: PdvCustomer | null; 
 }
 
 // ============================================================
-// Cupom 80mm (impressão)
+// Cupom — imprime em térmica (80mm) ou A4 (impressora normal)
 // ============================================================
 function ReceiptModal({
   storeName,
@@ -620,14 +761,22 @@ function ReceiptModal({
   storeName: string;
   receipt: {
     orderNumber: string;
-    items: CartLine[];
+    items: { name: string; qty: number; note?: string }[];
     totalCents: number;
     changeCents: number;
     onCredit: boolean;
+    fiscal: boolean;
     customerName: string;
   };
   onClose: () => void;
 }) {
+  const [format, setFormat] = useState<"thermal" | "a4">("thermal");
+
+  const print = (fmt: "thermal" | "a4") => {
+    setFormat(fmt);
+    setTimeout(() => window.print(), 50);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 print:bg-white print:block print:p-0">
       <div className="bg-white rounded-2xl max-w-sm w-full p-5 print:rounded-none print:shadow-none print:max-w-none">
@@ -638,14 +787,20 @@ function ReceiptModal({
           <button onClick={onClose} className="text-cocoa/40 hover:text-cocoa"><X size={18} /></button>
         </div>
 
-        <div id="pdv-receipt" className="font-mono text-[12px] text-black leading-snug">
+        <div id="pdv-receipt" className={`font-mono text-[12px] text-black leading-snug ${format === "a4" ? "fmt-a4" : "fmt-thermal"}`}>
           <div className="text-center font-bold text-sm">{storeName}</div>
           <div className="text-center">Pedido {receipt.orderNumber}</div>
           <div className="text-center text-[11px]">{receipt.customerName}</div>
+          <div className="text-center text-[11px] font-bold">
+            {receipt.fiscal ? "CUPOM FISCAL" : "NÃO FISCAL"}
+          </div>
           <div className="border-t border-dashed border-black my-2" />
-          {receipt.items.map((l) => (
-            <div key={l.product.id} className="flex justify-between gap-2">
-              <span className="truncate">{l.qty}x {l.product.name}</span>
+          {receipt.items.map((l, i) => (
+            <div key={i}>
+              <div className="flex justify-between gap-2">
+                <span className="truncate">{l.qty}x {l.name}</span>
+              </div>
+              {l.note && <div className="pl-3 text-[11px] italic">→ {l.note}</div>}
             </div>
           ))}
           <div className="border-t border-dashed border-black my-2" />
@@ -663,9 +818,12 @@ function ReceiptModal({
           <div className="text-center mt-2 text-[11px]">Obrigado pela preferência!</div>
         </div>
 
-        <div className="flex gap-2 mt-4 print:hidden">
-          <button onClick={() => window.print()} className="flex-1 bg-cocoa hover:bg-espresso text-white py-2.5 rounded-full text-sm font-bold inline-flex items-center justify-center gap-2">
-            <Printer size={15} /> Imprimir cupom
+        <div className="flex flex-wrap gap-2 mt-4 print:hidden">
+          <button onClick={() => print("thermal")} className="flex-1 bg-cocoa hover:bg-espresso text-white py-2.5 rounded-full text-sm font-bold inline-flex items-center justify-center gap-2">
+            <Printer size={15} /> Térmica (80mm)
+          </button>
+          <button onClick={() => print("a4")} className="flex-1 bg-white border border-cocoa/20 text-cocoa py-2.5 rounded-full text-sm font-bold inline-flex items-center justify-center gap-2">
+            <Printer size={15} /> A4
           </button>
           <button onClick={onClose} className="px-4 py-2.5 rounded-full border border-cocoa/15 text-cocoa text-sm font-bold">Nova venda</button>
         </div>
@@ -675,7 +833,9 @@ function ReceiptModal({
         @media print {
           body * { visibility: hidden !important; }
           #pdv-receipt, #pdv-receipt * { visibility: visible !important; }
-          #pdv-receipt { position: fixed; left: 0; top: 0; width: 80mm; padding: 4mm; }
+          #pdv-receipt { position: fixed; left: 0; top: 0; padding: 4mm; }
+          #pdv-receipt.fmt-thermal { width: 80mm; font-size: 12px; }
+          #pdv-receipt.fmt-a4 { width: 190mm; padding: 12mm; font-size: 13px; }
         }
       `}</style>
     </div>

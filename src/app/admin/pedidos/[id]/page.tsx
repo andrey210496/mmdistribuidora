@@ -177,6 +177,11 @@ export default async function OrderDetailPage({
                     <div className="text-xs text-cocoa/55 font-mono">
                       SKU: {item.productSkuSnapshot}
                     </div>
+                    {item.note && (
+                      <div className="text-xs text-rose-brand font-semibold mt-0.5">
+                        → {item.note}
+                      </div>
+                    )}
                   </div>
                   <div className="text-sm text-cocoa whitespace-nowrap">
                     <span className="font-bold">{item.quantity}×</span>{" "}

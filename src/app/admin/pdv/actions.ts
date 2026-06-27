@@ -86,6 +86,8 @@ export type PdvCustomer = {
   isWholesale: boolean;
   creditAvailableCents: number;
   creditOwedCents: number;
+  // Preços fixos do cliente: productId -> priceCents (aplicado no PDV).
+  productPrices: Record<string, number>;
 };
 
 export async function searchCustomers(query: string): Promise<PdvCustomer[]> {
@@ -104,6 +106,7 @@ export async function searchCustomers(query: string): Promise<PdvCustomer[]> {
     },
     take: 10,
     orderBy: { name: "asc" },
+    include: { productPrices: { select: { productId: true, priceCents: true } } },
   });
 
   const out: PdvCustomer[] = [];
@@ -117,6 +120,7 @@ export async function searchCustomers(query: string): Promise<PdvCustomer[]> {
       isWholesale: c.isWholesale,
       creditAvailableCents: summary.availableCents,
       creditOwedCents: summary.owedCents,
+      productPrices: Object.fromEntries(c.productPrices.map((p) => [p.productId, p.priceCents])),
     });
   }
   return out;
@@ -161,6 +165,7 @@ export async function quickCreateCustomer(input: {
       isWholesale: false,
       creditAvailableCents: 0,
       creditOwedCents: 0,
+      productPrices: {},
     },
   };
 }
@@ -275,10 +280,12 @@ export async function closeCashSession(countedCashBrl: string): Promise<ActionRe
 // fiado gera CHARGE (sem receita até o recebimento).
 // ============================================================
 export type SaleInput = {
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; note?: string | null }[];
   customerId: string | null; // null = Consumidor
   payments: PaymentInput[];
   onCredit: boolean;
+  paymentMode?: "CASH" | "PIX" | "CARD"; // modo de preço (preço por forma de pgto)
+  fiscal?: boolean; // emitir cupom fiscal (NFC-e) ou não
 };
 
 export type SaleResult = {
@@ -299,13 +306,18 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
     return { ok: false, error: "Carrinho vazio." };
   }
 
-  // Resolve o cliente (Consumidor por padrão).
+  // Resolve o cliente (Consumidor por padrão) + seus preços fixos.
   let customer: Awaited<ReturnType<typeof getOrCreateWalkInCustomer>>;
+  const customerPriceMap = new Map<string, number>();
   if (input.customerId) {
     const id = idSchema.safeParse(input.customerId);
     if (!id.success) return { ok: false, error: "Cliente inválido" };
-    const c = await prisma.customer.findUnique({ where: { id: id.data } });
+    const c = await prisma.customer.findUnique({
+      where: { id: id.data },
+      include: { productPrices: { select: { productId: true, priceCents: true } } },
+    });
     if (!c) return { ok: false, error: "Cliente não encontrado" };
+    for (const pp of c.productPrices) customerPriceMap.set(pp.productId, pp.priceCents);
     customer = c;
   } else {
     if (input.onCredit) return { ok: false, error: "Fiado exige um cliente cadastrado." };
@@ -313,6 +325,7 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
   }
 
   const isWholesale = customer.isWholesale;
+  const paymentMode = input.paymentMode ?? "CASH";
 
   // Recalcula preços do banco (anti-fraude).
   const productIds = input.items.map((i) => i.productId);
@@ -332,6 +345,7 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
     totalCents: number;
     unitCostCents: number;
     costTotalCents: number;
+    note: string | null;
   }[] = [];
   let subtotalCents = 0;
   let normalSubtotalCents = 0;
@@ -345,6 +359,8 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
     const unitPriceCents = resolveUnitPrice(product, {
       isWholesale,
       qty,
+      paymentMode,
+      customerPriceCents: customerPriceMap.get(product.id) ?? null,
     }).unitPriceCents;
     const totalCents = unitPriceCents * qty;
     const unitCostCents = product.costCents ?? 0;
@@ -359,6 +375,7 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
       totalCents,
       unitCostCents,
       costTotalCents: unitCostCents * qty,
+      note: (item.note ?? "").trim() || null,
     });
   }
 
@@ -423,6 +440,7 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
     cashSessionId: session.id,
     amountReceivedCents: input.onCredit ? null : breakdown.cashGivenCents || null,
     changeCents: input.onCredit ? null : breakdown.changeCents,
+    fiscal: Boolean(input.fiscal),
     items: { create: orderItemsData },
     statusHistory: {
       create: {
@@ -521,4 +539,75 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
     orderNumber: created.orderNumber,
     changeCents: breakdown.changeCents,
   };
+}
+
+// ============================================================
+// Cancelar uma venda do balcão: devolve o estoque, cancela a receita,
+// estorna fiado e remove os pagamentos (saem da conferência do caixa).
+// ============================================================
+export async function cancelPdvSale(orderId: string, reason: string): Promise<ActionResult> {
+  const user = await requireArea("pdv");
+  const id = idSchema.safeParse(orderId);
+  if (!id.success) return { ok: false, error: "Pedido inválido" };
+
+  const order = await prisma.order.findUnique({
+    where: { id: id.data },
+    include: { items: true },
+  });
+  if (!order) return { ok: false, error: "Venda não encontrada" };
+  if (order.channel !== "PDV") return { ok: false, error: "Só vendas do balcão podem ser canceladas aqui." };
+  if (order.status === "CANCELED") return { ok: false, error: "Venda já cancelada." };
+
+  const now = new Date();
+  await prisma.$transaction(async (tx) => {
+    // devolve estoque
+    for (const it of order.items) {
+      await tx.product.update({
+        where: { id: it.productId },
+        data: { stock: { increment: it.quantity } },
+      });
+    }
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: "CANCELED",
+        paymentStatus: "REFUNDED",
+        canceledAt: now,
+        canceledReason: reason?.trim() || "Cancelada no PDV",
+      },
+    });
+    // receita reconhecida → cancelada
+    await tx.financialEntry.updateMany({
+      where: { orderId: order.id },
+      data: { status: "CANCELED" },
+    });
+    // estorna fiado (remove o CHARGE da venda)
+    await tx.creditTransaction.deleteMany({ where: { orderId: order.id, type: "CHARGE" } });
+    // pagamentos saem da conferência do caixa
+    await tx.orderPayment.deleteMany({ where: { orderId: order.id } });
+    await tx.orderStatusHistory.create({
+      data: {
+        orderId: order.id,
+        fromStatus: order.status,
+        toStatus: "CANCELED",
+        changedBy: user.id,
+        notes: `Cancelada no PDV: ${reason?.trim() || "sem motivo"}`,
+      },
+    });
+  });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "pdv.sale.canceled",
+    entityType: "Order",
+    entityId: order.id,
+    afterJson: { orderNumber: order.orderNumber, reason },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath("/admin/pdv");
+  revalidatePath("/admin/pedidos");
+  return { ok: true };
 }
