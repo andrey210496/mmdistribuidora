@@ -30,7 +30,7 @@ let cachedToken: { token: string; expiresAt: number } | null = null;
 async function fetchJson(
   path: string,
   init: RequestInit,
-  timeoutMs = 6000
+  timeoutMs = 12000
 ): Promise<unknown> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
