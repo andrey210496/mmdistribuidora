@@ -17,6 +17,7 @@ export type AreaKey =
   | "entradas"
   | "anuncios"
   | "financeiro"
+  | "relatorios"
   | "configuracoes";
 
 export const ADMIN_AREAS: { key: AreaKey; label: string; href: string; desc: string }[] = [
@@ -31,6 +32,7 @@ export const ADMIN_AREAS: { key: AreaKey; label: string; href: string; desc: str
   { key: "entradas", label: "Entrada de Mercadoria", href: "/admin/entradas", desc: "Entradas de estoque e import de NF-e" },
   { key: "anuncios", label: "Anúncios", href: "/admin/anuncios", desc: "Criar pop-ups e campanhas" },
   { key: "financeiro", label: "Financeiro", href: "/admin/financeiro", desc: "Contas a receber/pagar" },
+  { key: "relatorios", label: "Relatórios", href: "/admin/relatorios", desc: "Vendas por produto, período e forma de pagamento" },
   { key: "configuracoes", label: "Configurações", href: "/admin/configuracoes", desc: "Ajustes gerais da loja" },
 ];
 
@@ -43,10 +45,10 @@ export const AREA_LABEL: Record<AreaKey, string> = ADMIN_AREAS.reduce(
 export const ROLE_PRESETS: { label: string; areas: AreaKey[] }[] = [
   {
     label: "Gerente",
-    areas: ["dashboard", "pdv", "pedidos", "produtos", "categorias", "secoes", "clientes", "fornecedores", "entradas", "anuncios", "financeiro"],
+    areas: ["dashboard", "pdv", "pedidos", "produtos", "categorias", "secoes", "clientes", "fornecedores", "entradas", "anuncios", "financeiro", "relatorios"],
   },
   { label: "Separação / Estoque", areas: ["pedidos", "produtos", "entradas", "fornecedores"] },
-  { label: "Financeiro", areas: ["dashboard", "pedidos", "financeiro", "clientes"] },
+  { label: "Financeiro", areas: ["dashboard", "pedidos", "financeiro", "relatorios", "clientes"] },
   { label: "Caixa / Balcão", areas: ["pdv", "pedidos", "clientes"] },
   { label: "Atendimento", areas: ["pedidos", "clientes"] },
   { label: "Marketing", areas: ["secoes", "anuncios", "produtos"] },
