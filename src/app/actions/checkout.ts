@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCart, clearCart } from "@/lib/cart";
+import { resolveUnitPrice } from "@/lib/pricing";
 import { checkoutSchema } from "@/lib/validations";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
@@ -81,8 +82,9 @@ export async function submitCheckout(
   const data = parsed.data;
 
   // Recalcula tudo do banco — preço enviado/exibido nunca é fonte da verdade.
-  // O preço de membro só vale se o cliente logado for membro ATIVO (anti-burla).
+  // Clube/atacado só valem conforme o cadastro real do cliente (anti-burla).
   const isClubMember = customer.isClubMember;
+  const isWholesale = customer.isWholesale;
   const productIds = data.items.map((i) => i.productId);
   const products = await prisma.product.findMany({
     where: { id: { in: productIds }, active: true },
@@ -101,10 +103,11 @@ export async function submitCheckout(
     if (item.quantity > product.stock) {
       return { error: `Estoque insuficiente para "${product.name}".` };
     }
-    const hasClubPrice =
-      product.clubPriceCents != null && product.clubPriceCents < product.priceCents;
-    const unitPriceCents =
-      isClubMember && hasClubPrice ? product.clubPriceCents! : product.priceCents;
+    const unitPriceCents = resolveUnitPrice(product, {
+      isClubMember,
+      isWholesale,
+      qty: item.quantity,
+    }).unitPriceCents;
 
     const totalCents = unitPriceCents * item.quantity;
     const unitCostCents = product.costCents ?? 0;

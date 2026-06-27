@@ -18,6 +18,7 @@ export type CurrentCustomer = {
   phone: string | null;
   clubMember: ClubMember | null;
   isClubMember: boolean;
+  isWholesale: boolean;
 };
 
 /** Membro ativo = status ACTIVE e (sem expiração OU ainda não expirou). */
@@ -47,6 +48,7 @@ export async function getCurrentCustomer(): Promise<CurrentCustomer | null> {
     phone: customer.phone,
     clubMember: customer.clubMember,
     isClubMember: isActiveClubMember(customer.clubMember),
+    isWholesale: customer.isWholesale,
   };
 }
 
@@ -71,4 +73,15 @@ export async function isCurrentCustomerActiveMember(): Promise<boolean> {
     where: { customerId: session.customerId },
   });
   return isActiveClubMember(member);
+}
+
+/** Cliente logado é atacadista? Atalho barato para a precificação do carrinho. */
+export async function isCurrentCustomerWholesale(): Promise<boolean> {
+  const session = await getCustomerSession();
+  if (!session.customerId) return false;
+  const customer = await prisma.customer.findUnique({
+    where: { id: session.customerId },
+    select: { isWholesale: true },
+  });
+  return customer?.isWholesale ?? false;
 }

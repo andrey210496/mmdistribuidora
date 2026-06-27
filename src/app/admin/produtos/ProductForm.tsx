@@ -15,9 +15,12 @@ type Product = {
   slug: string;
   description: string;
   sku: string;
+  barcode: string | null;
   priceCents: number;
   compareAtPriceCents: number | null;
   clubPriceCents: number | null;
+  wholesalePriceCents: number | null;
+  wholesaleMinQty: number;
   costCents: number | null;
   stock: number;
   weightGrams: number;
@@ -145,6 +148,24 @@ export function ProductForm({
                 />
                 {fe.sku && <p className="text-red-600 text-xs mt-1">{fe.sku[0]}</p>}
               </div>
+              <div>
+                <label className="label" htmlFor="barcode">
+                  Código de barras <span className="text-cocoa/45 font-normal">(EAN/UPC)</span>
+                </label>
+                <input
+                  id="barcode"
+                  name="barcode"
+                  defaultValue={product?.barcode ?? ""}
+                  maxLength={60}
+                  inputMode="numeric"
+                  className="input-field font-mono"
+                  placeholder="bipar ou digitar"
+                />
+                <p className="text-[11px] text-cocoa/55 mt-1">
+                  Usado no PDV: bipar o código adiciona o produto ao carrinho.
+                </p>
+                {fe.barcode && <p className="text-red-600 text-xs mt-1">{fe.barcode[0]}</p>}
+              </div>
               <div className="md:col-span-2">
                 <label className="label" htmlFor="description">Descrição *</label>
                 <textarea
@@ -212,6 +233,40 @@ export function ProductForm({
                 </div>
                 <p className="text-[11px] text-cocoa/55 mt-1">
                   Se preenchido, o produto aparece na <strong>vitrine do Clube</strong> na home, mostrando o preço normal e este preço de membro.
+                </p>
+              </div>
+              <div>
+                <label className="label" htmlFor="wholesalePrice">
+                  📦 Preço de atacado
+                </label>
+                <div className="flex">
+                  <span className="px-3 py-3 bg-cocoa/5 border border-r-0 border-cocoa/15 rounded-l-full text-cocoa/70 text-sm font-bold">R$</span>
+                  <input
+                    id="wholesalePrice"
+                    name="wholesalePrice"
+                    defaultValue={product?.wholesalePriceCents ? formatBrl(product.wholesalePriceCents) : ""}
+                    inputMode="decimal"
+                    className="input-field rounded-l-none"
+                    placeholder="0,00 (opcional)"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="label" htmlFor="wholesaleMinQty">
+                  Qtd. mínima p/ atacado
+                </label>
+                <input
+                  id="wholesaleMinQty"
+                  name="wholesaleMinQty"
+                  type="number"
+                  min={0}
+                  defaultValue={product?.wholesaleMinQty ?? 0}
+                  className="input-field"
+                  placeholder="0"
+                />
+                <p className="text-[11px] text-cocoa/55 mt-1">
+                  A partir desta quantidade o preço de atacado vale para qualquer cliente.
+                  Atacadistas (cadastro) pagam atacado sempre. <strong>0 = só atacadista.</strong>
                 </p>
               </div>
               <div className="md:col-span-2">

@@ -8,6 +8,8 @@ function product(over: Partial<PricingProduct>): PricingProduct {
     slug: "produto",
     priceCents: 5000,
     clubPriceCents: null,
+    wholesalePriceCents: null,
+    wholesaleMinQty: 0,
     stock: 100,
     images: [],
     ...over,

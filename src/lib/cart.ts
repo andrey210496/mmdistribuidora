@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { getCustomerSession, type CartItem } from "./session";
-import { isCurrentCustomerActiveMember } from "./customer";
+import { isCurrentCustomerActiveMember, isCurrentCustomerWholesale } from "./customer";
+import { resolveUnitPrice } from "./pricing";
 import { resolveShipping } from "./shipping";
 import { buildStoneItems, type StoneOption } from "./stone-entrega";
 import { getStoreSettings } from "./settings";
@@ -21,11 +22,12 @@ export type CartLine = {
   quantity: number;
   unitPriceCents: number;
   totalCents: number;
-  // Preço normal (sem clube) — usado para exibir o "de/por" quando o
-  // preço de membro está aplicado.
+  // Preço normal (sem clube/atacado) — usado para exibir o "de/por".
   normalUnitPriceCents: number;
   // true quando o preço de membro foi aplicado nesta linha
   clubPriceApplied: boolean;
+  // true quando o preço de atacado foi aplicado nesta linha
+  wholesalePriceApplied: boolean;
   stock: number;
   available: boolean;
 };
@@ -59,6 +61,8 @@ export type PricingProduct = {
   slug: string;
   priceCents: number;
   clubPriceCents: number | null;
+  wholesalePriceCents: number | null;
+  wholesaleMinQty: number;
   stock: number;
   images: { url: string }[];
 };
@@ -73,13 +77,17 @@ export type PricedCart = {
 
 /**
  * Precificação PURA do carrinho (sem sessão/DB) — fácil de testar.
- * ANTI-BURLA: o preço de membro só é aplicado quando isClubMember === true.
+ * Usa resolveUnitPrice (fonte única): aplica o MENOR preço aplicável
+ * entre normal, clube e atacado.
+ * ANTI-BURLA: clube só com isClubMember; atacado só com isWholesale (ou
+ * quando a quantidade atinge o mínimo do produto).
  * Clampa a quantidade ao estoque e ao máximo por item.
  */
 export function priceCartLines(
   items: CartItem[],
   products: PricingProduct[],
-  isClubMember: boolean
+  isClubMember: boolean,
+  isWholesale = false
 ): PricedCart {
   const lines: CartLine[] = [];
   let clubSavingsCents = 0;
@@ -92,11 +100,13 @@ export function priceCartLines(
     if (qty <= 0) continue;
 
     const normalUnit = product.priceCents;
+    const resolved = resolveUnitPrice(product, { isClubMember, isWholesale, qty });
+    const unit = resolved.unitPriceCents;
+    const clubPriceApplied = resolved.source === "club";
+    const wholesalePriceApplied = resolved.source === "wholesale";
+
     const hasClubPrice =
       product.clubPriceCents != null && product.clubPriceCents < normalUnit;
-    const clubPriceApplied = isClubMember && hasClubPrice;
-    const unit = clubPriceApplied ? product.clubPriceCents! : normalUnit;
-
     if (hasClubPrice) potentialClubSavingsCents += (normalUnit - product.clubPriceCents!) * qty;
     if (clubPriceApplied) clubSavingsCents += (normalUnit - unit) * qty;
 
@@ -110,6 +120,7 @@ export function priceCartLines(
       totalCents: unit * qty,
       normalUnitPriceCents: normalUnit,
       clubPriceApplied,
+      wholesalePriceApplied,
       stock: product.stock,
       available: true,
     });
@@ -151,9 +162,12 @@ export async function getCart(): Promise<CartSummary> {
     };
   }
 
-  // ANTI-BURLA: o preço de membro só é aplicado se o cliente logado for
-  // membro ATIVO. Isso é decidido aqui, no servidor — o frontend não influi.
-  const isClubMember = await isCurrentCustomerActiveMember();
+  // ANTI-BURLA: clube/atacado só valem se o cliente logado realmente os tiver.
+  // Isso é decidido aqui, no servidor — o frontend não influi.
+  const [isClubMember, isWholesale] = await Promise.all([
+    isCurrentCustomerActiveMember(),
+    isCurrentCustomerWholesale(),
+  ]);
 
   const products = await prisma.product.findMany({
     where: {
@@ -163,7 +177,7 @@ export async function getCart(): Promise<CartSummary> {
     include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
   });
 
-  const priced = priceCartLines(items, products, isClubMember);
+  const priced = priceCartLines(items, products, isClubMember, isWholesale);
   const weightByProduct = new Map(products.map((p) => [p.id, p.weightGrams]));
   const stoneItems = buildStoneItems(priced.lines, weightByProduct, {
     height: settings.boxHeightCm,

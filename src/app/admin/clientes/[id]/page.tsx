@@ -14,6 +14,7 @@ import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ORDER_STATUS_META } from "@/lib/orders";
+import { WholesaleToggle } from "./WholesaleToggle";
 
 export const metadata = { title: "Cliente · Admin" };
 export const dynamic = "force-dynamic";
@@ -65,7 +66,14 @@ export default async function ClienteDetailPage({
               .toUpperCase()}
           </div>
           <div>
-            <h1 className="font-display text-3xl font-bold text-cocoa">{customer.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display text-3xl font-bold text-cocoa">{customer.name}</h1>
+              {customer.isWholesale && (
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-caramel/15 text-caramel border border-caramel/30">
+                  Atacado
+                </span>
+              )}
+            </div>
             <div className="text-cocoa/60 text-sm flex items-center gap-3 flex-wrap mt-1">
               <span className="flex items-center gap-1.5">
                 <Mail size={13} />
@@ -180,6 +188,9 @@ export default async function ClienteDetailPage({
               )}
             </div>
           </section>
+
+          {/* Atacado */}
+          <WholesaleToggle customerId={customer.id} initial={customer.isWholesale} />
 
           {/* Endereços */}
           {customer.addresses.length > 0 && (

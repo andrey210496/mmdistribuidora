@@ -131,15 +131,28 @@ export function CartDrawer() {
                     >
                       {line.productName}
                     </Link>
-                    <div className="text-cocoa/60 text-xs mt-0.5 flex items-center gap-1.5">
-                      {line.clubPriceApplied && (
+                    <div className="text-cocoa/60 text-xs mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      {(line.clubPriceApplied || line.wholesalePriceApplied) && (
                         <span className="text-cocoa/40 line-through">
                           {centsToBRL(line.normalUnitPriceCents)}
                         </span>
                       )}
-                      <span className={line.clubPriceApplied ? "text-[#8a5a1e] font-semibold" : ""}>
+                      <span
+                        className={
+                          line.clubPriceApplied
+                            ? "text-[#8a5a1e] font-semibold"
+                            : line.wholesalePriceApplied
+                              ? "text-caramel font-semibold"
+                              : ""
+                        }
+                      >
                         {centsToBRL(line.unitPriceCents)} cada
                       </span>
+                      {line.wholesalePriceApplied && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-caramel/15 text-caramel">
+                          Atacado
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center justify-between mt-2">

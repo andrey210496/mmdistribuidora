@@ -23,9 +23,12 @@ const productFormSchema = z.object({
   slug: z.string().min(2).max(200),
   description: z.string().min(1).max(5000),
   sku: z.string().min(1).max(50),
+  barcode: z.string().max(60).nullable().optional(),
   priceCents: z.number().int().positive(),
   compareAtPriceCents: z.number().int().positive().nullable().optional(),
   clubPriceCents: z.number().int().positive().nullable().optional(),
+  wholesalePriceCents: z.number().int().positive().nullable().optional(),
+  wholesaleMinQty: z.number().int().nonnegative(),
   costCents: z.number().int().nonnegative().nullable().optional(),
   stock: z.number().int().nonnegative(),
   weightGrams: z.number().int().nonnegative(),
@@ -64,16 +67,21 @@ function parseFormData(formData: FormData) {
 
   const compareAt = parseMoney(formData.get("compareAtPrice"));
   const clubPrice = parseMoney(formData.get("clubPrice"));
+  const wholesalePrice = parseMoney(formData.get("wholesalePrice"));
   const cost = parseMoney(formData.get("cost"));
+  const barcode = String(formData.get("barcode") ?? "").trim();
 
   return {
     name: String(formData.get("name") ?? "").trim(),
     slug: String(formData.get("slug") ?? "").trim() || slugify(String(formData.get("name") ?? "")),
     description: String(formData.get("description") ?? "").trim(),
     sku: String(formData.get("sku") ?? "").trim().toUpperCase(),
+    barcode: barcode || null,
     priceCents: parseMoney(formData.get("price")) ?? 0,
     compareAtPriceCents: compareAt && compareAt > 0 ? compareAt : null,
     clubPriceCents: clubPrice && clubPrice > 0 ? clubPrice : null,
+    wholesalePriceCents: wholesalePrice && wholesalePrice > 0 ? wholesalePrice : null,
+    wholesaleMinQty: Math.max(0, Number(formData.get("wholesaleMinQty") ?? 0) || 0),
     costCents: cost && cost > 0 ? cost : 0,
     stock: Number(formData.get("stock") ?? 0),
     weightGrams: Number(formData.get("weightGrams") ?? 0),
@@ -97,13 +105,24 @@ export async function createProduct(
     return { fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
   }
 
-  // Checa se SKU/slug já existem
+  // Checa se SKU/slug/código de barras já existem
   const conflict = await prisma.product.findFirst({
-    where: { OR: [{ sku: parsed.data.sku }, { slug: parsed.data.slug }] },
+    where: {
+      OR: [
+        { sku: parsed.data.sku },
+        { slug: parsed.data.slug },
+        ...(parsed.data.barcode ? [{ barcode: parsed.data.barcode }] : []),
+      ],
+    },
   });
   if (conflict) {
     return {
-      error: conflict.sku === parsed.data.sku ? "SKU já cadastrado" : "Slug já cadastrado",
+      error:
+        conflict.sku === parsed.data.sku
+          ? "SKU já cadastrado"
+          : conflict.barcode && conflict.barcode === parsed.data.barcode
+            ? "Código de barras já cadastrado"
+            : "Slug já cadastrado",
     };
   }
 
@@ -156,16 +175,25 @@ export async function updateProduct(
   });
   if (!existing) return { error: "Produto não encontrado" };
 
-  // Checa conflito de SKU/slug com OUTROS produtos
+  // Checa conflito de SKU/slug/código de barras com OUTROS produtos
   const conflict = await prisma.product.findFirst({
     where: {
       id: { not: id.data },
-      OR: [{ sku: parsed.data.sku }, { slug: parsed.data.slug }],
+      OR: [
+        { sku: parsed.data.sku },
+        { slug: parsed.data.slug },
+        ...(parsed.data.barcode ? [{ barcode: parsed.data.barcode }] : []),
+      ],
     },
   });
   if (conflict) {
     return {
-      error: conflict.sku === parsed.data.sku ? "SKU já cadastrado em outro produto" : "Slug já cadastrado",
+      error:
+        conflict.sku === parsed.data.sku
+          ? "SKU já cadastrado em outro produto"
+          : conflict.barcode && conflict.barcode === parsed.data.barcode
+            ? "Código de barras já cadastrado em outro produto"
+            : "Slug já cadastrado",
     };
   }
 
