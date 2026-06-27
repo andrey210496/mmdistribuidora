@@ -76,6 +76,11 @@ export default async function OrderDetailPage({
             <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${statusMeta.bg} ${statusMeta.color}`}>
               {statusMeta.label}
             </span>
+            {order.channel === "PDV" && (
+              <span className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full bg-cocoa/10 text-cocoa/70">
+                Balcão
+              </span>
+            )}
           </div>
           <div className="text-cocoa/60 text-sm">
             Realizado em {order.createdAt.toLocaleString("pt-BR")}

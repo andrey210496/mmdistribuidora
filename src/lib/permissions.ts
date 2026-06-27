@@ -7,6 +7,7 @@
 
 export type AreaKey =
   | "dashboard"
+  | "pdv"
   | "pedidos"
   | "produtos"
   | "categorias"
@@ -19,6 +20,7 @@ export type AreaKey =
 
 export const ADMIN_AREAS: { key: AreaKey; label: string; href: string; desc: string }[] = [
   { key: "dashboard", label: "Painel (Dashboard)", href: "/admin", desc: "Visão geral: vendas, pedidos e estoque" },
+  { key: "pdv", label: "PDV / Caixa", href: "/admin/pdv", desc: "Venda no balcão, caixa e pagamento" },
   { key: "pedidos", label: "Pedidos", href: "/admin/pedidos", desc: "Ver e gerenciar pedidos, status e separação" },
   { key: "produtos", label: "Produtos", href: "/admin/produtos", desc: "Cadastrar e editar produtos e estoque" },
   { key: "categorias", label: "Categorias", href: "/admin/categorias", desc: "Organizar categorias do catálogo" },
@@ -39,10 +41,11 @@ export const AREA_LABEL: Record<AreaKey, string> = ADMIN_AREAS.reduce(
 export const ROLE_PRESETS: { label: string; areas: AreaKey[] }[] = [
   {
     label: "Gerente",
-    areas: ["dashboard", "pedidos", "produtos", "categorias", "secoes", "clientes", "clube", "anuncios", "financeiro"],
+    areas: ["dashboard", "pdv", "pedidos", "produtos", "categorias", "secoes", "clientes", "clube", "anuncios", "financeiro"],
   },
   { label: "Separação / Estoque", areas: ["pedidos", "produtos"] },
   { label: "Financeiro", areas: ["dashboard", "pedidos", "financeiro", "clientes"] },
+  { label: "Caixa / Balcão", areas: ["pdv", "pedidos", "clientes"] },
   { label: "Atendimento", areas: ["pedidos", "clientes", "clube"] },
   { label: "Marketing", areas: ["secoes", "anuncios", "clube", "produtos"] },
 ];

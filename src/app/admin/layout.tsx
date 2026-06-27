@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   LayoutDashboard,
+  Store,
   ShoppingCart,
   Package,
   Tag,
@@ -24,6 +25,7 @@ export const metadata = { robots: { index: false } };
 // area: undefined = sempre visível; "admin" = só super-admin
 const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin" }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, area: "dashboard" },
+  { href: "/admin/pdv", label: "PDV / Caixa", icon: Store, area: "pdv" },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart, area: "pedidos" },
   { href: "/admin/produtos", label: "Produtos", icon: Package, area: "produtos" },
   { href: "/admin/categorias", label: "Categorias", icon: Tag, area: "categorias" },

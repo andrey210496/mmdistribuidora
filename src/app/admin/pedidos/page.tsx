@@ -153,6 +153,11 @@ export default async function AdminPedidosPage({
                         <Link href={`/admin/pedidos/${o.id}`} className="hover:text-rose-brand">
                           {o.orderNumber}
                         </Link>
+                        {o.channel === "PDV" && (
+                          <span className="ml-2 align-middle text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-cocoa/10 text-cocoa/70">
+                            Balcão
+                          </span>
+                        )}
                       </td>
                       <td className="px-5 py-3 text-cocoa">
                         <div className="font-medium">{o.customerNameSnapshot}</div>
