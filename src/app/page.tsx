@@ -1,6 +1,7 @@
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
-import { HeroBanner } from "@/components/storefront/HeroBanner";
+import { Hero } from "@/components/storefront/Hero";
+import { CategoryTiles } from "@/components/storefront/CategoryTiles";
 import { BenefitsBar } from "@/components/storefront/BenefitsBar";
 import { ProductShelf } from "@/components/storefront/ProductShelf";
 import { PromoQuad } from "@/components/storefront/PromoQuad";
@@ -23,8 +24,11 @@ export default async function HomePage() {
   return (
     <>
       <Header />
-      {/* Capa */}
-      <HeroBanner />
+      {/* Hero codado (proposta de valor + atacado) */}
+      <Hero />
+
+      {/* Categorias reais do catálogo */}
+      <CategoryTiles />
 
       {/* DESTAQUE DO CLUBE — logo no início pra chamar atenção */}
       <ClubBanner />

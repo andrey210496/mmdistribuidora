@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { Instagram, Facebook, Mail } from "lucide-react";
+import { Instagram, Facebook, Mail, ShieldCheck, Lock } from "lucide-react";
 import { COMPANY } from "@/lib/company";
+
+const PAYMENTS = ["PIX", "Crédito", "Débito", "Dinheiro", "Fiado"];
 
 export function Footer() {
   return (
@@ -68,9 +70,35 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Linha divisória */}
-        <div className="border-t border-cocoa/15 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-[11px] text-cocoa/50 tracking-wide">
+        {/* Pagamentos + segurança */}
+        <div className="border-t border-cocoa/15 pt-8 flex flex-col lg:flex-row items-center justify-between gap-5">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cocoa/45 mr-1">
+              Formas de pagamento
+            </span>
+            {PAYMENTS.map((p) => (
+              <span
+                key={p}
+                className="text-[11px] font-bold text-cocoa/75 bg-white border border-cocoa/15 rounded-md px-2.5 py-1"
+              >
+                {p}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-olive">
+              <ShieldCheck size={15} /> Loja protegida
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-cocoa/55">
+              <Lock size={13} /> Compra 100% segura
+            </span>
+          </div>
+        </div>
+
+        {/* Rodapé legal */}
+        <div className="border-t border-cocoa/10 mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-[11px] text-cocoa/50 tracking-wide text-center md:text-left">
             © {new Date().getFullYear()} {COMPANY.name} · CNPJ {COMPANY.cnpj}
           </div>
 
@@ -89,12 +117,6 @@ export function Footer() {
                 <Icon size={14} strokeWidth={1.5} />
               </Link>
             ))}
-          </div>
-
-          <div className="flex items-center gap-2 text-[10px] text-cocoa/40 tracking-widest uppercase">
-            <span>Cartão de crédito</span>
-            <span>·</span>
-            <span>até 6x</span>
           </div>
         </div>
       </div>

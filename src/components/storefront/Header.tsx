@@ -15,23 +15,26 @@ import { CartButton } from "@/components/cart/CartButton";
 import { CategoryNav, type NavItem } from "@/components/storefront/CategoryNav";
 import { MobileMenu } from "@/components/storefront/MobileMenu";
 import { getCurrentCustomer } from "@/lib/customer";
-
-const NAV_ITEMS: NavItem[] = [
-  { label: "Início", href: "/", active: true },
-  { label: "Embalagens", href: "/produtos?categoria=embalagens" },
-  { label: "Insumos", href: "/produtos?categoria=confeitaria" },
-  { label: "Descartáveis", href: "/produtos?categoria=embalagens" },
-  { label: "Confeitaria", href: "/produtos?categoria=doces-finos" },
-  { label: "Food Service", href: "/produtos?categoria=festas" },
-  { label: "Promoções", href: "/produtos?ofertas=1" },
-  { label: "Clube", href: "/clube" },
-  { label: "Quem Somos", href: "/sobre" },
-  { label: "Contato", href: "/contato" },
-];
+import { getNavCategories } from "@/lib/categories";
 
 export async function Header() {
-  const customer = await getCurrentCustomer();
+  const [customer, categories] = await Promise.all([
+    getCurrentCustomer(),
+    getNavCategories(8),
+  ]);
   const firstName = customer?.name.split(/\s+/)[0];
+
+  // Nav com categorias REAIS do catálogo + links fixos.
+  const NAV_ITEMS: NavItem[] = [
+    { label: "Início", href: "/", active: true },
+    ...categories.map((c) => ({
+      label: c.name,
+      href: `/produtos?categoria=${c.slug}`,
+    })),
+    { label: "Promoções", href: "/produtos?ofertas=1" },
+    { label: "Clube", href: "/clube" },
+    { label: "Contato", href: "/contato" },
+  ];
 
   return (
     <header className="sticky top-0 z-50">
@@ -150,22 +153,14 @@ export async function Header() {
       {/* Main header — logo + busca + ações */}
       <div className="bg-cream border-b border-cocoa/10">
         <div className="container-wide flex items-center justify-between h-[110px] gap-6">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
+          {/* Logo (lockup horizontal — já inclui o nome da marca) */}
+          <Link href="/" className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
               alt="MM Distribuidora"
-              className="w-16 h-16 lg:w-20 lg:h-20 object-contain shrink-0"
+              className="h-12 lg:h-16 w-auto object-contain shrink-0"
             />
-            <div className="leading-none">
-              <div className="font-display text-[22px] lg:text-[28px] font-bold tracking-tight bg-gradient-to-br from-[#a07640] via-[#d4a574] to-[#a07640] bg-clip-text text-transparent">
-                DOCE ENCANTO
-              </div>
-              <div className="text-[10px] tracking-[0.4em] uppercase text-cocoa/60 mt-1.5">
-                Distribuidora
-              </div>
-            </div>
           </Link>
 
           {/* Busca gigante */}
