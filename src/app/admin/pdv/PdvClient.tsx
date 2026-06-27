@@ -9,6 +9,7 @@ import { centsToBRL, brlToCents } from "@/lib/money";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
 import { PAYMENT_METHOD_LABELS } from "@/lib/orders";
+import { matchAction, type ShortcutMap } from "@/lib/pdv-shortcuts";
 import type { CashReconciliation } from "@/lib/cash";
 import {
   searchProducts, searchCustomers, quickCreateCustomer, finalizeSale,
@@ -37,13 +38,15 @@ export function PdvClient({
   storeName,
   session,
   recon,
+  shortcuts,
 }: {
   storeName: string;
   session: Session | null;
   recon: CashReconciliation | null;
+  shortcuts: ShortcutMap;
 }) {
   if (!session) return <OpenCashForm />;
-  return <Pos storeName={storeName} session={session} recon={recon!} />;
+  return <Pos storeName={storeName} session={session} recon={recon!} shortcuts={shortcuts} />;
 }
 
 // ============================================================
@@ -95,7 +98,7 @@ function OpenCashForm() {
 // ============================================================
 // PDV em operação
 // ============================================================
-function Pos({ storeName, session, recon }: { storeName: string; session: Session; recon: CashReconciliation }) {
+function Pos({ storeName, session, recon, shortcuts }: { storeName: string; session: Session; recon: CashReconciliation; shortcuts: ShortcutMap }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -235,6 +238,28 @@ function Pos({ storeName, session, recon }: { storeName: string; session: Sessio
       resetSale();
     });
   };
+
+  // Atalhos de teclado (config em /admin/configuracoes).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement as HTMLElement | null;
+      const isTyping =
+        !!el &&
+        (el.tagName === "INPUT" ||
+          el.tagName === "TEXTAREA" ||
+          el.tagName === "SELECT" ||
+          el.isContentEditable);
+      const action = matchAction(e, shortcuts, isTyping);
+      if (!action) return;
+      e.preventDefault();
+      if (action === "focusSearch") searchRef.current?.focus();
+      else if (action === "finalize") submit(false);
+      else if (action === "credit") submit(true);
+      else if (action === "clearSale") resetSale();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [shortcuts, submit, resetSale]);
 
   return (
     <div className="p-4 lg:p-6">

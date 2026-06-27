@@ -1,7 +1,8 @@
 import { Settings } from "lucide-react";
 import { requireArea } from "@/lib/auth";
-import { getStoreSettings } from "@/lib/settings";
+import { getStoreSettings, getPdvShortcuts } from "@/lib/settings";
 import { SettingsForm } from "./SettingsForm";
+import { ShortcutsForm } from "./ShortcutsForm";
 
 export const metadata = { title: "Configurações · Admin" };
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ const centsToReais = (c: number) => (c / 100).toFixed(2).replace(".", ",");
 export default async function ConfigPage() {
   await requireArea("configuracoes");
   const s = await getStoreSettings();
+  const shortcuts = await getPdvShortcuts();
 
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-3xl">
@@ -35,6 +37,8 @@ export default async function ConfigPage() {
           boxDepthCm: s.boxDepthCm,
         }}
       />
+
+      <ShortcutsForm initial={shortcuts} />
     </div>
   );
 }

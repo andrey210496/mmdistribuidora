@@ -1,9 +1,18 @@
 import { prisma } from "./prisma";
+import { parseShortcuts, type ShortcutMap } from "./pdv-shortcuts";
 
 // ============================================================
 // Configurações operacionais da loja — armazenadas em Setting (chave/valor).
 // O admin edita em /admin/configuracoes; dashboard, produtos e carrinho leem daqui.
 // ============================================================
+
+export const PDV_SHORTCUTS_KEY = "pdv.shortcuts";
+
+/** Lê os atalhos de teclado do PDV (ou os defaults). */
+export async function getPdvShortcuts(): Promise<ShortcutMap> {
+  const row = await prisma.setting.findUnique({ where: { key: PDV_SHORTCUTS_KEY } });
+  return parseShortcuts(row?.value);
+}
 
 export const SETTINGS_KEYS = {
   lowStockThreshold: "inventory.low_stock_threshold",

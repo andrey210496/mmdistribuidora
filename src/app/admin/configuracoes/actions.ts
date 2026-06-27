@@ -4,9 +4,11 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { requireArea } from "@/lib/auth";
-import { getStoreSettings, saveStoreSettings } from "@/lib/settings";
+import { getStoreSettings, saveStoreSettings, PDV_SHORTCUTS_KEY } from "@/lib/settings";
 import { stoneDiagnose, buildStoneItems } from "@/lib/stone-entrega";
 import { brlToCents } from "@/lib/money";
+import { prisma } from "@/lib/prisma";
+import { PDV_ACTIONS, serializeShortcuts, DEFAULT_SHORTCUTS, type ShortcutMap } from "@/lib/pdv-shortcuts";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 
@@ -75,6 +77,40 @@ export async function saveSettings(input: z.infer<typeof schema>): Promise<Actio
   revalidatePath("/admin/produtos");
   revalidatePath("/carrinho");
   revalidatePath("/checkout");
+  return { ok: true };
+}
+
+// ============================================================
+// Atalhos de teclado do PDV — salva o mapa em Setting (pdv.shortcuts).
+// ============================================================
+export async function savePdvShortcuts(map: Record<string, string>): Promise<ActionResult> {
+  const user = await requireArea("configuracoes");
+
+  const clean: ShortcutMap = { ...DEFAULT_SHORTCUTS };
+  for (const a of PDV_ACTIONS) {
+    const v = map?.[a.key];
+    clean[a.key] = typeof v === "string" && v.trim() ? v.trim() : a.default;
+  }
+
+  await prisma.setting.upsert({
+    where: { key: PDV_SHORTCUTS_KEY },
+    update: { value: serializeShortcuts(clean) },
+    create: { key: PDV_SHORTCUTS_KEY, value: serializeShortcuts(clean) },
+  });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "settings.pdvShortcuts.updated",
+    entityType: "Setting",
+    entityId: PDV_SHORTCUTS_KEY,
+    afterJson: clean,
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath("/admin/configuracoes");
+  revalidatePath("/admin/pdv");
   return { ok: true };
 }
 

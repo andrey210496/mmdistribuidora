@@ -1,5 +1,6 @@
 import { requireArea } from "@/lib/auth";
 import { getOpenCashSession, getSessionReconciliation } from "@/lib/cash";
+import { getPdvShortcuts } from "@/lib/settings";
 import { COMPANY } from "@/lib/company";
 import { PdvClient } from "./PdvClient";
 
@@ -11,10 +12,12 @@ export default async function PdvPage() {
 
   const session = await getOpenCashSession();
   const recon = session ? await getSessionReconciliation(session) : null;
+  const shortcuts = await getPdvShortcuts();
 
   return (
     <PdvClient
       storeName={COMPANY.name}
+      shortcuts={shortcuts}
       session={
         session
           ? {
