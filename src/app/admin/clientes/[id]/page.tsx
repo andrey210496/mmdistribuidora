@@ -17,6 +17,7 @@ import { ORDER_STATUS_META } from "@/lib/orders";
 import { getCustomerCreditSummary } from "@/lib/credit";
 import { WholesaleToggle } from "./WholesaleToggle";
 import { CreditPanel } from "./CreditPanel";
+import { CustomerPriceList } from "./CustomerPriceList";
 
 export const metadata = { title: "Cliente · Admin" };
 export const dynamic = "force-dynamic";
@@ -37,10 +38,21 @@ export default async function ClienteDetailPage({
         orderBy: { createdAt: "desc" },
         include: { items: { select: { id: true } } },
       },
+      productPrices: {
+        include: { product: { select: { name: true, sku: true } } },
+        orderBy: { updatedAt: "desc" },
+      },
     },
   });
 
   if (!customer) notFound();
+
+  const fixedPrices = customer.productPrices.map((pp) => ({
+    id: pp.id,
+    productName: pp.product.name,
+    productSku: pp.product.sku,
+    priceCents: pp.priceCents,
+  }));
 
   const paidOrders = customer.orders.filter((o) => o.paymentStatus === "CONFIRMED");
   const ltv = paidOrders.reduce((s, o) => s + o.totalCents, 0);
@@ -216,6 +228,9 @@ export default async function ClienteDetailPage({
 
           {/* Atacado */}
           <WholesaleToggle customerId={customer.id} initial={customer.isWholesale} />
+
+          {/* Preços fixos por produto */}
+          <CustomerPriceList customerId={customer.id} initial={fixedPrices} />
 
           {/* Endereços */}
           {customer.addresses.length > 0 && (

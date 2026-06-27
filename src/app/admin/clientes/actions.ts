@@ -145,3 +145,63 @@ export async function receiveCreditPayment(
   revalidatePath(`/admin/clientes/${id.data}`);
   return { ok: true, appliedCents: r.appliedCents };
 }
+
+// ============================================================
+// Preço FIXO por cliente — lista de produtos com preço próprio do cliente.
+// Tem precedência sobre os demais preços no PDV/checkout.
+// ============================================================
+export type PriceProduct = { id: string; name: string; sku: string; priceCents: number };
+
+export async function searchProductsForPrice(query: string): Promise<PriceProduct[]> {
+  await requireArea("clientes");
+  const q = query.trim();
+  if (q.length < 1) return [];
+  const products = await prisma.product.findMany({
+    where: {
+      active: true,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { sku: { contains: q, mode: "insensitive" } },
+        { barcode: q },
+      ],
+    },
+    take: 12,
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, sku: true, priceCents: true },
+  });
+  return products;
+}
+
+export async function setCustomerProductPrice(
+  customerId: string,
+  productId: string,
+  priceBrl: string
+): Promise<ActionResult> {
+  await requireArea("clientes");
+  const cid = idSchema.safeParse(customerId);
+  const pid = idSchema.safeParse(productId);
+  if (!cid.success || !pid.success) return { ok: false, error: "Dados inválidos" };
+
+  const cents = parseBrl(priceBrl);
+  if (cents == null || cents <= 0) return { ok: false, error: "Preço inválido" };
+
+  await prisma.customerProductPrice.upsert({
+    where: { customerId_productId: { customerId: cid.data, productId: pid.data } },
+    update: { priceCents: cents },
+    create: { customerId: cid.data, productId: pid.data, priceCents: cents },
+  });
+
+  revalidatePath(`/admin/clientes/${cid.data}`);
+  return { ok: true };
+}
+
+export async function removeCustomerProductPrice(id: string): Promise<ActionResult> {
+  await requireArea("clientes");
+  const pid = idSchema.safeParse(id);
+  if (!pid.success) return { ok: false, error: "Inválido" };
+  const row = await prisma.customerProductPrice.findUnique({ where: { id: pid.data } });
+  if (!row) return { ok: false, error: "Não encontrado" };
+  await prisma.customerProductPrice.delete({ where: { id: pid.data } });
+  revalidatePath(`/admin/clientes/${row.customerId}`);
+  return { ok: true };
+}
