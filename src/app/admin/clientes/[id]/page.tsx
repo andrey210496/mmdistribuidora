@@ -14,7 +14,9 @@ import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { ORDER_STATUS_META } from "@/lib/orders";
+import { getCustomerCreditSummary } from "@/lib/credit";
 import { WholesaleToggle } from "./WholesaleToggle";
+import { CreditPanel } from "./CreditPanel";
 
 export const metadata = { title: "Cliente · Admin" };
 export const dynamic = "force-dynamic";
@@ -46,6 +48,16 @@ export default async function ClienteDetailPage({
   const avgTicket = paidOrders.length > 0 ? Math.round(ltv / paidOrders.length) : 0;
   const lastOrder = customer.orders[0];
 
+  const credit = await getCustomerCreditSummary(customer.id);
+  const openCreditOrders = customer.orders
+    .filter((o) => o.paymentMethod === "STORE_CREDIT" && o.paymentStatus === "PENDING")
+    .map((o) => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      totalCents: o.totalCents,
+      createdAt: o.createdAt.toISOString(),
+    }));
+
   return (
     <div className="p-6 lg:p-8">
       <Link
@@ -71,6 +83,11 @@ export default async function ClienteDetailPage({
               {customer.isWholesale && (
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-caramel/15 text-caramel border border-caramel/30">
                   Atacado
+                </span>
+              )}
+              {credit.owedCents > 0 && (
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">
+                  Fiado {centsToBRL(credit.owedCents)}
                 </span>
               )}
             </div>
@@ -188,6 +205,15 @@ export default async function ClienteDetailPage({
               )}
             </div>
           </section>
+
+          {/* Crediário / fiado */}
+          <CreditPanel
+            customerId={customer.id}
+            limitCents={credit.limitCents}
+            owedCents={credit.owedCents}
+            availableCents={credit.availableCents}
+            openOrders={openCreditOrders}
+          />
 
           {/* Atacado */}
           <WholesaleToggle customerId={customer.id} initial={customer.isWholesale} />

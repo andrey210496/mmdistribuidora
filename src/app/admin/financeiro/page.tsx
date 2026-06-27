@@ -10,6 +10,7 @@ import {
   getExpenseByCategory, getTopProductsByRevenue, getOpenPayables, listEntries,
   categoryLabel,
 } from "@/lib/finance";
+import { getTotalOutstandingCredit } from "@/lib/credit";
 import { NewEntryForm } from "./NewEntryForm";
 import { markEntryPaid, cancelEntry, deleteEntry, reopenEntry } from "./actions";
 
@@ -38,15 +39,17 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
   const sp = await searchParams;
   const period = resolvePeriod(typeof sp.periodo === "string" ? sp.periodo : "mes");
 
-  const [summary, monthly, revByCat, expByCat, topProducts, payables, entries] = await Promise.all([
-    getFinanceSummary(period),
-    getMonthlySeries(12),
-    getRevenueByCategory(period),
-    getExpenseByCategory(period),
-    getTopProductsByRevenue(period, 8),
-    getOpenPayables(10),
-    listEntries({ limit: 40 }),
-  ]);
+  const [summary, monthly, revByCat, expByCat, topProducts, payables, entries, outstandingCredit] =
+    await Promise.all([
+      getFinanceSummary(period),
+      getMonthlySeries(12),
+      getRevenueByCategory(period),
+      getExpenseByCategory(period),
+      getTopProductsByRevenue(period, 8),
+      getOpenPayables(10),
+      listEntries({ limit: 40 }),
+      getTotalOutstandingCredit(),
+    ]);
 
   const maxMonthly = Math.max(1, ...monthly.map((m) => Math.max(m.revenueCents, m.expenseCents)));
   const maxRevCat = Math.max(1, ...revByCat.map((c) => c.amountCents));
@@ -139,6 +142,16 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
             <div className="font-display text-xl font-bold text-cocoa mt-1">{centsToBRL(summary.openPayableCents)}</div>
           </div>
           <CalendarClock size={20} className="text-caramel" />
+        </div>
+        <div className={`rounded-2xl border p-5 flex items-center justify-between ${outstandingCredit > 0 ? "bg-red-50 border-red-200" : "bg-white border-cocoa/10"}`}>
+          <div>
+            <div className="text-cocoa/60 text-sm">A receber em fiado</div>
+            <div className={`font-display text-xl font-bold mt-1 ${outstandingCredit > 0 ? "text-red-600" : "text-cocoa"}`}>
+              {centsToBRL(outstandingCredit)}
+            </div>
+            <div className="text-xs text-cocoa/55 mt-0.5">Crediário em aberto (todos os clientes)</div>
+          </div>
+          <Wallet size={20} className={outstandingCredit > 0 ? "text-red-500" : "text-cocoa/30"} />
         </div>
         <div className={`rounded-2xl border p-5 flex items-center justify-between ${summary.overduePayableCents > 0 ? "bg-red-50 border-red-200" : "bg-white border-cocoa/10"}`}>
           <div>
