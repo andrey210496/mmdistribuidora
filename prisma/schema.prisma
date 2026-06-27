@@ -69,6 +69,7 @@ model Customer {
   addresses          Address[]
   orders             Order[]
   creditTransactions CreditTransaction[]
+  productPrices      CustomerProductPrice[]
 
   @@index([email])
   @@index([cpfCnpj])
@@ -116,6 +117,11 @@ model Product {
   barcode             String?   @unique
   priceCents          Int
   compareAtPriceCents Int?
+  // Preço por forma de pagamento (opcionais; vazio = usa priceCents).
+  // Ex.: dinheiro mais barato, cartão mais caro.
+  priceCashCents      Int?
+  pricePixCents       Int?
+  priceCardCents      Int?
   // Atacado: preço especial a partir de uma quantidade mínima.
   wholesalePriceCents Int?
   wholesaleMinQty     Int       @default(0)
@@ -132,15 +138,34 @@ model Product {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  category   Category?      @relation(fields: [categoryId], references: [id])
-  images     ProductImage[]
-  orderItems OrderItem[]
+  category       Category?              @relation(fields: [categoryId], references: [id])
+  images         ProductImage[]
+  orderItems     OrderItem[]
+  customerPrices CustomerProductPrice[]
 
   @@index([categoryId])
   @@index([slug])
   @@index([active])
   @@index([expiryDate])
   @@index([barcode])
+}
+
+// Preço FIXO de um produto para um cliente específico (clientes "fortes" têm
+// preço próprio em cada item). Tem precedência sobre os demais preços.
+model CustomerProductPrice {
+  id         String   @id @default(cuid())
+  customerId String
+  productId  String
+  priceCents Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
 }
 
 model ProductImage {
@@ -247,6 +272,11 @@ model Order {
   cashSessionId       String?
   amountReceivedCents Int? // valor em dinheiro recebido (para cálculo de troco)
   changeCents         Int? // troco devolvido
+  // Venda no balcão emitida como cupom FISCAL (NFC-e) ou não-fiscal.
+  fiscal              Boolean   @default(false)
+  // Cancelamento (PDV/admin)
+  canceledAt          DateTime?
+  canceledReason      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -279,8 +309,10 @@ model OrderItem {
   quantity            Int
   totalCents          Int
   // Snapshot do CUSTO na venda (unitário e total) — base do lucro/CMV
-  unitCostCents       Int    @default(0)
-  costTotalCents      Int    @default(0)
+  unitCostCents       Int     @default(0)
+  costTotalCents      Int     @default(0)
+  // Observação do item (ex.: "3 fardos", "1 fardo = 10 pacotes") — entrega.
+  note                String?
 
   // Controle de separação
   picked   Boolean   @default(false)
