@@ -131,6 +131,11 @@ model Product {
   // Unidade de medida de venda (UN, KG, CX, FD, PCT...).
   unit                String    @default("UN")
   weightGrams         Int       @default(0)
+  // Fiscal (base p/ NFC-e/NF-e — emissão depende de provedor + certificado).
+  ncm                 String?
+  cest                String?
+  origem              String    @default("0") // origem da mercadoria (0-8)
+  taxGroupId          String?
   active              Boolean   @default(true)
   featured            Boolean   @default(false)
   // Validade do produto (uso interno). Alimenta a seção "Destaque do Clube",
@@ -141,6 +146,7 @@ model Product {
   updatedAt           DateTime  @updatedAt
 
   category        Category?              @relation(fields: [categoryId], references: [id])
+  taxGroup        TaxGroup?              @relation(fields: [taxGroupId], references: [id])
   images          ProductImage[]
   orderItems      OrderItem[]
   customerPrices  CustomerProductPrice[]
@@ -501,6 +507,28 @@ model HomeSection {
   updatedAt       DateTime        @updatedAt
 
   @@index([enabled, sortOrder])
+}
+
+// ============================================================
+// FISCAL — grupos tributários (base para NFC-e/NF-e)
+// ============================================================
+model TaxGroup {
+  id           String   @id @default(cuid())
+  name         String
+  cfop         String? // ex.: 5102
+  // Simples Nacional usa CSOSN; regime normal usa CST.
+  csosn        String?
+  cst          String?
+  origem       String   @default("0")
+  // Alíquota de ICMS em centésimos de % (ex.: 1800 = 18,00%).
+  icmsAliquota Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  products Product[]
+
+  @@index([active])
 }
 
 // ============================================================

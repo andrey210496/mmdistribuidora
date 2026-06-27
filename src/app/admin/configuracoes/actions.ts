@@ -100,3 +100,46 @@ export async function savePdvShortcuts(map: Record<string, string>): Promise<Act
   revalidatePath("/admin/pdv");
   return { ok: true };
 }
+
+// ============================================================
+// Grupos tributários (base p/ NFC-e/NF-e).
+// ============================================================
+const taxGroupSchema = z.object({
+  name: z.string().min(1).max(120),
+  cfop: z.string().max(10).optional().default(""),
+  csosn: z.string().max(10).optional().default(""),
+  cst: z.string().max(10).optional().default(""),
+  origem: z.string().max(2).optional().default("0"),
+  icmsPct: z.coerce.number().min(0).max(100).optional().default(0),
+});
+
+export async function saveTaxGroup(
+  id: string | null,
+  input: z.infer<typeof taxGroupSchema>
+): Promise<ActionResult> {
+  await requireArea("configuracoes");
+  const parsed = taxGroupSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "Dados inválidos" };
+  const d = parsed.data;
+  const data = {
+    name: d.name.trim(),
+    cfop: d.cfop.trim() || null,
+    csosn: d.csosn.trim() || null,
+    cst: d.cst.trim() || null,
+    origem: d.origem.trim() || "0",
+    icmsAliquota: Math.round((Number(d.icmsPct) || 0) * 100),
+  };
+  if (id) await prisma.taxGroup.update({ where: { id }, data });
+  else await prisma.taxGroup.create({ data });
+  revalidatePath("/admin/configuracoes");
+  return { ok: true };
+}
+
+export async function toggleTaxGroupActive(id: string): Promise<ActionResult> {
+  await requireArea("configuracoes");
+  const g = await prisma.taxGroup.findUnique({ where: { id }, select: { active: true } });
+  if (!g) return { ok: false, error: "Não encontrado" };
+  await prisma.taxGroup.update({ where: { id }, data: { active: !g.active } });
+  revalidatePath("/admin/configuracoes");
+  return { ok: true };
+}

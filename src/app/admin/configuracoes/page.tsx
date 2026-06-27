@@ -1,8 +1,10 @@
 import { Settings } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { getStoreSettings, getPdvShortcuts } from "@/lib/settings";
+import { prisma } from "@/lib/prisma";
 import { SettingsForm } from "./SettingsForm";
 import { ShortcutsForm } from "./ShortcutsForm";
+import { TaxGroupManager } from "./TaxGroupManager";
 
 export const metadata = { title: "Configurações · Admin" };
 export const dynamic = "force-dynamic";
@@ -13,6 +15,7 @@ export default async function ConfigPage() {
   await requireArea("configuracoes");
   const s = await getStoreSettings();
   const shortcuts = await getPdvShortcuts();
+  const taxGroups = await prisma.taxGroup.findMany({ orderBy: { name: "asc" } });
 
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-3xl">
@@ -34,6 +37,13 @@ export default async function ConfigPage() {
       />
 
       <ShortcutsForm initial={shortcuts} />
+
+      <TaxGroupManager
+        initial={taxGroups.map((g) => ({
+          id: g.id, name: g.name, cfop: g.cfop, csosn: g.csosn, cst: g.cst,
+          origem: g.origem, icmsAliquota: g.icmsAliquota, active: g.active,
+        }))}
+      />
     </div>
   );
 }

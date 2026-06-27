@@ -31,15 +31,21 @@ type Product = {
   featured: boolean;
   expiryDate?: string | null; // "YYYY-MM-DD"
   categoryId: string | null;
+  ncm?: string | null;
+  cest?: string | null;
+  origem?: string | null;
+  taxGroupId?: string | null;
   imageUrl?: string | null;
 };
 
 export function ProductForm({
   product,
   categories,
+  taxGroups = [],
 }: {
   product?: Product;
   categories: Category[];
+  taxGroups?: { id: string; name: string }[];
 }) {
   const action = product
     ? updateProduct.bind(null, product.id)
@@ -371,6 +377,35 @@ export function ProductForm({
                 <p className="text-[11px] text-cocoa/55 mt-1">
                   Uso interno: ajuda a acompanhar itens com validade próxima. Não é exibido ao cliente.
                 </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Fiscal */}
+          <section className="bg-white rounded-2xl border border-cocoa/10 p-6">
+            <h2 className="font-display text-lg font-bold text-cocoa mb-1">Fiscal</h2>
+            <p className="text-[11px] text-cocoa/55 mb-4">
+              Base para a emissão de NFC-e/NF-e. (A emissão em si depende do provedor + certificado A1.)
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="label" htmlFor="ncm">NCM</label>
+                <input id="ncm" name="ncm" defaultValue={product?.ncm ?? ""} maxLength={20} className="input-field font-mono" placeholder="00000000" />
+              </div>
+              <div>
+                <label className="label" htmlFor="cest">CEST</label>
+                <input id="cest" name="cest" defaultValue={product?.cest ?? ""} maxLength={20} className="input-field font-mono" />
+              </div>
+              <div>
+                <label className="label" htmlFor="origem">Origem</label>
+                <input id="origem" name="origem" defaultValue={product?.origem ?? "0"} maxLength={2} className="input-field" placeholder="0" />
+              </div>
+              <div>
+                <label className="label" htmlFor="taxGroupId">Grupo tributário</label>
+                <select id="taxGroupId" name="taxGroupId" defaultValue={product?.taxGroupId ?? ""} className="input-field bg-white">
+                  <option value="">—</option>
+                  {taxGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
               </div>
             </div>
           </section>

@@ -14,7 +14,7 @@ export default async function EditarProdutoPage({
   await requireArea("produtos");
   const { id } = await params;
 
-  const [product, categories] = await Promise.all([
+  const [product, categories, taxGroups] = await Promise.all([
     prisma.product.findUnique({
       where: { id },
       include: { images: { take: 1, orderBy: { sortOrder: "asc" } } },
@@ -24,6 +24,7 @@ export default async function EditarProdutoPage({
       orderBy: { sortOrder: "asc" },
       select: { id: true, name: true },
     }),
+    prisma.taxGroup.findMany({ where: { active: true }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
   if (!product) notFound();
@@ -55,9 +56,14 @@ export default async function EditarProdutoPage({
             ? product.expiryDate.toISOString().slice(0, 10)
             : null,
           categoryId: product.categoryId,
+          ncm: product.ncm,
+          cest: product.cest,
+          origem: product.origem,
+          taxGroupId: product.taxGroupId,
           imageUrl: product.images[0]?.url ?? null,
         }}
         categories={categories}
+        taxGroups={taxGroups}
       />
 
       <div className="max-w-4xl mt-6">
