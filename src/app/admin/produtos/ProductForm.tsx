@@ -25,6 +25,7 @@ type Product = {
   wholesaleMinQty: number;
   costCents: number | null;
   stock: number;
+  unit: string;
   weightGrams: number;
   active: boolean;
   featured: boolean;
@@ -331,6 +332,19 @@ export function ProductForm({
                   defaultValue={product?.stock ?? 0}
                   className="input-field"
                 />
+              </div>
+              <div>
+                <label className="label" htmlFor="unit">Unidade de medida</label>
+                <select
+                  id="unit"
+                  name="unit"
+                  defaultValue={product?.unit ?? "UN"}
+                  className="input-field bg-white"
+                >
+                  {["UN", "KG", "CX", "FD", "PCT", "L", "DZ", "MÇ"].map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="label" htmlFor="weightGrams">Peso (gramas)</label>

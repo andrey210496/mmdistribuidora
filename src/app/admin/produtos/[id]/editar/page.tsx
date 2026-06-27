@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "../../ProductForm";
+import { StockAdjust } from "./StockAdjust";
 
 export const metadata = { title: "Editar produto · Admin" };
 
@@ -46,6 +47,7 @@ export default async function EditarProdutoPage({
           wholesaleMinQty: product.wholesaleMinQty,
           costCents: product.costCents,
           stock: product.stock,
+          unit: product.unit,
           weightGrams: product.weightGrams,
           active: product.active,
           featured: product.featured,
@@ -57,6 +59,10 @@ export default async function EditarProdutoPage({
         }}
         categories={categories}
       />
+
+      <div className="max-w-4xl mt-6">
+        <StockAdjust productId={product.id} currentStock={product.stock} unit={product.unit} />
+      </div>
     </div>
   );
 }

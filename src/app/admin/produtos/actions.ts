@@ -33,6 +33,7 @@ const productFormSchema = z.object({
   wholesaleMinQty: z.number().int().nonnegative(),
   costCents: z.number().int().nonnegative().nullable().optional(),
   stock: z.number().int().nonnegative(),
+  unit: z.string().min(1).max(8),
   weightGrams: z.number().int().nonnegative(),
   active: z.boolean(),
   featured: z.boolean(),
@@ -90,6 +91,7 @@ function parseFormData(formData: FormData) {
     wholesaleMinQty: Math.max(0, Number(formData.get("wholesaleMinQty") ?? 0) || 0),
     costCents: cost && cost > 0 ? cost : 0,
     stock: Number(formData.get("stock") ?? 0),
+    unit: String(formData.get("unit") ?? "UN").trim().toUpperCase() || "UN",
     weightGrams: Number(formData.get("weightGrams") ?? 0),
     active: formData.get("active") === "on",
     featured: formData.get("featured") === "on",
@@ -324,5 +326,45 @@ export async function deleteProduct(productId: string): Promise<{ ok: boolean; e
 
   revalidatePath("/admin/produtos");
   revalidatePath("/produtos");
+  return { ok: true };
+}
+
+// ============================================================
+// Ajuste de estoque (inventário): define a nova quantidade e registra
+// o motivo na auditoria (entrada/saída/contagem).
+// ============================================================
+export async function adjustStock(
+  productId: string,
+  newQty: number,
+  reason: string
+): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireArea("produtos");
+  const pid = z.string().min(1).safeParse(productId);
+  if (!pid.success) return { ok: false, error: "Produto inválido" };
+  const qty = Math.max(0, Math.floor(Number(newQty)));
+  if (!Number.isFinite(qty)) return { ok: false, error: "Quantidade inválida" };
+
+  const product = await prisma.product.findUnique({
+    where: { id: pid.data },
+    select: { id: true, stock: true, name: true },
+  });
+  if (!product) return { ok: false, error: "Produto não encontrado" };
+
+  await prisma.product.update({ where: { id: product.id }, data: { stock: qty } });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "product.stock.adjusted",
+    entityType: "Product",
+    entityId: product.id,
+    beforeJson: { stock: product.stock },
+    afterJson: { stock: qty, delta: qty - product.stock, reason: reason?.trim() || null },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath(`/admin/produtos/${product.id}/editar`);
+  revalidatePath("/admin/produtos");
   return { ok: true };
 }
