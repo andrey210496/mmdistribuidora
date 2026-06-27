@@ -1,8 +1,10 @@
-# Doce Encanto — Sistema de Gestão
+# PDV MM — Sistema de Gestão (MM Distribuidora)
 
-Sistema completo de e-commerce + ERP para a Doce Encanto (distribuidora de doces e embalagens).
+Sistema completo de e-commerce + PDV + ERP para a **MM Distribuidora** (distribuidora de doces, confeitaria e embalagens).
 
-Stack: **Next.js 15 (App Router) · TypeScript · PostgreSQL · Prisma · Tailwind · Asaas**
+> Projeto independente. (Antiga base "Doce Encanto" — agora MM Distribuidora.)
+
+Stack: **Next.js 15 (App Router) · TypeScript · PostgreSQL · Prisma · Tailwind · Stripe**
 
 ---
 
