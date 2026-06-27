@@ -72,12 +72,12 @@ export default async function AdminLayout({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
-              alt="Doce Encanto"
+              alt="MM Distribuidora"
               className="w-11 h-11 object-contain shrink-0"
             />
             <div>
               <div className="font-display font-bold text-gold leading-none">
-                Doce Encanto
+                MM Distribuidora
               </div>
               <div className="text-[10px] tracking-widest uppercase text-cream/60">
                 Admin

@@ -69,7 +69,7 @@ export default async function ClienteDetailPage({
 
       <header className="mb-8 flex items-start justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-brand to-[#b06b80] text-white flex items-center justify-center font-display font-bold text-2xl shadow-lg">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-rose-brand to-[#A81E1E] text-white flex items-center justify-center font-display font-bold text-2xl shadow-lg">
             {customer.name
               .split(" ")
               .slice(0, 2)

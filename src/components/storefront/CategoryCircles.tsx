@@ -18,7 +18,7 @@ const circles = [
     label: "Forminhas",
     href: "/produtos?categoria=embalagens",
     image: "https://images.unsplash.com/photo-1607478900766-efe13248b125?w=200&q=80",
-    bg: "from-rose-brand to-[#b06b80]",
+    bg: "from-rose-brand to-[#A81E1E]",
   },
   {
     label: "Embalagens",
@@ -30,7 +30,7 @@ const circles = [
     label: "Mesa de Doces",
     href: "/produtos?categoria=festas",
     image: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=200&q=80",
-    bg: "from-[#e8a2b6] to-rose-brand",
+    bg: "from-[#D12B2B] to-rose-brand",
   },
   {
     label: "Granulado",

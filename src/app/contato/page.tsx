@@ -6,7 +6,7 @@ import { Footer } from "@/components/storefront/Footer";
 
 export const metadata = {
   title: "Contato",
-  description: "Fale com a Doce Encanto — WhatsApp, telefone e atendimento no Vale do Paraíba e Litoral Norte.",
+  description: "Fale com a MM Distribuidora — WhatsApp, telefone e atendimento no Vale do Paraíba e Litoral Norte.",
 };
 
 export default function ContatoPage() {

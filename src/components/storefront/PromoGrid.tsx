@@ -29,7 +29,7 @@ const promos = [
     cta: "Ver coleção",
     href: "/produtos?categoria=festas",
     image: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=900&q=80",
-    bg: "from-[#e8a2b6] to-[#b06b80]",
+    bg: "from-[#D12B2B] to-[#A81E1E]",
     accent: "text-cream",
   },
 ];

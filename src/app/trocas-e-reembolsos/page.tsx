@@ -5,7 +5,7 @@ import { COMPANY } from "@/lib/company";
 export const metadata = {
   title: "Trocas e Reembolsos",
   description:
-    "Política de trocas, devoluções e reembolsos da Doce Encanto — prazos, condições e como solicitar.",
+    "Política de trocas, devoluções e reembolsos da MM Distribuidora — prazos, condições e como solicitar.",
 };
 
 export default function TrocasReembolsosPage() {

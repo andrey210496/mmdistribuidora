@@ -1,4 +1,4 @@
-// Banner principal da home — usa a capa oficial da Doce Encanto.
+// Banner principal da home — usa a capa oficial da MM Distribuidora.
 // A imagem já traz logo, headline, ícones e a faixa de entrega embutidos.
 export function HeroBanner() {
   return (
@@ -7,7 +7,7 @@ export function HeroBanner() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/capa.png"
-          alt="Doce Encanto — A distribuidora parceira de quem precisa de embalagens e produtos para vender mais. Entregamos em todo Vale do Paraíba e Litoral Norte."
+          alt="MM Distribuidora — A distribuidora parceira de quem precisa de embalagens e produtos para vender mais. Entregamos em todo Vale do Paraíba e Litoral Norte."
           className="w-full h-auto rounded-2xl shadow-[0_8px_30px_-12px_rgba(90,43,23,0.25)]"
           fetchPriority="high"
         />

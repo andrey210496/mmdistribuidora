@@ -100,7 +100,7 @@ export default async function ContaPage({ searchParams }: { searchParams: Search
           ) : (
             <div className="rounded-2xl border-2 border-dashed border-[#d4a574]/50 bg-[#faf3e6] p-6 h-fit">
               <div className="flex items-center gap-2 text-[#a07640] font-bold uppercase tracking-widest text-xs mb-2">
-                <Crown size={16} /> Clube Doce Encanto
+                <Crown size={16} /> Clube MM Distribuidora
               </div>
               <p className="text-cocoa text-sm mb-1 font-semibold">
                 Você ainda não é membro.
@@ -110,7 +110,7 @@ export default async function ContaPage({ searchParams }: { searchParams: Search
               </p>
               <Link
                 href="/clube"
-                className="mt-4 inline-flex items-center gap-1.5 bg-rose-brand hover:bg-[#c97d92] text-white px-4 py-2 rounded-full font-bold text-sm transition"
+                className="mt-4 inline-flex items-center gap-1.5 bg-rose-brand hover:bg-[#A81E1E] text-white px-4 py-2 rounded-full font-bold text-sm transition"
               >
                 Quero ser membro <ArrowRight size={15} />
               </Link>

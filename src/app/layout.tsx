@@ -33,8 +33,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   metadataBase: new URL("https://doceencantodistribuidora.com"),
   title: {
-    default: "Doce Encanto — Distribuidora de Doces & Embalagens",
-    template: "%s | Doce Encanto",
+    default: "MM Distribuidora — Distribuidora de Doces & Embalagens",
+    template: "%s | MM Distribuidora",
   },
   description:
     "Distribuidora especializada em chocolates, doces finos, embalagens e tudo para confeitaria. Preço justo, variedade e qualidade.",
@@ -56,12 +56,12 @@ export const metadata: Metadata = {
     apple: "/logo.png",
   },
   openGraph: {
-    title: "Doce Encanto — Distribuidora de Doces & Embalagens",
+    title: "MM Distribuidora — Distribuidora de Doces & Embalagens",
     description:
       "Chocolates, doces finos, embalagens e tudo para confeitaria. Preço justo, variedade e qualidade.",
     url: "https://doceencantodistribuidora.com",
-    siteName: "Doce Encanto",
-    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Doce Encanto" }],
+    siteName: "MM Distribuidora",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "MM Distribuidora" }],
     locale: "pt_BR",
     type: "website",
   },

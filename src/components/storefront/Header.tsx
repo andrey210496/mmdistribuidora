@@ -114,7 +114,7 @@ export async function Header() {
             {/* Texto numa linha só */}
             <div className="min-w-0 flex items-center gap-2 text-cream truncate">
               <span className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.18em] text-[#e6c089] shrink-0">
-                Clube Doce Encanto
+                Clube MM Distribuidora
               </span>
               <span className="hidden sm:inline-block w-4 h-px bg-[#d4a574]/40 shrink-0" />
               <span className="hidden sm:inline text-[12px] lg:text-[13px] font-medium truncate">
@@ -155,7 +155,7 @@ export async function Header() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo.png"
-              alt="Doce Encanto"
+              alt="MM Distribuidora"
               className="w-16 h-16 lg:w-20 lg:h-20 object-contain shrink-0"
             />
             <div className="leading-none">
@@ -181,7 +181,7 @@ export async function Header() {
               <button
                 type="submit"
                 aria-label="Buscar"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-rose-brand hover:bg-[#c97d92] text-white flex items-center justify-center transition"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-rose-brand hover:bg-[#A81E1E] text-white flex items-center justify-center transition"
               >
                 <Search size={18} strokeWidth={2} />
               </button>

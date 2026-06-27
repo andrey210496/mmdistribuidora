@@ -14,9 +14,9 @@ const cats = [
   { label: "Insumos para Confeitaria", href: "/produtos?categoria=confeitaria", color: "bg-caramel", Icon: Cake },
   { label: "Confeitaria e Decoração", href: "/produtos?categoria=doces-finos", color: "bg-olive", Icon: Cookie },
   { label: "Descartáveis", href: "/produtos?categoria=embalagens", color: "bg-[#d4a574]", Icon: Coffee },
-  { label: "Food Service", href: "/produtos?categoria=festas", color: "bg-[#c97d92]", Icon: UtensilsCrossed },
+  { label: "Food Service", href: "/produtos?categoria=festas", color: "bg-[#A81E1E]", Icon: UtensilsCrossed },
   { label: "Limpeza e Utilidades", href: "/produtos?q=limpeza", color: "bg-[#7d8550]", Icon: ShoppingCart },
-  { label: "Promoções", href: "/produtos?ofertas=1", color: "bg-[#e8a2b6]", Icon: Tag },
+  { label: "Promoções", href: "/produtos?ofertas=1", color: "bg-[#D12B2B]", Icon: Tag },
 ];
 
 export function CategoryRound() {

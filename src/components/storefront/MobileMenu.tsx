@@ -65,7 +65,7 @@ export function MobileMenu({
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="" className="w-9 h-9 object-contain" />
-            <span className="font-display font-bold text-gold">Doce Encanto</span>
+            <span className="font-display font-bold text-gold">MM Distribuidora</span>
           </div>
           <button onClick={() => setOpen(false)} aria-label="Fechar" className="p-1.5 text-cream/80 hover:text-cream">
             <X size={22} />
@@ -118,7 +118,7 @@ export function MobileMenu({
           >
             <Crown size={20} className="text-gold" fill="currentColor" />
             <div className="flex-1">
-              <div className="font-bold text-gold text-sm">Clube Doce Encanto</div>
+              <div className="font-bold text-gold text-sm">Clube MM Distribuidora</div>
               <div className="text-[11px] text-cream/70">Preços exclusivos de membro</div>
             </div>
             <ChevronRight size={16} className="text-cream/50" />

@@ -6,7 +6,7 @@ import { Footer } from "@/components/storefront/Footer";
 export const metadata = {
   title: "Quem Somos",
   description:
-    "A Doce Encanto é uma distribuidora de doces, chocolates e embalagens para confeitaria no Vale do Paraíba e Litoral Norte.",
+    "A MM Distribuidora é uma distribuidora de doces, chocolates e embalagens para confeitaria no Vale do Paraíba e Litoral Norte.",
 };
 
 const valores = [
@@ -24,7 +24,7 @@ export default function SobrePage() {
         <div className="container-default text-center">
           <span className="eyebrow text-gold">Quem somos</span>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-gold mt-3 mb-4">
-            Doce Encanto
+            MM Distribuidora
           </h1>
           <p className="text-cream/85 max-w-2xl mx-auto text-lg">
             Distribuidora de doces, chocolates e embalagens para confeitaria — feita
@@ -36,7 +36,7 @@ export default function SobrePage() {
       <main className="container-default py-12 lg:py-16">
         <div className="max-w-3xl mx-auto space-y-5 text-cocoa/80 leading-relaxed">
           <p>
-            A <strong className="text-cocoa">Doce Encanto</strong> nasceu para facilitar a vida de
+            A <strong className="text-cocoa">MM Distribuidora</strong> nasceu para facilitar a vida de
             confeiteiras, doceiras, buffets e lojistas do <strong className="text-cocoa">Vale do
             Paraíba e Litoral Norte</strong>. Reunimos em um só lugar chocolates, insumos de
             confeitaria, embalagens e doces prontos — com preço justo e variedade.
@@ -45,7 +45,7 @@ export default function SobrePage() {
             Trabalhamos com seleção de produtos de qualidade, atendimento próximo e entrega na
             região. E para quem compra com frequência, criamos o{" "}
             <Link href="/clube" className="text-rose-brand font-semibold hover:underline">
-              Clube Doce Encanto
+              Clube MM Distribuidora
             </Link>
             , com preços exclusivos de membro o ano inteiro.
           </p>

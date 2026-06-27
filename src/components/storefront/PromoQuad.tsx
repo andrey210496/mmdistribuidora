@@ -10,7 +10,7 @@ const promos = [
     cta: "Ver embalagens",
     href: "/produtos?categoria=embalagens",
     bg: "bg-pink-warm",
-    btnClass: "bg-rose-brand text-white hover:bg-[#c97d92]",
+    btnClass: "bg-rose-brand text-white hover:bg-[#A81E1E]",
     image: "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=800&q=85",
   },
   {
@@ -121,7 +121,7 @@ export function PromoQuad() {
               <p className="text-cream/70 text-xs lg:text-sm mb-3">
                 Mais agilidade e segurança para o seu negócio.
               </p>
-              <span className="mt-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-brand text-white hover:bg-[#c97d92] transition w-fit">
+              <span className="mt-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-brand text-white hover:bg-[#A81E1E] transition w-fit">
                 Saiba mais
                 <ArrowRight size={12} className="group-hover:translate-x-0.5 transition" />
               </span>

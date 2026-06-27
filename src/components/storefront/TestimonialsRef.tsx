@@ -5,10 +5,10 @@ const testimonials = [
   {
     name: "Mariana Lopes",
     role: "Confeitaria Doce Casa · São José dos Campos, SP",
-    quote: "Mudei pra Doce Encanto faz 6 meses e o lucro da confeitaria subiu 22%. Preço justo de verdade e o atendimento é outro nível.",
+    quote: "Mudei pra MM Distribuidora faz 6 meses e o lucro da confeitaria subiu 22%. Preço justo de verdade e o atendimento é outro nível.",
     rating: 5,
     avatar: "ML",
-    color: "from-rose-brand to-[#b06b80]",
+    color: "from-rose-brand to-[#A81E1E]",
   },
   {
     name: "Roberto Mendes",
@@ -39,7 +39,7 @@ export function TestimonialsRef() {
                 Quem conhece, confia!
               </h2>
               <p className="text-cocoa/65 text-sm mt-1">
-                Veja o que nossos clientes dizem sobre a Doce Encanto.
+                Veja o que nossos clientes dizem sobre a MM Distribuidora.
               </p>
             </div>
             <Link href="/avaliacoes" className="btn-pink shrink-0">

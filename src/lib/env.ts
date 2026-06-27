@@ -4,7 +4,7 @@ import { z } from "zod";
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   APP_URL: z.string().url().default("http://localhost:3000"),
-  APP_NAME: z.string().default("Doce Encanto"),
+  APP_NAME: z.string().default("MM Distribuidora"),
 
   DATABASE_URL: z.string().min(1, "DATABASE_URL é obrigatória"),
 

@@ -5,10 +5,10 @@ const testimonials = [
   {
     name: "Mariana Lopes",
     role: "Confeitaria Doce Casa · São Paulo, SP",
-    quote: "Mudei pra Doce Encanto faz 6 meses e o lucro da confeitaria subiu 22%. Preço justo de verdade e o atendimento é outro nível.",
+    quote: "Mudei pra MM Distribuidora faz 6 meses e o lucro da confeitaria subiu 22%. Preço justo de verdade e o atendimento é outro nível.",
     rating: 5,
     avatar: "ML",
-    color: "from-rose-brand to-[#b06b80]",
+    color: "from-rose-brand to-[#A81E1E]",
     quoteColor: "text-rose-brand/40",
     barColor: "bg-rose-brand",
     bonbonColor: "rose" as const,

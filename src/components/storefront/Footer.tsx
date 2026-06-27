@@ -13,11 +13,11 @@ export function Footer() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo.png"
-                alt="Doce Encanto"
+                alt="MM Distribuidora"
                 className="w-14 h-14 object-contain shrink-0"
               />
               <div className="font-display text-3xl font-bold text-espresso tracking-tight">
-                Doce Encanto
+                MM Distribuidora
               </div>
             </div>
             <div className="text-[10px] tracking-[0.4em] uppercase text-cocoa/50 mb-6">

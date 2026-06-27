@@ -112,7 +112,7 @@ export function AddToCartButton({
         handle();
       }}
       disabled={pending}
-      className="mt-3 w-full bg-rose-brand hover:bg-[#c97d92] disabled:opacity-50 text-white py-2.5 rounded-full font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
+      className="mt-3 w-full bg-rose-brand hover:bg-[#A81E1E] disabled:opacity-50 text-white py-2.5 rounded-full font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
     >
       {pending ? (
         "..."

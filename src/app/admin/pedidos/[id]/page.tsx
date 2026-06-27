@@ -50,7 +50,7 @@ export default async function OrderDetailPage({
   const waRefundUrl =
     order.status === "REFUNDED" && waPhone
       ? `https://wa.me/55${waPhone}?text=${encodeURIComponent(
-          `Olá, ${order.customerNameSnapshot}! Aqui é da Doce Encanto. ` +
+          `Olá, ${order.customerNameSnapshot}! Aqui é da MM Distribuidora. ` +
             `Confirmamos o estorno do seu pedido ${order.orderNumber}. ` +
             `Valor devolvido: ${refundedValue}. O reembolso aparece na sua fatura ou conta em até ` +
             `5 a 10 dias úteis, conforme o seu banco. Qualquer dúvida, é só chamar. 💛`
@@ -99,7 +99,7 @@ export default async function OrderDetailPage({
           <Link
             href={`/admin/pedidos/${order.id}/qr`}
             target="_blank"
-            className="inline-flex items-center gap-2 bg-rose-brand hover:bg-[#c97d92] text-white px-4 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition"
+            className="inline-flex items-center gap-2 bg-rose-brand hover:bg-[#A81E1E] text-white px-4 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition"
           >
             <QrCode size={14} />
             QR Separação

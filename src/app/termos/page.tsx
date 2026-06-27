@@ -5,14 +5,14 @@ import { COMPANY } from "@/lib/company";
 export const metadata = {
   title: "Termos de Uso",
   description:
-    "Termos e condições de uso do site e das compras na Doce Encanto.",
+    "Termos e condições de uso do site e das compras na MM Distribuidora.",
 };
 
 export default function TermosPage() {
   return (
     <LegalLayout
       title="Termos de Uso"
-      subtitle="As condições para usar o nosso site e comprar na Doce Encanto."
+      subtitle="As condições para usar o nosso site e comprar na MM Distribuidora."
       updatedAt={COMPANY.policiesUpdatedAt}
     >
       <p>
@@ -49,9 +49,9 @@ export default function TermosPage() {
         navegador. Reservamo-nos o direito de cancelar pedidos com suspeita de fraude ou erro evidente de preço.
       </p>
 
-      <h2>5. Clube Doce Encanto</h2>
+      <h2>5. Clube MM Distribuidora</h2>
       <p>
-        O <Link href="/clube">Clube Doce Encanto</Link> é uma assinatura <strong>anual</strong> que dá
+        O <Link href="/clube">Clube MM Distribuidora</Link> é uma assinatura <strong>anual</strong> que dá
         acesso a preços exclusivos de membro durante 12 meses. Os preços de membro só são aplicados
         para clientes com assinatura ativa, validados no servidor. A renovação e as condições são
         informadas na página do Clube.

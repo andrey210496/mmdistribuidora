@@ -24,7 +24,7 @@ export type ClubConfig = {
 const DEFAULTS: ClubConfig = {
   active: true,
   annualPriceCents: 9990, // R$ 99,90/ano
-  name: "Clube Doce Encanto",
+  name: "Clube MM Distribuidora",
   tagline: "Preços exclusivos de membro em todo o catálogo, o ano inteiro.",
   benefits: [
     "Preço de membro em produtos selecionados",

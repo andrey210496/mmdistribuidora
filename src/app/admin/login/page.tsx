@@ -15,11 +15,11 @@ export default async function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.png"
-            alt="Doce Encanto"
+            alt="MM Distribuidora"
             className="inline-block w-20 h-20 object-contain mb-3"
           />
           <h1 className="font-display text-3xl text-gold font-bold">
-            Doce Encanto
+            MM Distribuidora
           </h1>
           <p className="text-cream/70 text-sm mt-1">Painel administrativo</p>
         </div>

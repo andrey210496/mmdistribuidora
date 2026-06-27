@@ -33,7 +33,7 @@ export function Logo({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/logo.png"
-        alt="Doce Encanto"
+        alt="MM Distribuidora"
         width={size}
         height={size}
         style={{ width: size, height: size }}

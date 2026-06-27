@@ -5,7 +5,7 @@ import { COMPANY } from "@/lib/company";
 export const metadata = {
   title: "Política de Privacidade",
   description:
-    "Como a Doce Encanto coleta, usa e protege os seus dados pessoais, em conformidade com a LGPD.",
+    "Como a MM Distribuidora coleta, usa e protege os seus dados pessoais, em conformidade com a LGPD.",
 };
 
 export default function PoliticaPrivacidadePage() {

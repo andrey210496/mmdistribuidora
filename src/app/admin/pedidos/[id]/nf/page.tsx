@@ -77,7 +77,7 @@ export default async function NfPage({
           <header className="border-b-2 border-cocoa pb-4 mb-6 grid grid-cols-2 gap-4">
             <div className="flex items-start gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Doce Encanto" className="w-14 h-14 object-contain shrink-0" />
+              <img src="/logo.png" alt="MM Distribuidora" className="w-14 h-14 object-contain shrink-0" />
               <div>
               <div className="font-display text-2xl font-bold text-espresso">
                 DOCE ENCANTO
@@ -240,7 +240,7 @@ export default async function NfPage({
 
           {/* Rodapé */}
           <footer className="mt-12 pt-3 border-t border-cocoa/15 text-[7pt] text-cocoa/50 text-center leading-relaxed">
-            Doce Encanto Distribuidora · Documento gerado eletronicamente em{" "}
+            MM Distribuidora · Documento gerado eletronicamente em{" "}
             {new Date().toLocaleString("pt-BR")}
             <br />
             Este comprovante substitui o cupom fiscal apenas para fins de conferência interna.

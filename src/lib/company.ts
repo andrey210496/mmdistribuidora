@@ -2,8 +2,8 @@
 // e no rodapé. Para alterar, edite só aqui.
 // Campos marcados com [confirme]/[preencher] devem ser revisados.
 export const COMPANY = {
-  name: "Doce Encanto",
-  legalName: "Doce Encanto Distribuidora", // razão social — ajuste se diferente
+  name: "MM Distribuidora",
+  legalName: "MM Distribuidora", // razão social — ajuste se diferente
   cnpj: "46.686.311/0001-57",
   site: "doceencantodistribuidora.com",
   url: "https://doceencantodistribuidora.com",

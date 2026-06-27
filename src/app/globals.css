@@ -4,10 +4,10 @@
 
 :root {
   --background: #faf6ee;
-  --foreground: #2a0d05;
-  --pink: #e8a2b6;
-  --pink-deep: #c97d92;
-  --gold: #d4a574;
+  --foreground: #3a1e0c;
+  --pink: #D12B2B;
+  --pink-deep: #A81E1E;
+  --gold: #f2b23e;
   --olive: #a5aa66;
 }
 
@@ -32,20 +32,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-  background: #e8a2b6;
-  color: #2a0d05;
+  background: #D12B2B;
+  color: #fff;
 }
 
 /* ============================================================
    GRADIENTES E EFEITOS
    ============================================================ */
-.bg-cocoa-deep { background: linear-gradient(180deg, #2a0d05 0%, #1a0703 100%); }
+.bg-cocoa-deep { background: linear-gradient(180deg, #3a1e0c 0%, #1a0703 100%); }
 .bg-cream-soft { background: linear-gradient(180deg, #faf6ee 0%, #f0e3c9 100%); }
 .bg-pink-soft {
-  background: linear-gradient(135deg, #fce4eb 0%, #f4e6d0 60%, #f9d4dd 100%);
+  background: linear-gradient(135deg, #fbe9e9 0%, #fbf2e2 60%, #f6d6d6 100%);
 }
 .bg-pink-warm {
-  background: linear-gradient(135deg, #f5d4dd 0%, #e8a2b6 100%);
+  background: linear-gradient(135deg, #F8DADA 0%, #D12B2B 100%);
 }
 
 /* ============================================================
@@ -99,7 +99,7 @@ h1, h2, h3, h4, h5, h6 {
     @apply inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full
            bg-rose-brand text-white font-bold text-[13px] uppercase tracking-[0.08em]
            transition-all duration-300
-           hover:bg-[#c97d92] hover:shadow-[0_8px_24px_-8px_rgba(232,162,182,0.6)] hover:-translate-y-0.5
+           hover:bg-[#A81E1E] hover:shadow-[0_8px_24px_-8px_rgba(232,162,182,0.6)] hover:-translate-y-0.5
            focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-brand focus-visible:ring-offset-2
            disabled:opacity-50 disabled:cursor-not-allowed;
   }

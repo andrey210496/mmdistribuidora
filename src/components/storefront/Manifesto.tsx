@@ -35,7 +35,7 @@ export function Manifesto() {
               DE
             </div>
             <div>
-              <div className="font-semibold text-gold">Equipe Doce Encanto</div>
+              <div className="font-semibold text-gold">Equipe MM Distribuidora</div>
               <div className="text-cream/60 text-sm">Há mais de 10 anos no mercado</div>
             </div>
 

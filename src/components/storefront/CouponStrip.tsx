@@ -14,7 +14,7 @@ const coupons = [
     code: "FRETE50",
     discount: "Frete R$ 5,90",
     desc: "Em pedidos acima de R$ 150",
-    color: "from-rose-brand to-[#b06b80]",
+    color: "from-rose-brand to-[#A81E1E]",
   },
   {
     code: "PASCOA15",

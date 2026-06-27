@@ -34,7 +34,7 @@ export function OccasionsBand() {
     <section
       className="py-24 lg:py-32 relative overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, #f5d4dd 0%, #f4e6d0 50%, #e8a2b6 100%)",
+        background: "linear-gradient(135deg, #F8DADA 0%, #f4e6d0 50%, #D12B2B 100%)",
       }}
     >
       {/* Decorações */}

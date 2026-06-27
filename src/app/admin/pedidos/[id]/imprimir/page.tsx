@@ -73,7 +73,7 @@ export default async function PrintOrderPage({
           <header className="flex items-start justify-between border-b-2 border-cocoa pb-4 mb-6">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="Doce Encanto" className="w-16 h-16 object-contain" />
+              <img src="/logo.png" alt="MM Distribuidora" className="w-16 h-16 object-contain" />
               <div>
               <div className="font-display text-2xl font-bold text-espresso">
                 DOCE ENCANTO
@@ -244,7 +244,7 @@ export default async function PrintOrderPage({
 
           {/* Rodapé */}
           <footer className="mt-8 pt-3 border-t border-cocoa/15 text-[7pt] text-cocoa/50 text-center">
-            Doce Encanto Distribuidora · {order.orderNumber} · Gerado em {new Date().toLocaleString("pt-BR")}
+            MM Distribuidora · {order.orderNumber} · Gerado em {new Date().toLocaleString("pt-BR")}
           </footer>
         </div>
       </main>

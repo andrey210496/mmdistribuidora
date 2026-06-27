@@ -1,4 +1,4 @@
-// SVG decorativos baseados na identidade Doce Encanto + nicho de confeitaria
+// SVG decorativos baseados na identidade MM Distribuidora + nicho de confeitaria
 // (curvas douradas, bombons, gotas de chocolate, granulado, cacau)
 
 export function GoldCurveTopLeft({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
@@ -63,7 +63,7 @@ export function ChocolateDrop({ className = "", style }: { className?: string; s
 export function Bonbon({ className = "", color = "cocoa", style }: { className?: string; color?: "cocoa" | "rose" | "caramel"; style?: React.CSSProperties }) {
   const colors = {
     cocoa: { main: "#5a2b17", dark: "#2a0d05", shine: "#bf6e27" },
-    rose: { main: "#c97d92", dark: "#8a4a5c", shine: "#e8a2b6" },
+    rose: { main: "#A81E1E", dark: "#8a4a5c", shine: "#D12B2B" },
     caramel: { main: "#bf6e27", dark: "#7a4416", shine: "#e8a86b" },
   };
   const c = colors[color];

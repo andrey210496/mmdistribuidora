@@ -11,7 +11,7 @@ export function Hero() {
 
       {/* Sprinkles caindo do topo */}
       <div className="absolute top-0 left-[20%] anim-sprinkle pointer-events-none">
-        <Sprinkle className="w-3" color="#e8a2b6" />
+        <Sprinkle className="w-3" color="#D12B2B" />
       </div>
       <div className="absolute top-0 left-[45%] anim-sprinkle pointer-events-none" style={{ animationDelay: "1s" }}>
         <Sprinkle className="w-3" color="#d4a574" />
