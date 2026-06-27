@@ -8,7 +8,6 @@ import {
   updateCartQuantity,
   removeFromCart,
   setCartZip,
-  setCartShippingOption,
 } from "@/app/actions/cart";
 import type { CartSummary } from "@/lib/cart";
 
@@ -31,12 +30,6 @@ export function CartView({ cart }: { cart: CartSummary }) {
   const applyZip = () => {
     startTransition(async () => {
       await setCartZip(zip);
-    });
-  };
-
-  const chooseOption = (key: string) => {
-    startTransition(async () => {
-      await setCartShippingOption(key);
     });
   };
 
@@ -197,65 +190,13 @@ export function CartView({ cart }: { cart: CartSummary }) {
               </div>
             </div>
 
-            {/* Opções de entrega (Stone) — cliente escolhe; preço vem do backend */}
-            {cart.shippingOptions.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-xs uppercase tracking-widest text-cocoa/60 font-bold block">
-                  Opções de entrega
-                </span>
-                {cart.shippingOptions.map((o) => {
-                  const selected = cart.shippingOptionKey === o.key;
-                  return (
-                    <label
-                      key={o.key}
-                      className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 cursor-pointer transition ${
-                        selected
-                          ? "border-rose-brand bg-rose-brand/5"
-                          : "border-cocoa/15 hover:border-cocoa/30"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2.5 min-w-0">
-                        <input
-                          type="radio"
-                          name="shipopt"
-                          checked={selected}
-                          onChange={() => chooseOption(o.key)}
-                          disabled={pending}
-                          className="accent-rose-brand"
-                        />
-                        <span className="min-w-0">
-                          <span className="text-sm text-cocoa font-medium block truncate">
-                            {o.service || o.carrier || "Entrega"}
-                          </span>
-                          <span className="text-[11px] text-cocoa/50 block">
-                            {o.etaSeconds ? `~${Math.round(o.etaSeconds / 3600)}h` : ""}
-                            {o.carrier ? ` · ${o.carrier}` : ""}
-                          </span>
-                        </span>
-                      </span>
-                      <span className="font-bold text-cocoa text-sm whitespace-nowrap">
-                        {centsToBRL(o.cents)}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-
             <div className="border-t border-cocoa/10 pt-4 space-y-2.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-cocoa/70">Subtotal ({cart.totalItems} {cart.totalItems > 1 ? "itens" : "item"})</span>
                 <span className="text-cocoa font-semibold">{centsToBRL(cart.subtotalCents)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-cocoa/70">
-                  Frete
-                  {cart.shippingSource === "stone" && (
-                    <span className="ml-1.5 text-[11px] text-olive font-semibold">
-                      Stone Entrega{cart.shippingService ? ` · ${cart.shippingService}` : ""}
-                    </span>
-                  )}
-                </span>
+                <span className="text-cocoa/70">Frete</span>
                 <span className={`font-semibold ${cart.shippingCents === 0 ? "text-olive" : "text-cocoa"}`}>
                   {cart.shippingCents === 0 && cart.subtotalCents > 0
                     ? "Grátis"

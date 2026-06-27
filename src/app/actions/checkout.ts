@@ -14,7 +14,6 @@ import { stripe } from "@/lib/stripe";
 import { generateOrderNumber } from "@/lib/utils";
 import { getCurrentCustomer } from "@/lib/customer";
 import { resolveShipping } from "@/lib/shipping";
-import { buildStoneItems } from "@/lib/stone-entrega";
 import { getStoreSettings } from "@/lib/settings";
 import { Prisma, type OrderStatus } from "@prisma/client";
 
@@ -127,23 +126,9 @@ export async function submitCheckout(
 
   const discountCents = Math.max(0, normalSubtotalCents - subtotalCents);
 
-  // Frete usa a MESMA função do carrinho (Stone Entrega + fallback fixo).
+  // Frete usa a MESMA função do carrinho (manual: grátis acima do limite ou fixo).
   const settings = await getStoreSettings();
-  const weightByProduct = new Map(products.map((p) => [p.id, p.weightGrams]));
-  const stoneItems = buildStoneItems(orderItemsData, weightByProduct, {
-    height: settings.boxHeightCm,
-    width: settings.boxWidthCm,
-    depth: settings.boxDepthCm,
-  });
-  // Recota no servidor para o CEP do checkout e respeita a OPÇÃO escolhida
-  // (cart.shippingOptionKey) — o preço vem da cotação, nunca do front.
-  const ship = await resolveShipping({
-    subtotalCents,
-    deliveryZip: data.shippingAddress.zip,
-    items: stoneItems,
-    settings,
-    preferredKey: cart.shippingOptionKey,
-  });
+  const ship = resolveShipping({ subtotalCents, settings });
   const shippingCents = ship.cents;
   const totalCents = subtotalCents + shippingCents;
 

@@ -20,22 +20,14 @@ export const SETTINGS_KEYS = {
   shippingFreeThresholdCents: "shipping.free_threshold_cents",
   shippingFlatRateCents: "shipping.flat_rate_cents",
   installmentsMinCents: "payments.installments_min_cents",
-  stonePickupZip: "stone.pickup_zip", // CEP de coleta (origem) p/ cotação
-  boxHeightCm: "stone.box_height_cm", // dimensões da "caixa padrão"
-  boxWidthCm: "stone.box_width_cm",
-  boxDepthCm: "stone.box_depth_cm",
 } as const;
 
 export type StoreSettings = {
   lowStockThreshold: number; // estoque <= isto = "estoque baixo"
   expiryWarningDays: number; // validade dentro de N dias = "vencendo"
   shippingFreeThresholdCents: number; // frete grátis a partir deste subtotal
-  shippingFlatRateCents: number; // valor do frete fixo
+  shippingFlatRateCents: number; // valor do frete fixo (manual)
   installmentsMinCents: number; // total mínimo para liberar parcelamento no cartão
-  stonePickupZip: string; // CEP de origem (coleta) para o Stone Entrega
-  boxHeightCm: number;
-  boxWidthCm: number;
-  boxDepthCm: number;
 };
 
 export const STORE_SETTINGS_DEFAULTS: StoreSettings = {
@@ -44,10 +36,6 @@ export const STORE_SETTINGS_DEFAULTS: StoreSettings = {
   shippingFreeThresholdCents: 20000,
   shippingFlatRateCents: 1990,
   installmentsMinCents: 10000, // R$ 100,00
-  stonePickupZip: "",
-  boxHeightCm: 20,
-  boxWidthCm: 20,
-  boxDepthCm: 20,
 };
 
 function clampInt(v: string | undefined, def: number, min: number, max: number): number {
@@ -69,10 +57,6 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     shippingFreeThresholdCents: clampInt(map.get(SETTINGS_KEYS.shippingFreeThresholdCents), d.shippingFreeThresholdCents, 0, 100_000_000),
     shippingFlatRateCents: clampInt(map.get(SETTINGS_KEYS.shippingFlatRateCents), d.shippingFlatRateCents, 0, 100_000_000),
     installmentsMinCents: clampInt(map.get(SETTINGS_KEYS.installmentsMinCents), d.installmentsMinCents, 0, 100_000_000),
-    stonePickupZip: (map.get(SETTINGS_KEYS.stonePickupZip) || d.stonePickupZip).replace(/\D/g, ""),
-    boxHeightCm: clampInt(map.get(SETTINGS_KEYS.boxHeightCm), d.boxHeightCm, 1, 200),
-    boxWidthCm: clampInt(map.get(SETTINGS_KEYS.boxWidthCm), d.boxWidthCm, 1, 200),
-    boxDepthCm: clampInt(map.get(SETTINGS_KEYS.boxDepthCm), d.boxDepthCm, 1, 200),
   };
 }
 
@@ -84,10 +68,6 @@ export async function saveStoreSettings(s: StoreSettings): Promise<void> {
     [SETTINGS_KEYS.shippingFreeThresholdCents, String(Math.round(s.shippingFreeThresholdCents))],
     [SETTINGS_KEYS.shippingFlatRateCents, String(Math.round(s.shippingFlatRateCents))],
     [SETTINGS_KEYS.installmentsMinCents, String(Math.round(s.installmentsMinCents))],
-    [SETTINGS_KEYS.stonePickupZip, s.stonePickupZip.replace(/\D/g, "")],
-    [SETTINGS_KEYS.boxHeightCm, String(Math.round(s.boxHeightCm))],
-    [SETTINGS_KEYS.boxWidthCm, String(Math.round(s.boxWidthCm))],
-    [SETTINGS_KEYS.boxDepthCm, String(Math.round(s.boxDepthCm))],
   ];
   await prisma.$transaction(
     entries.map(([key, value]) =>

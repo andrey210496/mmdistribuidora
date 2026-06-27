@@ -213,7 +213,7 @@ export function CartDrawer() {
                   <div className="text-[11px] text-cocoa/60 mt-0.5">
                     {cart && cart.shippingCents === 0
                       ? "Frete grátis incluso"
-                      : `+ frete ${centsToBRL(cart?.shippingCents ?? 0)}${cart?.shippingSource === "stone" ? " · Stone" : ""}`}
+                      : `+ frete ${centsToBRL(cart?.shippingCents ?? 0)}`}
                   </div>
                 </div>
               </div>

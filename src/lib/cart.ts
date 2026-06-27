@@ -3,7 +3,6 @@ import { getCustomerSession, type CartItem } from "./session";
 import { isCurrentCustomerActiveMember, isCurrentCustomerWholesale } from "./customer";
 import { resolveUnitPrice } from "./pricing";
 import { resolveShipping } from "./shipping";
-import { buildStoneItems, type StoneOption } from "./stone-entrega";
 import { getStoreSettings } from "./settings";
 
 // ============================================================
@@ -41,12 +40,8 @@ export type CartSummary = {
   totalCents: number;
   totalItems: number;
   shippingZip: string | null;
-  // De onde veio o frete: grátis, cotação Stone, fixo, ou carrinho vazio
-  shippingSource: "free" | "stone" | "flat" | "none";
-  shippingCarrier: string | null; // transportadora (quando vier do Stone)
-  shippingService: string | null; // "Mais rápida" | "Mais Barata"
-  shippingOptions: StoneOption[]; // opções do Stone p/ o cliente escolher
-  shippingOptionKey: string | null; // opção atualmente selecionada
+  // De onde veio o frete: grátis, fixo, ou carrinho vazio
+  shippingSource: "free" | "flat" | "none";
   // Cliente logado é membro ativo do clube? (decidido no backend)
   isClubMember: boolean;
   // Quanto o cliente está economizando com o preço de membro neste carrinho
@@ -152,10 +147,6 @@ export async function getCart(): Promise<CartSummary> {
       totalItems: 0,
       shippingZip: zip,
       shippingSource: "none",
-      shippingCarrier: null,
-      shippingService: null,
-      shippingOptions: [],
-      shippingOptionKey: null,
       isClubMember: false,
       clubSavingsCents: 0,
       potentialClubSavingsCents: 0,
@@ -178,19 +169,7 @@ export async function getCart(): Promise<CartSummary> {
   });
 
   const priced = priceCartLines(items, products, isClubMember, isWholesale);
-  const weightByProduct = new Map(products.map((p) => [p.id, p.weightGrams]));
-  const stoneItems = buildStoneItems(priced.lines, weightByProduct, {
-    height: settings.boxHeightCm,
-    width: settings.boxWidthCm,
-    depth: settings.boxDepthCm,
-  });
-  const ship = await resolveShipping({
-    subtotalCents: priced.subtotalCents,
-    deliveryZip: zip,
-    items: stoneItems,
-    settings,
-    preferredKey: session.shippingOptionKey ?? null,
-  });
+  const ship = resolveShipping({ subtotalCents: priced.subtotalCents, settings });
   const totalCents = priced.subtotalCents + ship.cents;
 
   return {
@@ -203,10 +182,6 @@ export async function getCart(): Promise<CartSummary> {
     totalItems: priced.totalItems,
     shippingZip: zip,
     shippingSource: ship.source,
-    shippingCarrier: ship.carrier,
-    shippingService: ship.service,
-    shippingOptions: ship.options,
-    shippingOptionKey: ship.selectedKey,
     isClubMember,
     clubSavingsCents: priced.clubSavingsCents,
     potentialClubSavingsCents: priced.potentialClubSavingsCents,
@@ -296,15 +271,5 @@ export async function clearCart(): Promise<void> {
 export async function setShippingZip(zip: string | null): Promise<void> {
   const session = await getCustomerSession();
   session.shippingZip = zip ?? undefined;
-  await session.save();
-}
-
-/**
- * Guarda QUAL opção de frete o cliente escolheu (só a chave). O preço nunca
- * vem do front — é sempre recotado/derivado no backend (anti-fraude).
- */
-export async function setShippingOption(key: string | null): Promise<void> {
-  const session = await getCustomerSession();
-  session.shippingOptionKey = key ?? undefined;
   await session.save();
 }

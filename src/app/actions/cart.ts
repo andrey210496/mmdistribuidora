@@ -9,7 +9,6 @@ import {
   removeFromCart as removeFromCartLib,
   clearCart as clearCartLib,
   setShippingZip,
-  setShippingOption,
   type CartSummary,
 } from "@/lib/cart";
 
@@ -85,34 +84,13 @@ export async function setCartZip(zip: string): Promise<ActionResult> {
 }
 
 /**
- * Cliente escolhe QUAL opção de frete (Mais barata x Mais rápida). Só a chave
- * é enviada; o backend recota no Stone e usa o preço real (anti-fraude).
+ * Atualiza o CEP do carrinho/checkout e devolve o carrinho recalculado
+ * (a UI reflete sem recarregar a página). O frete é manual (fixo/grátis).
  */
-export async function setCartShippingOption(key: string): Promise<ActionResult> {
-  const valid = z.string().min(1).max(60).safeParse(key);
-  if (!valid.success) return { ok: false, error: "Opção inválida" };
-  await setShippingOption(valid.data);
-  revalidatePath("/carrinho");
-  revalidatePath("/checkout");
-  return { ok: true };
-}
-
-/**
- * Recota o frete no checkout: grava o CEP e/ou a opção escolhida na sessão e
- * devolve o carrinho atualizado (a UI reflete sem recarregar a página).
- * O PREÇO continua sendo derivado no backend (anti-fraude).
- */
-export async function quoteShipping(
-  zip: string | null,
-  optionKey?: string | null
-): Promise<CartSummary> {
+export async function quoteShipping(zip: string | null): Promise<CartSummary> {
   if (zip != null) {
     const cleaned = zip.replace(/\D/g, "");
     if (cleaned.length === 8) await setShippingZip(cleaned);
-  }
-  if (optionKey) {
-    const valid = z.string().min(1).max(60).safeParse(optionKey);
-    if (valid.success) await setShippingOption(valid.data);
   }
   return getCart();
 }

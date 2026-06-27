@@ -101,9 +101,6 @@ export function CheckoutForm({
     }
   }, [cep]);
 
-  const chooseOption = (key: string) => {
-    startQuote(async () => setCart(await quoteShipping(null, key)));
-  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     if (shouldUpsell && !upsellPassed) {
@@ -393,58 +390,11 @@ export function CheckoutForm({
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-cocoa/70">
-                Frete
-                {cart.shippingSource === "stone" && (
-                  <span className="ml-1.5 text-[11px] text-olive font-semibold">
-                    Stone Entrega{cart.shippingService ? ` · ${cart.shippingService}` : ""}
-                  </span>
-                )}
-              </span>
+              <span className="text-cocoa/70">Frete</span>
               <span className={`font-semibold ${cart.shippingCents === 0 ? "text-olive" : "text-cocoa"}`}>
                 {quoting ? "calculando…" : cart.shippingCents === 0 ? "Grátis" : centsToBRL(cart.shippingCents)}
               </span>
             </div>
-
-            {/* Opções do Stone — cliente escolhe; preço recotado no backend */}
-            {cart.shippingOptions.length > 0 && (
-              <div className="space-y-1.5">
-                {cart.shippingOptions.map((o) => {
-                  const selected = cart.shippingOptionKey === o.key;
-                  return (
-                    <label
-                      key={o.key}
-                      className={`flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2 cursor-pointer transition ${
-                        selected ? "border-rose-brand bg-rose-brand/5" : "border-cocoa/15 hover:border-cocoa/30"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 min-w-0">
-                        <input
-                          type="radio"
-                          name="shipopt"
-                          checked={selected}
-                          onChange={() => chooseOption(o.key)}
-                          disabled={quoting}
-                          className="accent-rose-brand"
-                        />
-                        <span className="min-w-0">
-                          <span className="text-xs text-cocoa font-medium block truncate">
-                            {o.service || o.carrier || "Entrega"}
-                          </span>
-                          <span className="text-[10px] text-cocoa/50 block">
-                            {o.etaSeconds ? `~${Math.round(o.etaSeconds / 3600)}h` : ""}
-                            {o.carrier ? ` · ${o.carrier}` : ""}
-                          </span>
-                        </span>
-                      </span>
-                      <span className="font-bold text-cocoa text-xs whitespace-nowrap">
-                        {centsToBRL(o.cents)}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
             <div className="border-t border-cocoa/10 pt-3 flex justify-between items-baseline">
               <span className="font-bold text-cocoa">Total</span>
               <span className="font-display text-2xl font-bold text-cocoa">
