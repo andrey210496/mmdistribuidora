@@ -51,20 +51,25 @@ model User {
 // CLIENTES DA LOJA
 // ============================================================
 model Customer {
-  id            String    @id @default(cuid())
-  name          String
+  id               String    @id @default(cuid())
+  name             String
   // E-mail é OPCIONAL: o cadastro rápido usa apenas nome+telefone+CPF+senha.
-  email         String?   @unique
-  cpfCnpj       String?   @unique
-  phone         String?
-  passwordHash  String?
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  email            String?   @unique
+  cpfCnpj          String?   @unique
+  phone            String?
+  passwordHash     String?
+  emailVerified    DateTime?
+  // Atacado: cliente marcado como atacadista paga o preço de atacado.
+  isWholesale      Boolean   @default(false)
+  // Crediário: limite de fiado em centavos (0 = sem crédito liberado).
+  creditLimitCents Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  addresses  Address[]
-  orders     Order[]
-  clubMember ClubMember?
+  addresses          Address[]
+  orders             Order[]
+  clubMember         ClubMember?
+  creditTransactions CreditTransaction[]
 
   @@index([email])
   @@index([cpfCnpj])
@@ -108,8 +113,13 @@ model Product {
   slug                String    @unique
   description         String    @db.Text
   sku                 String    @unique
+  // Código de barras (EAN/UPC) — bipar no PDV adiciona o item ao carrinho.
+  barcode             String?   @unique
   priceCents          Int
   compareAtPriceCents Int?
+  // Atacado: preço especial a partir de uma quantidade mínima.
+  wholesalePriceCents Int?
+  wholesaleMinQty     Int       @default(0)
   // Preço exclusivo para membros do Clube. Se preenchido, o produto entra
   // na vitrine do Clube exibindo "preço normal" + "preço de membro".
   clubPriceCents      Int?
@@ -135,6 +145,7 @@ model Product {
   @@index([active])
   @@index([clubPriceCents])
   @@index([expiryDate])
+  @@index([barcode])
 }
 
 model ProductImage {
@@ -166,6 +177,15 @@ enum OrderStatus {
 enum PaymentMethod {
   PIX
   CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  STORE_CREDIT // pagamento via crediário/fiado
+}
+
+// Canal de origem do pedido: loja online (e-commerce) ou balcão (PDV).
+enum OrderChannel {
+  ONLINE
+  PDV
 }
 
 enum PaymentStatus {
@@ -180,6 +200,9 @@ model Order {
   orderNumber String      @unique // Ex: DE-2025-0001
   customerId  String
   status      OrderStatus @default(PENDING_PAYMENT)
+
+  // Canal de origem: ONLINE (e-commerce) ou PDV (venda no balcão)
+  channel OrderChannel @default(ONLINE)
 
   // Valores em centavos (Int) — nunca usar Float pra dinheiro
   subtotalCents Int
@@ -225,16 +248,26 @@ model Order {
   // Observações internas
   internalNotes String? @db.Text
 
+  // PDV / Caixa — vínculo com a sessão de caixa e troco do dinheiro
+  cashSessionId       String?
+  amountReceivedCents Int? // valor em dinheiro recebido (para cálculo de troco)
+  changeCents         Int? // troco devolvido
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  customer       Customer             @relation(fields: [customerId], references: [id])
-  items          OrderItem[]
-  statusHistory  OrderStatusHistory[]
-  financialEntry FinancialEntry?
+  customer           Customer             @relation(fields: [customerId], references: [id])
+  items              OrderItem[]
+  statusHistory      OrderStatusHistory[]
+  financialEntry     FinancialEntry?
+  payments           OrderPayment[]
+  creditTransactions CreditTransaction[]
+  cashSession        CashRegisterSession? @relation(fields: [cashSessionId], references: [id])
 
   @@index([customerId])
   @@index([status])
+  @@index([channel])
+  @@index([cashSessionId])
   @@index([createdAt])
   @@index([pickToken])
 }
@@ -277,6 +310,96 @@ model OrderStatusHistory {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
+}
+
+// ============================================================
+// PDV / CAIXA — sessão de caixa, sangria/suprimento e pagamento misto
+// ============================================================
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+model CashRegisterSession {
+  id                String            @id @default(cuid())
+  status            CashSessionStatus @default(OPEN)
+  // Fundo de troco no momento da abertura
+  openingFloatCents Int               @default(0)
+  // Conferência no fechamento: esperado (sistema) × contado (gaveta)
+  expectedCashCents Int?
+  countedCashCents  Int?
+  differenceCents   Int? // contado − esperado (negativo = falta)
+  openedBy          String // userId
+  closedBy          String? // userId
+  openedAt          DateTime          @default(now())
+  closedAt          DateTime?
+  notes             String?           @db.Text
+
+  movements CashMovement[]
+  orders    Order[]
+
+  @@index([status])
+  @@index([openedAt])
+}
+
+enum CashMovementType {
+  SANGRIA // retirada de dinheiro do caixa
+  SUPRIMENTO // entrada de dinheiro no caixa
+}
+
+model CashMovement {
+  id            String           @id @default(cuid())
+  cashSessionId String
+  type          CashMovementType
+  amountCents   Int
+  reason        String?
+  createdBy     String // userId
+  createdAt     DateTime         @default(now())
+
+  cashSession CashRegisterSession @relation(fields: [cashSessionId], references: [id], onDelete: Cascade)
+
+  @@index([cashSessionId])
+}
+
+// Pagamento misto: um pedido pode ter vários pagamentos (ex.: parte PIX, parte dinheiro).
+model OrderPayment {
+  id          String        @id @default(cuid())
+  orderId     String
+  method      PaymentMethod
+  amountCents Int
+  createdAt   DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ============================================================
+// CREDIÁRIO / FIADO — lançamentos de crédito do cliente
+// Saldo devedor = soma(CHARGE) − soma(PAYMENT).
+// ============================================================
+enum CreditTxType {
+  CHARGE // venda no fiado (aumenta o que o cliente deve)
+  PAYMENT // recebimento (abate o que o cliente deve)
+}
+
+model CreditTransaction {
+  id          String         @id @default(cuid())
+  customerId  String
+  type        CreditTxType
+  amountCents Int
+  orderId     String? // venda que originou o CHARGE
+  method      PaymentMethod? // forma de recebimento (no PAYMENT)
+  notes       String?
+  createdBy   String? // userId (null = sistema)
+  createdAt   DateTime       @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order    Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([customerId])
+  @@index([orderId])
+  @@index([type])
 }
 
 // ============================================================
