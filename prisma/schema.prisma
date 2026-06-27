@@ -128,6 +128,8 @@ model Product {
   // Custo do produto (uso interno) — base para margem/lucro no financeiro.
   costCents           Int?      @default(0)
   stock               Int       @default(0)
+  // Unidade de medida de venda (UN, KG, CX, FD, PCT...).
+  unit                String    @default("UN")
   weightGrams         Int       @default(0)
   active              Boolean   @default(true)
   featured            Boolean   @default(false)
@@ -138,10 +140,11 @@ model Product {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  category       Category?              @relation(fields: [categoryId], references: [id])
-  images         ProductImage[]
-  orderItems     OrderItem[]
-  customerPrices CustomerProductPrice[]
+  category        Category?              @relation(fields: [categoryId], references: [id])
+  images          ProductImage[]
+  orderItems      OrderItem[]
+  customerPrices  CustomerProductPrice[]
+  stockEntryItems StockEntryItem[]
 
   @@index([categoryId])
   @@index([slug])
@@ -498,6 +501,82 @@ model HomeSection {
   updatedAt       DateTime        @updatedAt
 
   @@index([enabled, sortOrder])
+}
+
+// ============================================================
+// COMPRAS / ESTOQUE — fornecedores e entrada de mercadoria
+// ============================================================
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  cnpjCpf   String?
+  phone     String?
+  email     String?
+  notes     String?  @db.Text
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockEntries StockEntry[]
+
+  @@index([name])
+  @@index([cnpjCpf])
+}
+
+enum StockEntrySource {
+  XML // importada do XML da NF-e
+  MANUAL // lançada à mão
+}
+
+enum StockEntryStatus {
+  PENDING // rascunho/conferência (não mexeu no estoque)
+  CONFIRMED // confirmada (estoque/custo atualizados)
+  CANCELED
+}
+
+model StockEntry {
+  id                   String           @id @default(cuid())
+  source               StockEntrySource @default(MANUAL)
+  status               StockEntryStatus @default(PENDING)
+  supplierId           String?
+  supplierNameSnapshot String?
+  // Dados da NF-e (quando XML)
+  accessKey            String?          @unique // chave de 44 dígitos
+  number               String?
+  series               String?
+  issuedAt             DateTime?
+  totalCents           Int              @default(0)
+  notes                String?          @db.Text
+  createdBy            String? // userId
+  createdAt            DateTime         @default(now())
+  confirmedAt          DateTime?
+
+  supplier Supplier?        @relation(fields: [supplierId], references: [id])
+  items    StockEntryItem[]
+
+  @@index([status])
+  @@index([supplierId])
+  @@index([createdAt])
+}
+
+model StockEntryItem {
+  id            String  @id @default(cuid())
+  stockEntryId  String
+  productId     String? // casado com um produto do catálogo (ou nulo até casar)
+  description   String
+  ean           String?
+  ncm           String?
+  quantity      Int // quantidade da nota
+  unitCostCents Int     @default(0)
+  totalCents    Int     @default(0)
+  // Fator de conversão p/ o estoque (ex.: 1 fardo = 10 unidades → fator 10).
+  stockFactor   Int     @default(1)
+
+  stockEntry StockEntry @relation(fields: [stockEntryId], references: [id], onDelete: Cascade)
+  product    Product?   @relation(fields: [productId], references: [id])
+
+  @@index([stockEntryId])
+  @@index([productId])
 }
 
 // ============================================================
