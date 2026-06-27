@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -20,7 +21,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": new URL("./src", import.meta.url).pathname,
+      // fileURLToPath decodifica o caminho (espaços/acentos). Usar .pathname
+      // aqui quebra em pastas como "Área de Trabalho" (vira %C3%81rea%20...).
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
 });
