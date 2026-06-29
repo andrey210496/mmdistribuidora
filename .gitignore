@@ -34,6 +34,14 @@ uploads/*
 deploy/release/
 deploy/*.tar.gz
 
+# Instalacao local (F4.1) — backups do banco gerados na maquina-host
+backups/
+
+# Instalador (F4.1b) — binarios baixados e .exe gerado (artefatos de build)
+installer/payload/
+installer/output/
+installer/downloads/
+
 # Cache do TypeScript
 *.tsbuildinfo
 

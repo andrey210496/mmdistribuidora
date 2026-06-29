@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const config: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false, // remove X-Powered-By: Next.js
+  // Fixa a raiz do tracing no diretorio do projeto. Sem isso, em alguns
+  // ambientes (ex.: OneDrive) o Next infere uma raiz acima e gera o
+  // standalone aninhado (.next/standalone/PDV-MM/...). Aqui ele sai liso:
+  // .next/standalone/server.js — que e o que os scripts de instalacao esperam.
+  outputFileTracingRoot: path.join(process.cwd()),
   // Lint é checagem de desenvolvimento — não deve derrubar o deploy.
   // (O TypeScript continua validando tipos no build.)
   eslint: { ignoreDuringBuilds: true },
