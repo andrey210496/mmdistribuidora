@@ -287,6 +287,12 @@ model Order {
   canceledAt          DateTime?
   canceledReason      String?
 
+  // Sincronizacao vitrine->retaguarda: marca pedidos online ja baixados
+  // pela retaguarda instalada (F4.2). Na instancia online fica false ate
+  // a retaguarda puxar e dar ack.
+  syncedToLocal Boolean   @default(false)
+  syncedAt      DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -304,6 +310,7 @@ model Order {
   @@index([cashSessionId])
   @@index([createdAt])
   @@index([pickToken])
+  @@index([syncedToLocal])
 }
 
 model OrderItem {

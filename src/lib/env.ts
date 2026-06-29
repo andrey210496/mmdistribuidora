@@ -27,6 +27,13 @@ const envSchema = z.object({
 
   // Diretório físico onde uploads de imagem são salvos
   UPLOAD_DIR: z.string().default("./public/uploads"),
+
+  // Sincronização vitrine online <-> retaguarda instalada (F4.2).
+  // SYNC_TOKEN: segredo compartilhado que autentica as duas pontas.
+  // SYNC_REMOTE_URL: na retaguarda LOCAL, é a URL da vitrine online para onde
+  // ela empurra catálogo e de onde puxa pedidos.
+  SYNC_TOKEN: z.string().optional().default(""),
+  SYNC_REMOTE_URL: z.string().optional().default(""),
 });
 
 const parsed = envSchema.safeParse(process.env);
