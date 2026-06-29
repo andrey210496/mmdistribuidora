@@ -109,6 +109,7 @@ $adminPass  = New-FriendlyPass 10
 if ($fresh -or -not (Test-Path $envPath)) {
   Write-Host "==> Gerando .env..." -ForegroundColor Cyan
   $sessionSecret = (New-Secret 48) + (New-Secret 16)
+  $syncToken = New-Secret 40
   $uploadsUrl = $uploads -replace '\\','/'
   $q = [char]34
   $envLines = @(
@@ -120,7 +121,11 @@ if ($fresh -or -not (Test-Path $envPath)) {
     "ADMIN_MUST_CHANGE=${q}true$q",
     "UPLOAD_DIR=$q$uploadsUrl$q",
     "PORT=${q}3000$q",
-    "NODE_ENV=${q}production$q"
+    "NODE_ENV=${q}production$q",
+    "# Sincronizacao com a vitrine online (preencha SYNC_REMOTE_URL com a URL da",
+    "# loja online; o mesmo SYNC_TOKEN deve ser configurado la tambem).",
+    "SYNC_TOKEN=$q$syncToken$q",
+    "SYNC_REMOTE_URL=${q}$q"
   )
   # UTF8 SEM BOM: o Set-Content -Encoding utf8 do PS 5.1 grava BOM, que depois
   # contamina a 1a variavel ao ler o .env. WriteAllLines com UTF8($false) evita.

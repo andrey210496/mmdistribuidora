@@ -12,6 +12,7 @@ $svc      = "MMRetaguardaDB"
 
 Unregister-ScheduledTask -TaskName "MM Retaguarda" -Confirm:$false
 Unregister-ScheduledTask -TaskName "MM Retaguarda Backup" -Confirm:$false
+Unregister-ScheduledTask -TaskName "MM Retaguarda Sync" -Confirm:$false
 
 # Encerra o servidor node desta instalacao
 Get-CimInstance Win32_Process |
