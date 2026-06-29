@@ -4,7 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { requireArea } from "@/lib/auth";
-import { saveStoreSettings, PDV_SHORTCUTS_KEY } from "@/lib/settings";
+import { saveStoreSettings, PDV_SHORTCUTS_KEY, PDV_PRODUCT_HOTKEYS_KEY } from "@/lib/settings";
 import { brlToCents } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { PDV_ACTIONS, serializeShortcuts, DEFAULT_SHORTCUTS, type ShortcutMap } from "@/lib/pdv-shortcuts";
@@ -92,6 +92,87 @@ export async function savePdvShortcuts(map: Record<string, string>): Promise<Act
     entityType: "Setting",
     entityId: PDV_SHORTCUTS_KEY,
     afterJson: clean,
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath("/admin/configuracoes");
+  revalidatePath("/admin/pdv");
+  return { ok: true };
+}
+
+// ============================================================
+// Atalhos de produto do PDV — tecla -> produto (comandos customizáveis).
+// Salva o mapa em Setting (pdv.product_hotkeys) como JSON [{key,productId}].
+// ============================================================
+export type HotkeyProduct = { id: string; name: string; sku: string };
+
+export async function searchProductsForHotkey(query: string): Promise<HotkeyProduct[]> {
+  await requireArea("configuracoes");
+  const q = query.trim();
+  if (q.length < 1) return [];
+  const products = await prisma.product.findMany({
+    where: {
+      active: true,
+      OR: [
+        { name: { contains: q, mode: "insensitive" } },
+        { sku: { contains: q, mode: "insensitive" } },
+        { barcode: q },
+      ],
+    },
+    take: 12,
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, sku: true },
+  });
+  return products;
+}
+
+// Teclas que não podem virar atalho de produto (já são fixas/reservadas no PDV).
+const RESERVED_KEYS = new Set(["F1", "F2", "F3", "F4", "Enter", "Escape"]);
+
+const hotkeysSchema = z
+  .array(z.object({ key: z.string().min(1).max(20), productId: z.string().min(1) }))
+  .max(40);
+
+export async function saveProductHotkeys(
+  items: { key: string; productId: string }[]
+): Promise<ActionResult> {
+  const user = await requireArea("configuracoes");
+
+  const parsed = hotkeysSchema.safeParse(items);
+  if (!parsed.success) return { ok: false, error: "Dados inválidos." };
+
+  // Normaliza, remove reservadas e duplica por tecla (a última vence).
+  const byKey = new Map<string, string>();
+  for (const it of parsed.data) {
+    const key = it.key.trim();
+    if (!key || RESERVED_KEYS.has(key)) continue;
+    byKey.set(key, it.productId);
+  }
+  const clean = [...byKey.entries()].map(([key, productId]) => ({ key, productId }));
+
+  // Valida que os produtos existem.
+  const ids = clean.map((c) => c.productId);
+  const found = ids.length
+    ? await prisma.product.findMany({ where: { id: { in: ids } }, select: { id: true } })
+    : [];
+  const valid = new Set(found.map((p) => p.id));
+  const final = clean.filter((c) => valid.has(c.productId));
+
+  const value = JSON.stringify(final);
+  await prisma.setting.upsert({
+    where: { key: PDV_PRODUCT_HOTKEYS_KEY },
+    update: { value },
+    create: { key: PDV_PRODUCT_HOTKEYS_KEY, value },
+  });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "settings.pdvProductHotkeys.updated",
+    entityType: "Setting",
+    entityId: PDV_PRODUCT_HOTKEYS_KEY,
+    afterJson: { count: final.length },
     ip: clientIp(h),
     userAgent: h.get("user-agent") ?? undefined,
   });

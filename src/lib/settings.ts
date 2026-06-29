@@ -14,6 +14,25 @@ export async function getPdvShortcuts(): Promise<ShortcutMap> {
   return parseShortcuts(row?.value);
 }
 
+export const PDV_PRODUCT_HOTKEYS_KEY = "pdv.product_hotkeys";
+
+export type ProductHotkey = { key: string; productId: string };
+
+/** Lê os atalhos de produto do PDV (tecla -> produto). */
+export async function getProductHotkeys(): Promise<ProductHotkey[]> {
+  const row = await prisma.setting.findUnique({ where: { key: PDV_PRODUCT_HOTKEYS_KEY } });
+  if (!row?.value) return [];
+  try {
+    const arr = JSON.parse(row.value);
+    if (!Array.isArray(arr)) return [];
+    return arr
+      .filter((x) => x && typeof x.key === "string" && typeof x.productId === "string")
+      .map((x) => ({ key: x.key, productId: x.productId }));
+  } catch {
+    return [];
+  }
+}
+
 export const SETTINGS_KEYS = {
   lowStockThreshold: "inventory.low_stock_threshold",
   expiryWarningDays: "inventory.expiry_warning_days",

@@ -9,7 +9,7 @@ import { centsToBRL, brlToCents } from "@/lib/money";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
 import { PAYMENT_METHOD_LABELS } from "@/lib/orders";
-import { matchAction, type ShortcutMap } from "@/lib/pdv-shortcuts";
+import { matchAction, eventToKey, alwaysFires, type ShortcutMap } from "@/lib/pdv-shortcuts";
 import type { CashReconciliation } from "@/lib/cash";
 import {
   searchProducts, searchCustomers, quickCreateCustomer, finalizeSale,
@@ -19,6 +19,8 @@ import {
 
 type Movement = { id: string; type: string; amountCents: number; reason: string | null; createdAt: string };
 type Session = { id: string; openingFloatCents: number; openedAt: string; movements: Movement[] };
+
+export type PdvProductHotkey = { key: string; product: PdvProduct };
 
 type CartLine = { product: PdvProduct; qty: number; note?: string };
 
@@ -46,14 +48,16 @@ export function PdvClient({
   session,
   recon,
   shortcuts,
+  productHotkeys,
 }: {
   storeName: string;
   session: Session | null;
   recon: CashReconciliation | null;
   shortcuts: ShortcutMap;
+  productHotkeys: PdvProductHotkey[];
 }) {
   if (!session) return <OpenCashForm />;
-  return <Pos storeName={storeName} session={session} recon={recon!} shortcuts={shortcuts} />;
+  return <Pos storeName={storeName} session={session} recon={recon!} shortcuts={shortcuts} productHotkeys={productHotkeys} />;
 }
 
 // ============================================================
@@ -105,7 +109,7 @@ function OpenCashForm() {
 // ============================================================
 // PDV em operação
 // ============================================================
-function Pos({ storeName, session, recon, shortcuts }: { storeName: string; session: Session; recon: CashReconciliation; shortcuts: ShortcutMap }) {
+function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeName: string; session: Session; recon: CashReconciliation; shortcuts: ShortcutMap; productHotkeys: PdvProductHotkey[] }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -315,16 +319,33 @@ function Pos({ storeName, session, recon, shortcuts }: { storeName: string; sess
           el.tagName === "SELECT" ||
           el.isContentEditable);
       const action = matchAction(e, shortcuts, isTyping);
-      if (!action) return;
-      e.preventDefault();
-      if (action === "focusSearch") searchRef.current?.focus();
-      else if (action === "finalize") submit(false);
-      else if (action === "credit") submit(true);
-      else if (action === "clearSale") resetSale();
+      if (action) {
+        e.preventDefault();
+        if (action === "focusSearch") searchRef.current?.focus();
+        else if (action === "finalize") submit(false);
+        else if (action === "credit") submit(true);
+        else if (action === "clearSale") resetSale();
+        return;
+      }
+
+      // Atalhos de produto (tecla -> produto), configurados em /admin/configuracoes.
+      const key = eventToKey(e);
+      if (key && (!isTyping || alwaysFires(key))) {
+        const hk = productHotkeys.find((h) => h.key === key);
+        if (hk) {
+          e.preventDefault();
+          if (hk.product.stock <= 0) {
+            setError(`Sem estoque: ${hk.product.name}`);
+          } else {
+            addToCart(hk.product);
+            setInfo(`+ ${hk.product.name}`);
+          }
+        }
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [shortcuts, submit, resetSale, quickPay]);
+  }, [shortcuts, submit, resetSale, quickPay, productHotkeys]);
 
   return (
     <div className="p-4 lg:p-6">
