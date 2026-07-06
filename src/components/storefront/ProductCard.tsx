@@ -25,8 +25,7 @@ export function ProductCard({
   ranking,
   badge,
 }: Props) {
-  const hasDiscount =
-    compareAtPriceCents != null && compareAtPriceCents > priceCents;
+  const hasDiscount = compareAtPriceCents != null && compareAtPriceCents > priceCents;
   const discountPct = hasDiscount
     ? Math.round(((compareAtPriceCents! - priceCents) / compareAtPriceCents!) * 100)
     : 0;
@@ -37,48 +36,45 @@ export function ProductCard({
     badge === "exclusive" ? "Exclusivo" : null;
 
   return (
-    <div className="group relative bg-white rounded-[20px] overflow-hidden ring-1 ring-cocoa/8 hover:ring-rose-brand/30 shadow-[0_2px_12px_-6px_rgba(90,43,23,0.12)] hover:shadow-[0_20px_44px_-18px_rgba(90,43,23,0.32)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col h-full">
+    <div className="group relative bg-white border border-line hover:border-rose-brand rounded-lg overflow-hidden transition-colors flex flex-col h-full">
       {/* Imagem */}
       <Link href={`/produtos/${slug}`} className="relative block">
-        <div className="relative aspect-square bg-gradient-to-br from-cream to-[#f3e7d6] overflow-hidden">
+        <div className="relative aspect-square bg-smoke overflow-hidden">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imageUrl}
               alt={name}
-              className="w-full h-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.08]"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center font-display font-bold text-7xl text-cocoa/12">
-              DE
+            <div className="w-full h-full flex items-center justify-center font-display font-bold text-6xl text-ink/10">
+              MM
             </div>
           )}
 
-          {/* Gradiente sutil pra dar profundidade premium */}
-          <div className="absolute inset-0 bg-gradient-to-t from-cocoa/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-          {/* Ranking / Badge — topo esquerdo */}
+          {/* Ranking / Badge — topo esquerdo (retos) */}
           {ranking ? (
-            <div className="absolute top-3 left-3 w-8 h-8 rounded-full bg-espresso/90 backdrop-blur text-gold font-display font-bold text-[13px] flex items-center justify-center shadow-lg ring-1 ring-gold/30">
+            <div className="absolute top-0 left-0 w-8 h-8 bg-ink text-gold font-display font-bold text-sm flex items-center justify-center">
               {ranking}
             </div>
           ) : badgeText ? (
-            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur text-cocoa text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
+            <div className="absolute top-2 left-2 bg-ink text-white text-[10px] font-extrabold px-2 py-1 uppercase tracking-wide">
               {badgeText}
             </div>
           ) : null}
 
-          {/* Selo de desconto — topo direito */}
+          {/* Desconto — topo direito */}
           {hasDiscount && !outOfStock && (
-            <div className="absolute top-3 right-3 bg-rose-brand text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-md">
+            <div className="absolute top-2 right-2 bg-rose-brand text-white text-[12px] font-extrabold px-2 py-1">
               −{discountPct}%
             </div>
           )}
 
           {outOfStock && (
-            <div className="absolute inset-0 bg-cream/80 backdrop-blur-[1px] flex items-center justify-center">
-              <span className="text-cocoa font-bold text-[11px] uppercase tracking-widest border-2 border-cocoa rounded-full px-4 py-1.5 bg-white/70">
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+              <span className="text-ink font-extrabold text-[11px] uppercase tracking-widest bg-white border-2 border-ink px-4 py-1.5">
                 Esgotado
               </span>
             </div>
@@ -87,25 +83,23 @@ export function ProductCard({
       </Link>
 
       {/* Conteúdo */}
-      <div className="p-4 pt-3.5 flex flex-col flex-1">
+      <div className="p-3.5 flex flex-col flex-1">
         <Link href={`/produtos/${slug}`}>
-          <h3 className="text-cocoa text-[13.5px] font-medium leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-rose-brand transition-colors">
+          <h3 className="text-ink text-[13.5px] font-semibold leading-snug line-clamp-2 min-h-[2.5rem] group-hover:text-rose-brand transition-colors">
             {name}
           </h3>
         </Link>
 
         <div className="mt-2 flex-1">
-          <div>
-            {hasDiscount && (
-              <div className="text-[11.5px] text-cocoa/40 line-through leading-tight">
-                {centsToBRL(compareAtPriceCents!)}
-              </div>
-            )}
-            <div className="font-display text-[26px] font-bold text-cocoa leading-none">
-              {centsToBRL(priceCents)}
+          {hasDiscount && (
+            <div className="text-[12px] text-ink/40 line-through leading-tight">
+              {centsToBRL(compareAtPriceCents!)}
             </div>
-            <div className="text-[11px] text-cocoa/60 mt-1.5">à vista</div>
+          )}
+          <div className="font-display text-[27px] font-bold text-ink leading-none tracking-tight">
+            {centsToBRL(priceCents)}
           </div>
+          <div className="text-[11px] font-semibold text-ink/50 mt-1 uppercase tracking-wide">à vista</div>
         </div>
 
         {productId ? (
@@ -113,7 +107,7 @@ export function ProductCard({
         ) : (
           <Link
             href={`/produtos/${slug}`}
-            className="mt-3 w-full bg-rose-brand hover:bg-[#A81E1E] text-white py-2.5 rounded-full font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
+            className="mt-2.5 w-full bg-rose-brand hover:bg-redDeep text-white h-10 rounded-md font-extrabold text-[12px] uppercase tracking-wider flex items-center justify-center transition"
           >
             Ver produto
           </Link>

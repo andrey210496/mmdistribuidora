@@ -9,7 +9,7 @@ export type NavItem = { label: string; href: string; active?: boolean };
 // Barra de categorias responsiva: mostra quantos itens couberem na largura
 // disponível e move o restante para um menu "⋯ Mais" (overflow).
 // Nunca causa scroll horizontal da página — as linhas são clipadas.
-export function CategoryNav({ items }: { items: NavItem[] }) {
+export function CategoryNav({ items, dark = false }: { items: NavItem[]; dark?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const measureRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const moreRef = useRef<HTMLDivElement>(null);
@@ -66,8 +66,14 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
   const overflow = items.slice(visibleCount);
 
   const linkClass = (active?: boolean) =>
-    `relative shrink-0 px-3.5 py-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition ${
-      active ? "text-rose-brand" : "text-cocoa hover:text-rose-brand hover:bg-cocoa/5"
+    `relative shrink-0 px-3.5 py-3 whitespace-nowrap text-[12.5px] font-extrabold uppercase tracking-wide transition ${
+      dark
+        ? active
+          ? "text-gold"
+          : "text-white/85 hover:text-white hover:bg-white/10"
+        : active
+          ? "text-rose-brand"
+          : "text-cocoa hover:text-rose-brand hover:bg-cocoa/5"
     }`;
 
   return (
@@ -96,7 +102,7 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
           <Link key={item.label} href={item.href} className={linkClass(item.active)}>
             {item.label}
             {item.active && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-rose-brand rounded-full" />
+              <span className={`absolute bottom-0 left-0 right-0 h-1 ${dark ? "bg-gold" : "bg-rose-brand"}`} />
             )}
           </Link>
         ))}
@@ -110,7 +116,7 @@ export function CategoryNav({ items }: { items: NavItem[] }) {
             onClick={() => setOpenMore((v) => !v)}
             aria-label="Mais categorias"
             aria-expanded={openMore}
-            className="flex items-center px-2.5 py-2 rounded-full text-cocoa hover:text-rose-brand hover:bg-cocoa/5 transition"
+            className={`flex items-center px-3 py-3 transition ${dark ? "text-white/85 hover:text-white hover:bg-white/10" : "text-cocoa hover:text-rose-brand hover:bg-cocoa/5"}`}
           >
             <MoreHorizontal size={18} />
           </button>

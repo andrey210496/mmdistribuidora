@@ -23,8 +23,11 @@ export default async function HomePage() {
   return (
     <>
       <Header />
-      {/* Hero codado (proposta de valor + atacado) */}
+      {/* Hero comercial (atacado + varejo) */}
       <Hero />
+
+      {/* Faixa de confiança logo abaixo do hero */}
+      <BenefitsBar />
 
       {/* Categorias reais do catálogo */}
       <CategoryTiles />
@@ -32,7 +35,7 @@ export default async function HomePage() {
       {/* Seções configuráveis pelo admin */}
       {withProducts.map(({ section, products }, i) => {
         const meta = SECTION_TYPE_META[section.type];
-        const bgClass = meta.bg ?? (i % 2 === 0 ? "bg-cream" : "bg-white");
+        const bgClass = meta.bg ?? (i % 2 === 0 ? "bg-white" : "bg-smoke");
         return (
           <ProductShelf
             key={section.id}
@@ -48,9 +51,8 @@ export default async function HomePage() {
         );
       })}
 
-      {/* Apoio: blocos de categoria + confiança */}
+      {/* Apoio: blocos por tipo de negócio */}
       <PromoQuad />
-      <BenefitsBar />
 
       <Footer />
     </>

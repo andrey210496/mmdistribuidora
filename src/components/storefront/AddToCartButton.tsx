@@ -44,7 +44,7 @@ export function AddToCartButton({
         className={
           variant === "page"
             ? "btn-pink w-full opacity-50 cursor-not-allowed"
-            : "mt-3 w-full bg-cocoa/10 text-cocoa/40 py-2.5 rounded-full font-bold text-[12px] uppercase tracking-wider cursor-not-allowed"
+            : "mt-2.5 w-full bg-smoke text-ink/40 h-10 rounded-md font-bold text-[12px] uppercase tracking-wider cursor-not-allowed"
         }
       >
         Esgotado
@@ -112,17 +112,17 @@ export function AddToCartButton({
         handle();
       }}
       disabled={pending}
-      className="mt-3 w-full bg-rose-brand hover:bg-[#A81E1E] disabled:opacity-50 text-white py-2.5 rounded-full font-bold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-sm hover:shadow-md"
+      className="mt-2.5 w-full bg-rose-brand hover:bg-redDeep disabled:opacity-50 text-white h-10 rounded-md font-extrabold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition"
     >
       {pending ? (
         "..."
       ) : added ? (
         <>
-          <Check size={13} strokeWidth={2.5} /> Adicionado
+          <Check size={14} strokeWidth={2.5} /> Adicionado
         </>
       ) : (
         <>
-          <ShoppingBag size={13} strokeWidth={2.2} /> Comprar
+          <ShoppingBag size={14} strokeWidth={2.2} /> Adicionar
         </>
       )}
     </button>

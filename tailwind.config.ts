@@ -10,12 +10,18 @@ export default {
       colors: {
         // Paleta oficial MM Distribuidora
         rose: { brand: "#D12B2B" }, // vermelho primário da marca
+        redDeep: "#A81E1E", // vermelho escuro (hover/estados)
         caramel: "#D98A2B",
         cocoa: "#5a3214",
         cream: "#fbf2e2",
         espresso: "#3a1e0c",
         olive: "#a5aa66", // verde (sucesso)
         gold: "#f2b23e",
+        // Comercial "atacadao": preto-tinta quente + cinzas de superficie
+        ink: "#17120e", // quase-preto (barras/rodape/preco)
+        graphite: "#3b332c",
+        smoke: "#f4f1ea", // cinza-creme claro (fundo de catalogo)
+        line: "#e7e1d6", // bordas discretas
         // Aliases semânticos (marrons da identidade)
         brand: {
           DEFAULT: "#5a3214",
