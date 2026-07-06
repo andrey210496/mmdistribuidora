@@ -7,7 +7,7 @@ import { useCart } from "@/components/cart/CartProvider";
 type Props = {
   productId: string;
   outOfStock?: boolean;
-  variant?: "card" | "page";
+  variant?: "card" | "page" | "mini";
   initialQuantity?: number;
 };
 
@@ -38,6 +38,13 @@ export function AddToCartButton({
   };
 
   if (outOfStock) {
+    if (variant === "mini") {
+      return (
+        <span className="w-10 h-10 rounded-full bg-white/80 text-ink/30 flex items-center justify-center shadow-md cursor-not-allowed" aria-label="Esgotado">
+          <Plus size={18} />
+        </span>
+      );
+    }
     return (
       <button
         disabled
@@ -48,6 +55,22 @@ export function AddToCartButton({
         }
       >
         Esgotado
+      </button>
+    );
+  }
+
+  // Circulo "+" (usado sobreposto na imagem do card)
+  if (variant === "mini") {
+    return (
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handle(); }}
+        disabled={pending}
+        aria-label="Adicionar ao carrinho"
+        className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition disabled:opacity-60 ${
+          added ? "bg-olive text-white" : "bg-rose-brand hover:bg-redDeep text-white"
+        }`}
+      >
+        {added ? <Check size={18} strokeWidth={3} /> : <Plus size={20} strokeWidth={3} />}
       </button>
     );
   }

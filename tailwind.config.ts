@@ -42,6 +42,7 @@ export default {
         display: ["var(--font-spartan)", "system-ui", "sans-serif"],
         body: ["var(--font-akshar)", "system-ui", "sans-serif"],
         serif: ["var(--font-fraunces)", "ui-serif", "Georgia", "serif"],
+        poster: ["var(--font-poster)", "var(--font-spartan)", "system-ui", "sans-serif"],
       },
       backgroundImage: {
         "brand-gradient":

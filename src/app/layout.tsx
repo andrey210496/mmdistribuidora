@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { League_Spartan, Akshar, Fraunces } from "next/font/google";
+import { League_Spartan, Akshar, Fraunces, Anton } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
@@ -23,6 +23,14 @@ const fraunces = Fraunces({
   variable: "--font-fraunces",
   display: "swap",
   axes: ["SOFT", "WONK", "opsz"],
+});
+
+// Fonte de "poster" condensada — usada nos titulos/precos da VITRINE (font-poster).
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-poster",
+  display: "swap",
 });
 
 // O app inteiro é dinâmico (sessão/cookies em toda rota). Declarar aqui também
@@ -73,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${spartan.variable} ${akshar.variable} ${fraunces.variable}`}>
+    <html lang="pt-BR" className={`${spartan.variable} ${akshar.variable} ${fraunces.variable} ${anton.variable}`}>
       <body className="min-h-screen flex flex-col antialiased">
         <CartProvider>
           {children}

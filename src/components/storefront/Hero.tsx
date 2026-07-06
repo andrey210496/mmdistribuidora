@@ -1,89 +1,68 @@
 import Link from "next/link";
-import { ArrowRight, Truck, Package, Percent, Store } from "lucide-react";
-import { COMPANY } from "@/lib/company";
+import { Search, Truck, Percent, Zap, Tag } from "lucide-react";
 
-// Hero comercial "atacadao": alto contraste, proposta direta, CTAs fortes
-// e um bloco de atacado em destaque (dourado). Sem gradiente/blur.
+// Hero comercial "busca-first": banner escuro, titulo poster, busca em
+// destaque + blocos-informacao. Composicao diferente do card unico.
 export function Hero() {
   return (
-    <section className="bg-ink text-white relative overflow-hidden border-b-4 border-gold">
-      {/* Bloco geometrico solido */}
-      <div
-        className="absolute inset-y-0 right-0 w-2/5 bg-rose-brand/90 hidden lg:block"
-        style={{ clipPath: "polygon(22% 0, 100% 0, 100% 100%, 0% 100%)" }}
-        aria-hidden
-      />
-
-      <div className="container-wide relative grid lg:grid-cols-12 gap-8 items-center py-9 lg:py-12">
-        {/* Texto */}
+    <section className="bg-ink text-white border-b-4 border-gold">
+      <div className="container-wide grid lg:grid-cols-12 gap-8 items-center py-8 lg:py-11">
+        {/* Coluna principal */}
         <div className="lg:col-span-7">
           <span className="inline-flex items-center gap-2 bg-gold text-ink text-[12px] font-extrabold uppercase tracking-wider px-3 py-1.5">
-            <Package size={14} /> Atacado &amp; Varejo · Entrega rápida
+            <Tag size={14} /> Atacado &amp; Varejo
           </span>
 
-          <h1 className="font-display font-bold uppercase leading-[0.95] tracking-tight text-4xl sm:text-5xl lg:text-[64px] mt-5">
-            Preço de <span className="text-gold">distribuidora</span>
-            <br />
-            pra abastecer seu negócio
+          <h1 className="font-poster text-5xl sm:text-6xl lg:text-[76px] uppercase leading-[0.9] tracking-wide mt-4">
+            Abasteça pagando<br />
+            <span className="text-gold">preço de distribuidora</span>
           </h1>
 
-          <p className="text-white/70 text-base lg:text-lg max-w-xl mt-5 leading-relaxed">
-            Doces, embalagens e insumos com <strong className="text-white">preço de atacado e varejo</strong> no
-            mesmo lugar. Confeitaria, mercado, lanchonete ou festa — a gente entrega rápido e cobra justo.
+          <p className="text-white/65 text-base lg:text-lg max-w-lg mt-4 font-medium">
+            Doces, embalagens e insumos com entrega rápida na região. Do balcão ao seu negócio.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 mt-7">
-            <Link
-              href="/produtos"
-              className="group inline-flex items-center gap-2 bg-gold hover:bg-[#e0a230] text-ink font-extrabold uppercase tracking-wide text-sm px-7 py-4 transition"
-            >
-              Ver catálogo
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition" />
-            </Link>
-            <Link
-              href={`https://wa.me/${COMPANY.whatsapp}`}
-              target="_blank"
-              className="inline-flex items-center gap-2 border-2 border-white/30 hover:border-white text-white font-extrabold uppercase tracking-wide text-sm px-7 py-4 transition"
-            >
-              Pedir no WhatsApp
-            </Link>
-          </div>
+          {/* Busca em destaque */}
+          <form action="/produtos" method="get" className="mt-6 flex max-w-xl bg-white rounded-xl overflow-hidden shadow-2xl">
+            <input
+              type="search"
+              name="q"
+              placeholder="O que você vai abastecer hoje?"
+              maxLength={100}
+              className="flex-1 px-5 h-14 text-ink placeholder-ink/40 text-[15px] focus:outline-none"
+            />
+            <button type="submit" className="bg-rose-brand hover:bg-redDeep text-white px-6 flex items-center gap-2 font-extrabold uppercase text-sm tracking-wide transition">
+              <Search size={18} strokeWidth={2.5} /> <span className="hidden sm:inline">Buscar</span>
+            </button>
+          </form>
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-7 text-white/70 text-[13px] font-semibold">
-            <span className="flex items-center gap-1.5"><Truck size={16} className="text-gold" /> Entrega na região</span>
-            <span className="flex items-center gap-1.5"><Store size={16} className="text-gold" /> Atacado sem valor mínimo</span>
-            <span className="flex items-center gap-1.5"><Percent size={16} className="text-gold" /> Preço por quantidade</span>
+          <div className="flex flex-wrap items-center gap-2.5 mt-4">
+            <Link href="/produtos?ofertas=1" className="bg-white/10 hover:bg-white/20 px-4 h-9 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide transition">
+              <Zap size={14} className="text-gold" /> Ofertas
+            </Link>
+            <Link href="/produtos" className="bg-white/10 hover:bg-white/20 px-4 h-9 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide transition">
+              Ver catálogo
+            </Link>
           </div>
         </div>
 
-        {/* Card de atacado */}
-        <div className="lg:col-span-5 relative">
-          <div className="bg-white text-ink border-l-8 border-gold shadow-2xl p-7 lg:p-8">
-            <div className="flex items-center gap-2 text-rose-brand text-[11px] font-extrabold uppercase tracking-widest mb-2">
-              <Percent size={16} /> Comprou mais, pagou menos
+        {/* Blocos-informação */}
+        <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+          {[
+            { Icon: Percent, t: "Preço por quantidade", d: "O atacado entra sozinho no carrinho ao bater a quantidade." },
+            { Icon: Truck, t: "Entrega rápida", d: "Vale do Paraíba e Litoral Norte, no seu ritmo." },
+            { Icon: Zap, t: "Sem valor mínimo", d: "Mistura itens no mesmo pedido e pronto." },
+          ].map(({ Icon, t, d }) => (
+            <div key={t} className="bg-white/[0.06] border-l-4 border-gold p-4 flex gap-3">
+              <span className="w-10 h-10 shrink-0 bg-gold text-ink flex items-center justify-center">
+                <Icon size={20} strokeWidth={2.2} />
+              </span>
+              <div>
+                <div className="font-poster text-lg uppercase leading-none tracking-wide">{t}</div>
+                <div className="text-white/60 text-[12.5px] mt-1 leading-snug">{d}</div>
+              </div>
             </div>
-            <h3 className="font-display font-bold uppercase text-2xl leading-tight mb-3">
-              Preço de atacado por quantidade
-            </h3>
-            <p className="text-sm text-ink/65 leading-relaxed mb-5">
-              Bateu a quantidade mínima do produto, o preço de atacado entra sozinho no carrinho.
-              Atacadista cadastrado leva o desconto em qualquer volume.
-            </p>
-            <ul className="space-y-2 mb-6">
-              {["Sem pedido mínimo de valor", "Mistura itens no mesmo pedido", "Atendimento por WhatsApp"].map((t) => (
-                <li key={t} className="flex items-center gap-2.5 text-sm font-semibold text-ink/80">
-                  <span className="w-5 h-5 bg-olive text-white flex items-center justify-center shrink-0 text-xs font-bold">✓</span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href="/produtos"
-              className="w-full bg-ink hover:bg-graphite text-white font-extrabold uppercase tracking-wide text-sm h-12 flex items-center justify-center gap-2 transition"
-            >
-              Começar a comprar <ArrowRight size={16} />
-            </Link>
-          </div>
+          ))}
         </div>
       </div>
     </section>
