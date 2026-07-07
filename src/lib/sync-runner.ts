@@ -44,6 +44,26 @@ async function setCursor(v: string): Promise<void> {
   });
 }
 
+// Persiste o status no banco (chave local, nunca sincronizada) para o indicador
+// ler de forma confiavel — o singleton em memoria pode estar em outro bundle.
+const STATUS_KEY = "sync:status";
+async function persistStatus(): Promise<void> {
+  const snap = JSON.stringify({
+    online: syncStatus.online,
+    lastPullAt: syncStatus.lastPullAt,
+    lastPushAt: syncStatus.lastPushAt,
+    lastError: syncStatus.lastError,
+    at: new Date().toISOString(),
+  });
+  await prisma.setting
+    .upsert({
+      where: { key: STATUS_KEY },
+      update: { value: snap },
+      create: { key: STATUS_KEY, value: snap, encrypted: false },
+    })
+    .catch(() => {});
+}
+
 // SOBE as vendas do balcao (F5.3): empurra a fila e reconcilia o estoque com o
 // valor autoritativo devolvido pela gestao online.
 async function pushOnce(remote: string): Promise<void> {
@@ -109,6 +129,7 @@ async function syncTick(): Promise<void> {
     syncStatus.lastError = e instanceof Error ? e.message : String(e);
   } finally {
     syncStatus.running = false;
+    await persistStatus();
   }
 }
 

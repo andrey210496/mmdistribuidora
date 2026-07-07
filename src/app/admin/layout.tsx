@@ -23,6 +23,7 @@ import { hasArea, isSuperAdmin, firstAllowedPath, type AreaKey } from "@/lib/per
 import { readInstalledUpdateStatus } from "@/lib/updates";
 import { IS_PDV, stationLabel } from "@/lib/mode";
 import { UpdateBanner } from "./_components/UpdateBanner";
+import { SyncIndicator } from "./_components/SyncIndicator";
 import { logoutAction } from "./login/actions";
 
 export const metadata = { robots: { index: false } };
@@ -112,6 +113,11 @@ export default async function AdminLayout({
         </nav>
 
         <div className="p-3 border-t border-cream/10">
+          {IS_PDV ? (
+            <div className="mb-3">
+              <SyncIndicator />
+            </div>
+          ) : null}
           <div className="px-3 py-2 mb-2">
             <div className="text-xs text-cream/60">Logado como</div>
             <div className="text-sm font-semibold text-gold truncate">
