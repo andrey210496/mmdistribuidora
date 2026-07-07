@@ -1,17 +1,21 @@
 # ============================================================
-# MM Retaguarda — registra as Tarefas Agendadas (chamado pelo instalador)
+# MM PDV — registra as Tarefas Agendadas (chamado pelo instalador)
 #   "MM Retaguarda"        -> mm-run.ps1 no boot (SYSTEM)
 #   "MM Retaguarda Backup" -> mm-backup.ps1 diario
-#   "MM Retaguarda Sync"   -> mm-sync.ps1 a cada N minutos (vitrine online)
+#   "MM Retaguarda Update" -> mm-update.ps1 -Check (diario + pos-boot)
+# Obs.: a sincronizacao PDV<->gestao online roda DENTRO do app (runner
+# in-process, F5). Nao ha mais tarefa de sync externa.
 # ============================================================
-param([string]$BackupTime = "23:30", [int]$SyncMinutes = 5, [string]$UpdateCheckTime = "05:00")
+param([string]$BackupTime = "23:30", [string]$UpdateCheckTime = "05:00")
 $ErrorActionPreference = "Stop"
 
 $runPs    = Join-Path $PSScriptRoot "mm-run.ps1"
 $backupPs = Join-Path $PSScriptRoot "mm-backup.ps1"
-$syncPs   = Join-Path $PSScriptRoot "mm-sync.ps1"
 $updatePs = Join-Path $PSScriptRoot "mm-update.ps1"
 $pwsh = "powershell.exe"
+
+# Remove a tarefa de sync antiga (modelo F4.2), se existir de instalacao previa.
+Unregister-ScheduledTask -TaskName "MM Retaguarda Sync" -Confirm:$false -ErrorAction SilentlyContinue
 
 $runAction = New-ScheduledTaskAction -Execute $pwsh `
   -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$runPs`""
@@ -25,15 +29,6 @@ $bkAction = New-ScheduledTaskAction -Execute $pwsh `
 $bkTrigger = New-ScheduledTaskTrigger -Daily -At $BackupTime
 Register-ScheduledTask -TaskName "MM Retaguarda Backup" -Action $bkAction -Trigger $bkTrigger `
   -RunLevel Highest -User "SYSTEM" -Force | Out-Null
-
-# Sync com a vitrine online: repete a cada N minutos (indefinidamente).
-$syncAction = New-ScheduledTaskAction -Execute $pwsh `
-  -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$syncPs`""
-$syncTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
-  -RepetitionInterval (New-TimeSpan -Minutes $SyncMinutes)
-$syncSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName "MM Retaguarda Sync" -Action $syncAction -Trigger $syncTrigger `
-  -Settings $syncSettings -RunLevel Highest -User "SYSTEM" -Force | Out-Null
 
 # Verificacao de atualizacao: diaria (so consulta o canal e grava o status; NAO
 # aplica sozinho -> o admin ve o aviso e clica "Atualizar agora").

@@ -109,7 +109,6 @@ $adminPass  = New-FriendlyPass 10
 if ($fresh -or -not (Test-Path $envPath)) {
   Write-Host "==> Gerando .env..." -ForegroundColor Cyan
   $sessionSecret = (New-Secret 48) + (New-Secret 16)
-  $syncToken = New-Secret 40
   $uploadsUrl = $uploads -replace '\\','/'
   $q = [char]34
   $envLines = @(
@@ -122,9 +121,13 @@ if ($fresh -or -not (Test-Path $envPath)) {
     "UPLOAD_DIR=$q$uploadsUrl$q",
     "PORT=${q}3000$q",
     "NODE_ENV=${q}production$q",
-    "# Sincronizacao com a vitrine online (preencha SYNC_REMOTE_URL com a URL da",
-    "# loja online; o mesmo SYNC_TOKEN deve ser configurado la tambem).",
-    "SYNC_TOKEN=$q$syncToken$q",
+    "# Este e o PDV-SERVIDOR da loja (offline-first). A conexao com a gestao",
+    "# online (URL, token e numero da estacao) e feita na tela 'Conectar a gestao'",
+    "# dentro do proprio sistema e fica salva no banco. Os campos abaixo sao so",
+    "# fallback e normalmente ficam vazios.",
+    "MM_MODE=${q}pdv$q",
+    "STATION_ID=${q}1$q",
+    "SYNC_TOKEN=${q}$q",
     "SYNC_REMOTE_URL=${q}$q"
   )
   # UTF8 SEM BOM: o Set-Content -Encoding utf8 do PS 5.1 grava BOM, que depois

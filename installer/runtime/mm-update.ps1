@@ -80,8 +80,25 @@ $token  = $cfg["SYNC_TOKEN"]
 $dbUrl  = $cfg["DATABASE_URL"]
 $curVer = if (Test-Path $verFile) { (Get-Content $verFile -Raw).Trim() } else { "0.0.0" }
 
+# A conexao com a gestao (URL/token) e configurada na tela "Conectar a gestao"
+# do PDV e fica no banco (Setting). Le de la; cai pro .env se ainda vazio.
+$dbPassE = $null; $dbPortE = "5544"; $dbNameE = "mm_distribuidora"
+if ($dbUrl -match 'postgresql://postgres:([^@]+)@127\.0\.0\.1:(\d+)/([^?]+)') {
+  $dbPassE = $Matches[1]; $dbPortE = $Matches[2]; $dbNameE = $Matches[3]
+}
+function Get-Setting($key) {
+  if (-not $dbPassE) { return "" }
+  $env:PGPASSWORD = $dbPassE
+  $v = & "$pgbin\psql.exe" -h 127.0.0.1 -p $dbPortE -U postgres -w -d $dbNameE -tAc "SELECT value FROM ""Setting"" WHERE key='$key'" 2>$null
+  return (($v | Out-String).Trim())
+}
+$dbRemote = Get-Setting "pdv:remoteUrl"
+$dbToken  = Get-Setting "pdv:syncToken"
+if ($dbRemote) { $remote = $dbRemote.TrimEnd('/') }
+if ($dbToken)  { $token  = $dbToken }
+
 if (-not $remote -or -not $token) {
-  Write-Host "Canal de atualizacao nao configurado (SYNC_REMOTE_URL/SYNC_TOKEN)." -ForegroundColor Yellow
+  Write-Host "PDV ainda nao conectado a gestao (configure em 'Conectar a gestao')." -ForegroundColor Yellow
   Write-Status $curVer $null $false ""
   if (-not $Check) { try { Stop-Transcript | Out-Null } catch {} }
   exit 0
