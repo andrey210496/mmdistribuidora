@@ -97,9 +97,10 @@ Set-Content -Path (Join-Path $appOut "VERSION") -Value $appVersion -NoNewline -E
 Write-Host "==> VERSION do app: $appVersion" -ForegroundColor DarkGray
 
 # 6) atalho da Area de Trabalho (abre o navegador no sistema)
+# Atalho abre direto a GESTAO/PDV (/admin), nao a vitrine (raiz).
 @"
 [InternetShortcut]
-URL=http://localhost:3000
+URL=http://localhost:3000/admin
 IconIndex=0
 "@ | Set-Content -Path (Join-Path $payload "MM Retaguarda.url") -Encoding ascii
 
