@@ -41,6 +41,8 @@ const envSchema = z.object({
   // números de venda e no sync p/ evitar colisão entre PDVs).
   MM_MODE: z.enum(["online", "pdv"]).default("online"),
   STATION_ID: z.string().optional().default(""),
+  // Intervalo (segundos) do loop de sincronizacao no PDV. Curto = mais "realtime".
+  SYNC_INTERVAL_SECONDS: z.coerce.number().int().min(5).max(3600).default(20),
 });
 
 const parsed = envSchema.safeParse(process.env);
