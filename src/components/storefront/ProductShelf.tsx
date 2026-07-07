@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 
 type Product = {
@@ -33,65 +33,50 @@ export function ProductShelf({
   products,
   badge,
   showRanking,
-  bgClass = "bg-white",
+  bgClass = "bg-paper",
   ctaLabel = "Ver todos",
 }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
   if (products.length === 0) return null;
 
-  const bg = bgClass === "bg-cream" ? "bg-white" : bgClass;
+  // superfícies alternadas premium
+  const bg = bgClass === "bg-smoke" || bgClass === "bg-cream" ? "bg-sand" : bgClass === "bg-white" ? "bg-paper" : bgClass;
 
   const scrollBy = (dir: 1 | -1) => {
     const el = trackRef.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.85), behavior: "smooth" });
+    if (el) el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.85), behavior: "smooth" });
   };
 
   return (
-    <section className={`py-9 lg:py-11 ${bg}`}>
+    <section className={`py-14 lg:py-16 ${bg}`}>
       <div className="container-wide">
-        {/* Cabeçalho */}
-        <div className="flex items-end justify-between gap-4 mb-5">
-          <div className="min-w-0">
-            <h2 className="font-poster text-2xl lg:text-[34px] text-ink uppercase tracking-wide leading-none">
-              {title}
-            </h2>
-            {subtitle && <p className="text-ink/55 text-sm mt-1.5 font-medium">{subtitle}</p>}
-            <div className="h-1 w-16 bg-rose-brand mt-2.5" />
+        <div className="flex items-end justify-between gap-4 mb-8">
+          <div>
+            <span className="text-[11px] font-semibold tracking-[0.22em] uppercase text-brass">
+              {subtitle ?? "Seleção da casa"}
+            </span>
+            <h2 className="font-serif text-[30px] lg:text-[36px] text-ink tracking-tight mt-1.5">{title}</h2>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => scrollBy(-1)}
-              aria-label="Anterior"
-              className="hidden sm:flex w-9 h-9 items-center justify-center border-2 border-line text-ink hover:border-ink transition"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollBy(1)}
-              aria-label="Próximo"
-              className="hidden sm:flex w-9 h-9 items-center justify-center border-2 border-line text-ink hover:border-ink transition"
-            >
-              <ChevronRight size={18} />
-            </button>
-            <Link
-              href={href}
-              className="ml-1 inline-flex items-center gap-1.5 text-rose-brand hover:text-ink font-extrabold text-[12.5px] uppercase tracking-wide transition"
-            >
-              {ctaLabel} <ArrowRight size={14} />
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="hidden sm:flex items-center gap-1.5">
+              <button type="button" onClick={() => scrollBy(-1)} aria-label="Anterior"
+                className="w-9 h-9 rounded-full border border-line text-cocoa hover:border-ink hover:text-ink transition flex items-center justify-center">
+                <ChevronLeft size={17} />
+              </button>
+              <button type="button" onClick={() => scrollBy(1)} aria-label="Próximo"
+                className="w-9 h-9 rounded-full border border-line text-cocoa hover:border-ink hover:text-ink transition flex items-center justify-center">
+                <ChevronRight size={17} />
+              </button>
+            </div>
+            <Link href={href} className="text-wine hover:text-[#8e201c] font-semibold text-[12.5px] uppercase tracking-[0.08em] transition whitespace-nowrap">
+              {ctaLabel} →
             </Link>
           </div>
         </div>
 
-        {/* Trilho horizontal */}
-        <div
-          ref={trackRef}
-          className="flex gap-3 lg:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-1 -mx-1 px-1"
-        >
+        <div ref={trackRef} className="flex gap-4 lg:gap-5 overflow-x-auto scrollbar-hide snap-x pb-1 -mx-1 px-1">
           {products.map((p, i) => (
-            <div key={p.id} className="snap-start shrink-0 w-[46%] sm:w-[240px] lg:w-[220px]">
+            <div key={p.id} className="snap-start shrink-0 w-[47%] sm:w-[250px] lg:w-[248px]">
               <ProductCard
                 productId={p.id}
                 slug={p.slug}

@@ -31,71 +31,70 @@ export function ProductCard({
     : 0;
 
   const badgeText =
-    badge === "bestseller" ? "Top" :
-    badge === "new" ? "Novo" :
+    badge === "bestseller" ? "Mais vendido" :
+    badge === "new" ? "Novidade" :
     badge === "exclusive" ? "Exclusivo" : null;
 
   return (
-    <div className="group relative bg-white border border-line hover:border-rose-brand rounded-xl overflow-hidden transition-colors flex flex-col h-full">
+    <div className="group relative bg-white border border-line hover:shadow-[0_16px_40px_-22px_rgba(60,35,20,0.4)] transition-shadow flex flex-col h-full">
       {/* Imagem */}
       <Link href={`/produtos/${slug}`} className="relative block">
-        <div className="relative aspect-square bg-smoke overflow-hidden">
+        <div className="relative aspect-square bg-sand overflow-hidden">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={imageUrl}
               alt={name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.06]"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center font-poster text-6xl text-ink/10">MM</div>
+            <div className="w-full h-full flex items-center justify-center font-serif text-5xl text-ink/10">MM</div>
           )}
 
-          {/* Selos */}
-          <div className="absolute top-0 left-0 flex flex-col">
-            {ranking ? (
-              <span className="w-8 h-8 bg-ink text-gold font-poster text-lg flex items-center justify-center">{ranking}</span>
-            ) : badgeText ? (
-              <span className="bg-ink text-white text-[10px] font-extrabold px-2 py-1 uppercase tracking-wide">{badgeText}</span>
-            ) : null}
-          </div>
+          {ranking ? (
+            <span className="absolute top-3 left-3 w-7 h-7 bg-ink/90 text-paper font-serif text-[13px] flex items-center justify-center rounded-full">{ranking}</span>
+          ) : badgeText ? (
+            <span className="absolute top-3 left-3 bg-white/95 text-cocoa text-[10px] font-semibold px-2.5 py-1 uppercase tracking-[0.12em]">{badgeText}</span>
+          ) : null}
+
           {hasDiscount && !outOfStock && (
-            <span className="absolute top-2 right-2 bg-gold text-ink text-[13px] font-poster px-2 py-0.5 leading-tight">−{discountPct}%</span>
+            <span className="absolute top-3 right-3 bg-wine text-white text-[11px] font-bold px-2 py-1">−{discountPct}%</span>
           )}
 
           {outOfStock && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-              <span className="text-ink font-extrabold text-[11px] uppercase tracking-widest bg-white border-2 border-ink px-4 py-1.5">Esgotado</span>
-            </div>
-          )}
-
-          {/* Quick add sobreposto */}
-          {productId && (
-            <div className="absolute bottom-2 right-2">
-              <AddToCartButton productId={productId} outOfStock={outOfStock} variant="mini" />
+            <div className="absolute inset-0 bg-paper/75 flex items-center justify-center">
+              <span className="text-ink font-semibold text-[11px] uppercase tracking-[0.2em] border border-ink px-4 py-1.5 bg-white/80">Esgotado</span>
             </div>
           )}
         </div>
       </Link>
 
       {/* Conteúdo */}
-      <div className="p-3 flex flex-col flex-1">
+      <div className="p-4 flex flex-col flex-1">
         <Link href={`/produtos/${slug}`}>
-          <h3 className="text-ink text-[13px] font-semibold leading-snug line-clamp-2 min-h-[2.4rem] group-hover:text-rose-brand transition-colors">
+          <h3 className="text-cocoa text-[14px] leading-snug line-clamp-2 min-h-[2.6rem] group-hover:text-wine transition-colors">
             {name}
           </h3>
         </Link>
 
-        <div className="mt-auto pt-2">
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="font-serif text-[25px] font-bold text-ink leading-none">{centsToBRL(priceCents)}</span>
           {hasDiscount && (
-            <div className="text-[12px] text-ink/40 line-through leading-none mb-0.5">{centsToBRL(compareAtPriceCents!)}</div>
+            <span className="text-[13px] text-clay line-through">{centsToBRL(compareAtPriceCents!)}</span>
           )}
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-poster text-[30px] text-rose-brand leading-none">{centsToBRL(priceCents)}</span>
-          </div>
-          <div className="text-[10.5px] font-bold text-ink/45 mt-1 uppercase tracking-wide">à vista no Pix</div>
         </div>
+
+        {productId ? (
+          <AddToCartButton productId={productId} outOfStock={outOfStock} />
+        ) : (
+          <Link
+            href={`/produtos/${slug}`}
+            className="mt-3 w-full h-11 border border-ink text-ink hover:bg-ink hover:text-paper text-[12px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center transition"
+          >
+            Ver produto
+          </Link>
+        )}
       </div>
     </div>
   );

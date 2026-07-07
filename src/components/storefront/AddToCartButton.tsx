@@ -135,7 +135,9 @@ export function AddToCartButton({
         handle();
       }}
       disabled={pending}
-      className="mt-2.5 w-full bg-rose-brand hover:bg-redDeep disabled:opacity-50 text-white h-10 rounded-md font-extrabold text-[12px] uppercase tracking-wider flex items-center justify-center gap-2 transition"
+      className={`mt-3 w-full h-11 border text-[12px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 transition disabled:opacity-50 ${
+        added ? "bg-olive border-olive text-white" : "border-ink text-ink hover:bg-ink hover:text-paper"
+      }`}
     >
       {pending ? (
         "..."
@@ -145,7 +147,7 @@ export function AddToCartButton({
         </>
       ) : (
         <>
-          <ShoppingBag size={14} strokeWidth={2.2} /> Adicionar
+          <ShoppingBag size={14} strokeWidth={2} /> Adicionar
         </>
       )}
     </button>

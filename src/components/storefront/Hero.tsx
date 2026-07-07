@@ -1,68 +1,68 @@
 import Link from "next/link";
-import { Search, Truck, Percent, Zap, Tag } from "lucide-react";
+import { ArrowRight, Percent } from "lucide-react";
+import { COMPANY } from "@/lib/company";
 
-// Hero comercial "busca-first": banner escuro, titulo poster, busca em
-// destaque + blocos-informacao. Composicao diferente do card unico.
+// Hero editorial premium: serifada elegante, respiro, vermelho como acento,
+// imagem (bloco chocolate) com um selo de atacado sutil.
 export function Hero() {
   return (
-    <section className="bg-ink text-white border-b-4 border-gold">
-      <div className="container-wide grid lg:grid-cols-12 gap-8 items-center py-8 lg:py-11">
-        {/* Coluna principal */}
+    <section className="bg-paper">
+      <div className="container-wide grid lg:grid-cols-12 gap-10 lg:gap-14 items-center py-14 lg:py-20">
+        {/* Texto */}
         <div className="lg:col-span-7">
-          <span className="inline-flex items-center gap-2 bg-gold text-ink text-[12px] font-extrabold uppercase tracking-wider px-3 py-1.5">
-            <Tag size={14} /> Atacado &amp; Varejo
+          <span className="text-[11px] font-semibold tracking-[0.26em] uppercase text-brass">
+            Distribuidora de doces &amp; confeitaria
           </span>
-
-          <h1 className="font-poster text-5xl sm:text-6xl lg:text-[76px] uppercase leading-[0.9] tracking-wide mt-4">
-            Abasteça pagando<br />
-            <span className="text-gold">preço de distribuidora</span>
+          <h1 className="font-serif text-[42px] sm:text-5xl lg:text-[58px] leading-[1.04] tracking-tight text-ink mt-4 text-balance">
+            O melhor da confeitaria,{" "}
+            <em className="italic text-wine">do balcão ao seu negócio.</em>
           </h1>
-
-          <p className="text-white/65 text-base lg:text-lg max-w-lg mt-4 font-medium">
-            Doces, embalagens e insumos com entrega rápida na região. Do balcão ao seu negócio.
+          <p className="text-[17px] text-cocoa/90 leading-relaxed max-w-xl mt-6">
+            Chocolates nobres, insumos, embalagens e tudo para produzir e vender mais — com preço de
+            atacado e a curadoria de quem entende do ramo.
           </p>
-
-          {/* Busca em destaque */}
-          <form action="/produtos" method="get" className="mt-6 flex max-w-xl bg-white rounded-xl overflow-hidden shadow-2xl">
-            <input
-              type="search"
-              name="q"
-              placeholder="O que você vai abastecer hoje?"
-              maxLength={100}
-              className="flex-1 px-5 h-14 text-ink placeholder-ink/40 text-[15px] focus:outline-none"
-            />
-            <button type="submit" className="bg-rose-brand hover:bg-redDeep text-white px-6 flex items-center gap-2 font-extrabold uppercase text-sm tracking-wide transition">
-              <Search size={18} strokeWidth={2.5} /> <span className="hidden sm:inline">Buscar</span>
-            </button>
-          </form>
-
-          <div className="flex flex-wrap items-center gap-2.5 mt-4">
-            <Link href="/produtos?ofertas=1" className="bg-white/10 hover:bg-white/20 px-4 h-9 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide transition">
-              <Zap size={14} className="text-gold" /> Ofertas
+          <div className="flex flex-wrap items-center gap-3.5 mt-8">
+            <Link
+              href="/produtos"
+              className="group inline-flex items-center gap-2 bg-wine hover:bg-[#8e201c] text-white text-[13px] font-semibold uppercase tracking-[0.05em] px-7 py-3.5 transition"
+            >
+              Explorar catálogo
+              <ArrowRight size={17} className="group-hover:translate-x-0.5 transition" />
             </Link>
-            <Link href="/produtos" className="bg-white/10 hover:bg-white/20 px-4 h-9 flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide transition">
-              Ver catálogo
+            <Link
+              href={`https://wa.me/${COMPANY.whatsapp}`}
+              target="_blank"
+              className="inline-flex items-center gap-2 border border-ink hover:bg-ink hover:text-paper text-ink text-[13px] font-semibold uppercase tracking-[0.05em] px-7 py-3.5 transition"
+            >
+              Falar no WhatsApp
             </Link>
+          </div>
+          <div className="flex flex-wrap gap-x-8 gap-y-2 mt-9 text-[13px] text-clay">
+            <span><b className="text-ink font-semibold">+3.000</b> produtos</span>
+            <span><b className="text-ink font-semibold">Entrega</b> na região</span>
+            <span><b className="text-ink font-semibold">Atacado</b> sem mínimo</span>
           </div>
         </div>
 
-        {/* Blocos-informação */}
-        <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
-          {[
-            { Icon: Percent, t: "Preço por quantidade", d: "O atacado entra sozinho no carrinho ao bater a quantidade." },
-            { Icon: Truck, t: "Entrega rápida", d: "Vale do Paraíba e Litoral Norte, no seu ritmo." },
-            { Icon: Zap, t: "Sem valor mínimo", d: "Mistura itens no mesmo pedido e pronto." },
-          ].map(({ Icon, t, d }) => (
-            <div key={t} className="bg-white/[0.06] border-l-4 border-gold p-4 flex gap-3">
-              <span className="w-10 h-10 shrink-0 bg-gold text-ink flex items-center justify-center">
-                <Icon size={20} strokeWidth={2.2} />
-              </span>
-              <div>
-                <div className="font-poster text-lg uppercase leading-none tracking-wide">{t}</div>
-                <div className="text-white/60 text-[12.5px] mt-1 leading-snug">{d}</div>
+        {/* Imagem editorial */}
+        <div className="lg:col-span-5">
+          <div
+            className="relative aspect-[1/1.05] overflow-hidden"
+            style={{
+              background:
+                "radial-gradient(120% 90% at 72% 16%, rgba(255,255,255,.24), transparent 55%), linear-gradient(155deg,#6B4326 0%, #2A1710 62%, #1c0d06 100%)",
+            }}
+          >
+            <div className="absolute left-6 right-6 bottom-6 bg-paper/96 border-l-[3px] border-brass p-5">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-wine">
+                <Percent size={14} /> Comprou mais, pagou menos
               </div>
+              <div className="font-serif text-[19px] text-ink mt-1.5 leading-snug">
+                Preço de atacado por quantidade
+              </div>
+              <p className="text-clay text-[12.5px] mt-1">O desconto entra automático no carrinho.</p>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

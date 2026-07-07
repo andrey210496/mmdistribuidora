@@ -66,14 +66,14 @@ export function CategoryNav({ items, dark = false }: { items: NavItem[]; dark?: 
   const overflow = items.slice(visibleCount);
 
   const linkClass = (active?: boolean) =>
-    `relative shrink-0 px-3.5 py-3 whitespace-nowrap text-[12.5px] font-extrabold uppercase tracking-wide transition ${
+    `relative shrink-0 px-3.5 py-3 whitespace-nowrap text-[13.5px] tracking-wide transition ${
       dark
         ? active
-          ? "text-gold"
-          : "text-white/85 hover:text-white hover:bg-white/10"
+          ? "text-gold font-extrabold uppercase"
+          : "text-white/85 hover:text-white hover:bg-white/10 font-extrabold uppercase"
         : active
-          ? "text-rose-brand"
-          : "text-cocoa hover:text-rose-brand hover:bg-cocoa/5"
+          ? "text-ink font-semibold"
+          : "text-clay hover:text-wine font-medium"
     }`;
 
   return (
@@ -102,7 +102,7 @@ export function CategoryNav({ items, dark = false }: { items: NavItem[]; dark?: 
           <Link key={item.label} href={item.href} className={linkClass(item.active)}>
             {item.label}
             {item.active && (
-              <span className={`absolute bottom-0 left-0 right-0 h-1 ${dark ? "bg-gold" : "bg-rose-brand"}`} />
+              <span className={`absolute left-1/2 -translate-x-1/2 bottom-1 h-0.5 w-5 ${dark ? "bg-gold" : "bg-wine"}`} />
             )}
           </Link>
         ))}

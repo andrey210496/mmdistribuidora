@@ -1,28 +1,28 @@
-import { Truck, Tag, Boxes, CreditCard, MessageCircle, Percent, Store } from "lucide-react";
+import { Truck, Tag, CreditCard, MessageCircle } from "lucide-react";
 
 const items = [
-  { Icon: Truck, t: "Entrega rápida na região" },
-  { Icon: Tag, t: "Atacado e varejo" },
-  { Icon: Percent, t: "Preço por quantidade" },
-  { Icon: Boxes, t: "+3.000 produtos" },
-  { Icon: CreditCard, t: "Pix, cartão e dinheiro" },
-  { Icon: Store, t: "Sem valor mínimo" },
-  { Icon: MessageCircle, t: "Atende no WhatsApp" },
+  { Icon: Truck, t: "Entrega na região", d: "Vale do Paraíba e Litoral Norte" },
+  { Icon: Tag, t: "Atacado sem mínimo", d: "Preço por quantidade, automático" },
+  { Icon: CreditCard, t: "Pague do seu jeito", d: "Pix, cartão ou dinheiro" },
+  { Icon: MessageCircle, t: "Atendimento humano", d: "Fale com quem entende do ramo" },
 ];
 
-// Ticker vermelho rolante — assinatura "atacadao", diferente do bloco de cards.
+// Faixa de confiança premium — discreta, com filetes e ícones em latão.
 export function BenefitsBar() {
-  const row = [...items, ...items];
   return (
-    <section className="bg-rose-brand text-white overflow-hidden select-none">
-      <div className="flex whitespace-nowrap anim-marquee hover:[animation-play-state:paused]">
-        {row.map(({ Icon, t }, i) => (
-          <span key={i} className="flex items-center gap-2 px-6 py-2.5 text-[13px] font-extrabold uppercase tracking-wide">
-            <Icon size={16} className="text-gold" strokeWidth={2.4} />
-            {t}
-            <span className="text-gold ml-4">◆</span>
-          </span>
-        ))}
+    <section className="bg-sand border-y border-line">
+      <div className="container-wide">
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-line">
+          {items.map(({ Icon, t, d }) => (
+            <div key={t} className="flex items-center gap-3.5 px-5 py-6">
+              <Icon size={22} strokeWidth={1.5} className="text-brass shrink-0" />
+              <div className="min-w-0">
+                <div className="font-serif text-[15px] text-ink leading-tight">{t}</div>
+                <div className="text-[12px] text-clay leading-snug mt-0.5">{d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

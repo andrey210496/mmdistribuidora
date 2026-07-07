@@ -18,10 +18,17 @@ export default {
         olive: "#a5aa66", // verde (sucesso)
         gold: "#f2b23e",
         // Comercial "atacadao": preto-tinta quente + cinzas de superficie
-        ink: "#17120e", // quase-preto (barras/rodape/preco)
+        ink: "#231a13", // marrom-quase-preto (texto/bandas premium)
         graphite: "#3b332c",
         smoke: "#f4f1ea", // cinza-creme claro (fundo de catalogo)
-        line: "#e7e1d6", // bordas discretas
+        line: "#ede6db", // bordas discretas
+        // Premium (vitrine editorial)
+        paper: "#fcfbf9", // fundo quente quase-branco
+        sand: "#f6f1e9", // creme suave (seções alternadas)
+        clay: "#8c7c6e", // neutro amadeirado (textos secundários)
+        wine: "#b62b25", // vermelho refinado (acento)
+        brass: "#b7893c", // dourado sóbrio (labels/detalhes)
+        espressoDark: "#1b130d", // rodapé
         // Aliases semânticos (marrons da identidade)
         brand: {
           DEFAULT: "#5a3214",
