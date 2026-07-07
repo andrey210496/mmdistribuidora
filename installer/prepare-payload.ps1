@@ -33,10 +33,14 @@ function Get-Cached($url, $file) {
   return $dest
 }
 
+# Extracao dos zips fora do OneDrive (%TEMP%) com pasta unica — o OneDrive/AV
+# trava o Remove-Item de arvores grandes dentro do projeto e abortava o build.
+$xroot = Join-Path $env:TEMP ("mmbuild_" + [guid]::NewGuid().ToString('N').Substring(0,8))
+New-Item -ItemType Directory -Force -Path $xroot | Out-Null
+
 # 1) Node portatil
 $nodeZip = Get-Cached $NODE_URL "node-v$NODE_VER-win-x64.zip"
-$tmpNode = Join-Path $dl "node_x"
-if (Test-Path $tmpNode) { Remove-Item $tmpNode -Recurse -Force }
+$tmpNode = Join-Path $xroot "node"
 Expand-Archive -Path $nodeZip -DestinationPath $tmpNode -Force
 $nodeInner = Get-ChildItem $tmpNode -Directory | Select-Object -First 1
 Copy-Item $nodeInner.FullName (Join-Path $payload "node") -Recurse -Force
@@ -44,8 +48,7 @@ Write-Host "==> Node pronto." -ForegroundColor Green
 
 # 2) PostgreSQL binarios (e prune do que nao usamos)
 $pgZip = Get-Cached $PG_URL "postgresql-$PG_VER-windows-x64-binaries.zip"
-$tmpPg = Join-Path $dl "pg_x"
-if (Test-Path $tmpPg) { Remove-Item $tmpPg -Recurse -Force }
+$tmpPg = Join-Path $xroot "pg"
 Expand-Archive -Path $pgZip -DestinationPath $tmpPg -Force
 $pgInner = Join-Path $tmpPg "pgsql"
 foreach ($d in @("pgAdmin 4","StackBuilder","doc","include","symbols")) {
@@ -87,6 +90,9 @@ Copy-Item (Join-Path $inst "runtime") (Join-Path $appOut "runtime") -Recurse -Fo
 URL=http://localhost:3000
 IconIndex=0
 "@ | Set-Content -Path (Join-Path $payload "MM Retaguarda.url") -Encoding ascii
+
+# limpeza do temp de extracao (fora do OneDrive; ignora locks)
+Remove-Item $xroot -Recurse -Force -ErrorAction SilentlyContinue
 
 # 7) resumo
 $size = "{0:N0} MB" -f ((Get-ChildItem $payload -Recurse | Measure-Object Length -Sum).Sum / 1MB)
