@@ -32,7 +32,8 @@ export const metadata = { robots: { index: false } };
 // area: undefined = sempre visível; "admin" = só super-admin; pdvOnly = só modo pdv
 const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin"; pdvOnly?: boolean }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, area: "dashboard" },
-  { href: "/admin/pdv", label: "PDV / Caixa", icon: Store, area: "pdv" },
+  // PDV e Conexão só existem no PDV-servidor instalado (modo pdv), não na gestão online.
+  { href: "/admin/pdv", label: "PDV / Caixa", icon: Store, area: "pdv", pdvOnly: true },
   { href: "/admin/conexao", label: "Conexão", icon: Cloud, area: "configuracoes", pdvOnly: true },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart, area: "pedidos" },
   { href: "/admin/produtos", label: "Produtos", icon: Package, area: "produtos" },

@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { IS_PDV } from "@/lib/mode";
 import { getOpenCashSession, getSessionReconciliation } from "@/lib/cash";
 import { getPdvShortcuts, getProductHotkeys } from "@/lib/settings";
 import { COMPANY } from "@/lib/company";
@@ -9,6 +11,8 @@ export const metadata = { title: "PDV / Caixa · Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function PdvPage() {
+  // O PDV só roda no PDV-servidor instalado (modo pdv). Na gestão online, fora.
+  if (!IS_PDV) redirect("/admin");
   await requireArea("pdv");
 
   const session = await getOpenCashSession();
