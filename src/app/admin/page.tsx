@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 import { hasArea, firstAllowedPath } from "@/lib/permissions";
+import { IS_PDV } from "@/lib/mode";
 import { getInventoryAlerts } from "@/lib/inventory";
 import {
   ShoppingCart,
@@ -19,6 +20,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const user = await requireAdmin();
+  // No PDV-servidor (modo pdv) a tela inicial é o caixa, não o dashboard de gestão.
+  if (IS_PDV) {
+    redirect("/admin/pdv");
+  }
   // Dashboard é uma área liberável. Quem não tem acesso vai para a primeira
   // área permitida (sem loop, pois firstAllowedPath nunca retorna /admin aqui).
   if (!hasArea(user, "dashboard")) {

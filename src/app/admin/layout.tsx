@@ -21,6 +21,7 @@ import { getAdminSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { hasArea, isSuperAdmin, firstAllowedPath, type AreaKey } from "@/lib/permissions";
 import { readInstalledUpdateStatus } from "@/lib/updates";
+import { IS_PDV, stationLabel } from "@/lib/mode";
 import { UpdateBanner } from "./_components/UpdateBanner";
 import { logoutAction } from "./login/actions";
 
@@ -43,6 +44,10 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: A
   { href: "/admin/colaboradores", label: "Colaboradores", icon: ShieldCheck, area: "admin" },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings, area: "configuracoes" },
 ];
+
+// No PDV-servidor (modo pdv) a barra lateral mostra só o essencial do caixa;
+// a gestão completa (produtos, relatórios, financeiro, etc.) fica no online.
+const PDV_AREAS: (AreaKey | "admin")[] = ["pdv", "pedidos", "clientes", "configuracoes"];
 
 export default async function AdminLayout({
   children,
@@ -83,13 +88,14 @@ export default async function AdminLayout({
               <img src="/logo.png" alt="MM Distribuidora" className="h-7 w-auto object-contain" />
             </span>
             <span className="text-[10px] tracking-[0.3em] uppercase text-cream/60 font-bold">
-              Admin
+              {IS_PDV ? stationLabel() : "Admin"}
             </span>
           </Link>
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {NAV.filter(({ area }) => {
+            if (IS_PDV && (!area || !PDV_AREAS.includes(area))) return false;
             if (!area) return true; // Dashboard
             if (area === "admin") return isSuperAdmin(user);
             return hasArea(user, area);

@@ -34,6 +34,13 @@ const envSchema = z.object({
   // ela empurra catálogo e de onde puxa pedidos.
   SYNC_TOKEN: z.string().optional().default(""),
   SYNC_REMOTE_URL: z.string().optional().default(""),
+
+  // Papel desta instância (F5). "online" = gestão + site na VPS (dono da
+  // verdade). "pdv" = PDV-servidor instalado na loja (offline-first, sincroniza
+  // com a gestão online). STATION_ID identifica a estação/caixa (usado nos
+  // números de venda e no sync p/ evitar colisão entre PDVs).
+  MM_MODE: z.enum(["online", "pdv"]).default("online"),
+  STATION_ID: z.string().optional().default(""),
 });
 
 const parsed = envSchema.safeParse(process.env);
