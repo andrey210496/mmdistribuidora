@@ -65,6 +65,16 @@ try {
     Write-Host "==> Gerando migrate.sql (diff desde a ultima publicacao)..." -ForegroundColor Cyan
     & npx prisma migrate diff --from-schema-datamodel $baseline --to-schema-datamodel prisma/schema.prisma --script 2>$null |
       Out-File -FilePath (Join-Path $stage "migrate.sql") -Encoding utf8
+    # Torna a migracao IDEMPOTENTE (IF NOT EXISTS): a base instalada pode ja ter
+    # parte das colunas/tabelas (o schema.sql do .exe evolui a cada build), entao
+    # o diff nao pode falhar ao "re-adicionar" algo que ja existe.
+    $migFile = Join-Path $stage "migrate.sql"
+    $mig = Get-Content $migFile -Raw
+    $mig = $mig -replace 'ADD COLUMN "', 'ADD COLUMN IF NOT EXISTS "'
+    $mig = $mig -replace 'CREATE TABLE "', 'CREATE TABLE IF NOT EXISTS "'
+    $mig = $mig -replace 'CREATE UNIQUE INDEX "', 'CREATE UNIQUE INDEX IF NOT EXISTS "'
+    $mig = $mig -replace 'CREATE INDEX "', 'CREATE INDEX IF NOT EXISTS "'
+    [System.IO.File]::WriteAllText($migFile, $mig, (New-Object System.Text.UTF8Encoding($false)))
   } else {
     Write-Host "==> Sem baseline: migrate.sql vazio (base instalada ja tem este schema)." -ForegroundColor Yellow
     Set-Content -Path (Join-Path $stage "migrate.sql") -Value "" -Encoding ascii
