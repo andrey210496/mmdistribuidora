@@ -14,7 +14,9 @@ export function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function generateOrderNumber(seq: number): string {
+// prefix distingue a origem: "DE" (online) ou "PDV<STATION>" (cada caixa),
+// para que vendas offline de estacoes diferentes nunca colidam ao subir (F5.3).
+export function generateOrderNumber(seq: number, prefix = "DE"): string {
   const year = new Date().getFullYear();
-  return `DE-${year}-${String(seq).padStart(5, "0")}`;
+  return `${prefix}-${year}-${String(seq).padStart(5, "0")}`;
 }

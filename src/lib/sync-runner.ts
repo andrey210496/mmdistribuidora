@@ -2,6 +2,7 @@ import { prisma } from "./prisma";
 import { env } from "./env";
 import { IS_PDV } from "./mode";
 import { applyPullPayload, type PullPayload } from "./sync-pull";
+import { buildSalesToPush, type SalesPushResponse } from "./sync-sales";
 
 // Header do sync (mesmo valor de SYNC_HEADER em ./sync). Definido aqui p/ o
 // runner nao importar ./sync (que puxa node:crypto e quebra o bundle de edge
@@ -24,9 +25,11 @@ let started = false;
 // Status exposto p/ o indicador online/offline do PDV (F5.4).
 export const syncStatus = {
   lastPullAt: null as string | null,
+  lastPushAt: null as string | null,
   lastError: null as string | null,
   online: false,
   running: false,
+  pendingSales: 0,
 };
 
 async function getCursor(): Promise<string | null> {
@@ -41,7 +44,54 @@ async function setCursor(v: string): Promise<void> {
   });
 }
 
-async function pullOnce(): Promise<void> {
+// SOBE as vendas do balcao (F5.3): empurra a fila e reconcilia o estoque com o
+// valor autoritativo devolvido pela gestao online.
+async function pushOnce(remote: string): Promise<void> {
+  const sales = await buildSalesToPush(50);
+  syncStatus.pendingSales = sales.length;
+  if (sales.length === 0) return;
+
+  const res = await fetch(`${remote}/api/sync/sales`, {
+    method: "POST",
+    headers: { [SYNC_HEADER]: env.SYNC_TOKEN, "content-type": "application/json" },
+    body: JSON.stringify({ sales }),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`push HTTP ${res.status}`);
+  const data = (await res.json()) as SalesPushResponse;
+  if (!data.ok) throw new Error("push nao ok");
+
+  if (data.acked.length > 0) {
+    await prisma.order.updateMany({
+      where: { id: { in: data.acked } },
+      data: { syncedToOnline: true, syncedOnlineAt: new Date() },
+    });
+  }
+  // reconcilia o estoque local com o autoritativo do online
+  for (const s of data.stock) {
+    await prisma.product.update({ where: { id: s.productId }, data: { stock: s.stock } }).catch(() => {});
+  }
+  syncStatus.lastPushAt = new Date().toISOString();
+  const remaining = await prisma.order.count({ where: { channel: "PDV", syncedToOnline: false } });
+  syncStatus.pendingSales = remaining;
+}
+
+// BAIXA o que mudou na gestao online desde o ultimo cursor.
+async function doPull(remote: string): Promise<void> {
+  const since = await getCursor();
+  const url = `${remote}/api/sync/pull${since ? `?since=${encodeURIComponent(since)}` : ""}`;
+  const res = await fetch(url, { headers: { [SYNC_HEADER]: env.SYNC_TOKEN }, cache: "no-store" });
+  if (!res.ok) throw new Error(`pull HTTP ${res.status}`);
+  const data = (await res.json()) as { ok: boolean } & PullPayload;
+  if (!data.ok) throw new Error("pull nao ok");
+  await applyPullPayload(data);
+  await setCursor(data.now);
+  syncStatus.lastPullAt = new Date().toISOString();
+}
+
+// Um ciclo: SOBE as vendas primeiro (p/ o estoque autoritativo ja refletir) e
+// depois BAIXA o catalogo/precos/etc. Tolerante a offline.
+async function syncTick(): Promise<void> {
   if (syncStatus.running) return;
   const remote = (env.SYNC_REMOTE_URL || "").replace(/\/+$/, "");
   if (!remote || !env.SYNC_TOKEN) {
@@ -50,18 +100,8 @@ async function pullOnce(): Promise<void> {
   }
   syncStatus.running = true;
   try {
-    const since = await getCursor();
-    const url = `${remote}/api/sync/pull${since ? `?since=${encodeURIComponent(since)}` : ""}`;
-    const res = await fetch(url, {
-      headers: { [SYNC_HEADER]: env.SYNC_TOKEN },
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = (await res.json()) as { ok: boolean } & PullPayload;
-    if (!data.ok) throw new Error("resposta nao ok");
-    await applyPullPayload(data);
-    await setCursor(data.now);
-    syncStatus.lastPullAt = new Date().toISOString();
+    await pushOnce(remote);
+    await doPull(remote);
     syncStatus.lastError = null;
     syncStatus.online = true;
   } catch (e) {
@@ -78,7 +118,7 @@ export function startSyncRunner(): void {
   started = true;
   const ms = env.SYNC_INTERVAL_SECONDS * 1000;
   // Primeira passada logo apos subir; depois no intervalo configurado.
-  void pullOnce();
-  setInterval(() => void pullOnce(), ms);
+  void syncTick();
+  setInterval(() => void syncTick(), ms);
   console.log(`[sync] runner do PDV iniciado (a cada ${env.SYNC_INTERVAL_SECONDS}s)`);
 }

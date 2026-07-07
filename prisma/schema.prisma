@@ -293,6 +293,11 @@ model Order {
   syncedToLocal Boolean   @default(false)
   syncedAt      DateTime?
 
+  // F5.3 (PDV->online): no PDV local, marca as vendas ja enviadas para a
+  // gestao online. Na gestao online nao e usado (o runner so roda no PDV).
+  syncedToOnline Boolean   @default(false)
+  syncedOnlineAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -311,6 +316,7 @@ model Order {
   @@index([createdAt])
   @@index([pickToken])
   @@index([syncedToLocal])
+  @@index([syncedToOnline])
 }
 
 model OrderItem {
