@@ -10,7 +10,8 @@ import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { brlToCents } from "@/lib/money";
 import { generateOrderNumber } from "@/lib/utils";
-import { IS_PDV, STATION_ID } from "@/lib/mode";
+import { IS_PDV } from "@/lib/mode";
+import { getStationId } from "@/lib/pdv-config";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
 import { getOpenCashSession, getOrCreateWalkInCustomer } from "@/lib/cash";
@@ -454,7 +455,7 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
 
   // No PDV local, o numero leva o prefixo da estacao p/ nunca colidir entre
   // caixas ao subir para a gestao online (F5.3).
-  const orderPrefix = IS_PDV ? `PDV${STATION_ID || "0"}` : "DE";
+  const orderPrefix = IS_PDV ? `PDV${(await getStationId()) || "0"}` : "DE";
   let created: { id: string; orderNumber: string } | null = null;
   for (let attempt = 0; attempt < 5; attempt++) {
     const orderCount = await prisma.order.count();

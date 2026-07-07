@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { env } from "./env";
 import { IS_PDV } from "./mode";
+import { getPdvConfig } from "./pdv-config";
 import { applyPullPayload, type PullPayload } from "./sync-pull";
 import { buildSalesToPush, type SalesPushResponse } from "./sync-sales";
 
@@ -66,14 +67,14 @@ async function persistStatus(): Promise<void> {
 
 // SOBE as vendas do balcao (F5.3): empurra a fila e reconcilia o estoque com o
 // valor autoritativo devolvido pela gestao online.
-async function pushOnce(remote: string): Promise<void> {
+async function pushOnce(remote: string, token: string): Promise<void> {
   const sales = await buildSalesToPush(50);
   syncStatus.pendingSales = sales.length;
   if (sales.length === 0) return;
 
   const res = await fetch(`${remote}/api/sync/sales`, {
     method: "POST",
-    headers: { [SYNC_HEADER]: env.SYNC_TOKEN, "content-type": "application/json" },
+    headers: { [SYNC_HEADER]: token, "content-type": "application/json" },
     body: JSON.stringify({ sales }),
     cache: "no-store",
   });
@@ -97,10 +98,10 @@ async function pushOnce(remote: string): Promise<void> {
 }
 
 // BAIXA o que mudou na gestao online desde o ultimo cursor.
-async function doPull(remote: string): Promise<void> {
+async function doPull(remote: string, token: string): Promise<void> {
   const since = await getCursor();
   const url = `${remote}/api/sync/pull${since ? `?since=${encodeURIComponent(since)}` : ""}`;
-  const res = await fetch(url, { headers: { [SYNC_HEADER]: env.SYNC_TOKEN }, cache: "no-store" });
+  const res = await fetch(url, { headers: { [SYNC_HEADER]: token }, cache: "no-store" });
   if (!res.ok) throw new Error(`pull HTTP ${res.status}`);
   const data = (await res.json()) as { ok: boolean } & PullPayload;
   if (!data.ok) throw new Error("pull nao ok");
@@ -113,15 +114,17 @@ async function doPull(remote: string): Promise<void> {
 // depois BAIXA o catalogo/precos/etc. Tolerante a offline.
 async function syncTick(): Promise<void> {
   if (syncStatus.running) return;
-  const remote = (env.SYNC_REMOTE_URL || "").replace(/\/+$/, "");
-  if (!remote || !env.SYNC_TOKEN) {
-    syncStatus.lastError = "sync nao configurado (SYNC_REMOTE_URL/SYNC_TOKEN)";
+  const cfg = await getPdvConfig();
+  if (!cfg.remoteUrl || !cfg.syncToken) {
+    syncStatus.online = false;
+    syncStatus.lastError = "PDV nao conectado a gestao (configure em Conexao)";
+    await persistStatus();
     return;
   }
   syncStatus.running = true;
   try {
-    await pushOnce(remote);
-    await doPull(remote);
+    await pushOnce(cfg.remoteUrl, cfg.syncToken);
+    await doPull(cfg.remoteUrl, cfg.syncToken);
     syncStatus.lastError = null;
     syncStatus.online = true;
   } catch (e) {

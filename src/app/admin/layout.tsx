@@ -15,6 +15,7 @@ import {
   LayoutList,
   Settings,
   ShieldCheck,
+  Cloud,
   LogOut,
 } from "lucide-react";
 import { getAdminSession } from "@/lib/session";
@@ -28,10 +29,11 @@ import { logoutAction } from "./login/actions";
 
 export const metadata = { robots: { index: false } };
 
-// area: undefined = sempre visível; "admin" = só super-admin
-const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin" }[] = [
+// area: undefined = sempre visível; "admin" = só super-admin; pdvOnly = só modo pdv
+const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin"; pdvOnly?: boolean }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, area: "dashboard" },
   { href: "/admin/pdv", label: "PDV / Caixa", icon: Store, area: "pdv" },
+  { href: "/admin/conexao", label: "Conexão", icon: Cloud, area: "configuracoes", pdvOnly: true },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart, area: "pedidos" },
   { href: "/admin/produtos", label: "Produtos", icon: Package, area: "produtos" },
   { href: "/admin/categorias", label: "Categorias", icon: Tag, area: "categorias" },
@@ -95,7 +97,8 @@ export default async function AdminLayout({
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV.filter(({ area }) => {
+          {NAV.filter(({ area, pdvOnly }) => {
+            if (pdvOnly && !IS_PDV) return false;
             if (IS_PDV && (!area || !PDV_AREAS.includes(area))) return false;
             if (!area) return true; // Dashboard
             if (area === "admin") return isSuperAdmin(user);
