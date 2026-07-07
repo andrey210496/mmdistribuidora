@@ -56,11 +56,14 @@ try {
 
   # 3) schema.sql (referencia p/ fresh) + migrate.sql (diff desde a ultima release)
   Push-Location $root
-  & npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script |
+  # O aviso de deprecacao do Prisma vai pro stderr do node (neto do npx) e com
+  # ErrorActionPreference=Stop viraria NativeCommandError fatal. Continue = so imprime.
+  $eaPrev = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+  & npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script 2>$null |
     Out-File -FilePath (Join-Path $stage "schema.sql") -Encoding utf8
   if (Test-Path $baseline) {
     Write-Host "==> Gerando migrate.sql (diff desde a ultima publicacao)..." -ForegroundColor Cyan
-    & npx prisma migrate diff --from-schema-datamodel $baseline --to-schema-datamodel prisma/schema.prisma --script |
+    & npx prisma migrate diff --from-schema-datamodel $baseline --to-schema-datamodel prisma/schema.prisma --script 2>$null |
       Out-File -FilePath (Join-Path $stage "migrate.sql") -Encoding utf8
   } else {
     Write-Host "==> Sem baseline: migrate.sql vazio (base instalada ja tem este schema)." -ForegroundColor Yellow

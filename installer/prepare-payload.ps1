@@ -80,8 +80,15 @@ Remove-Item (Join-Path $appOut ".env") -Force -ErrorAction SilentlyContinue
 # 5) schema.sql (do Prisma) + scripts de runtime
 Write-Host "==> Gerando schema.sql..." -ForegroundColor Cyan
 Push-Location $root
-& npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script | Out-File -FilePath (Join-Path $appOut "schema.sql") -Encoding utf8
+# O Prisma 6 imprime um aviso de deprecacao (package.json#prisma) no stderr; o
+# node roda como neto do npx, entao o 2>$null nao pega, e com
+# ErrorActionPreference=Stop esse stderr vira NativeCommandError e aborta.
+# Trocamos para Continue so nesta chamada: o aviso apenas imprime, nao mata.
+$eaPrev = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+& npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script 2>$null | Out-File -FilePath (Join-Path $appOut "schema.sql") -Encoding utf8
+$ErrorActionPreference = $eaPrev
 Pop-Location
+if (-not (Test-Path (Join-Path $appOut "schema.sql")) -or (Get-Item (Join-Path $appOut "schema.sql")).Length -eq 0) { throw "schema.sql vazio (prisma migrate diff falhou)" }
 Copy-Item (Join-Path $inst "runtime") (Join-Path $appOut "runtime") -Recurse -Force
 
 # VERSION: versao embutida (usada pelo auto-update p/ comparar com o canal)
