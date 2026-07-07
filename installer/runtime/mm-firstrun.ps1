@@ -111,6 +111,12 @@ if ($fresh -or -not (Test-Path $envPath)) {
   $sessionSecret = (New-Secret 48) + (New-Secret 16)
   $uploadsUrl = $uploads -replace '\\','/'
   $q = [char]34
+  # Estacao default UNICA por maquina (nome do PC enxuto) p/ dois PDVs nao
+  # nascerem como a mesma estacao e colidirem os numeros de venda. O operador
+  # pode trocar por um numero curto (1, 2, ...) na tela 'Conectar a gestao'.
+  $station = ($env:COMPUTERNAME -replace '[^A-Za-z0-9]','')
+  if (-not $station) { $station = "PDV" + (New-Secret 3) }
+  if ($station.Length -gt 10) { $station = $station.Substring(0,10) }
   $envLines = @(
     "DATABASE_URL=$q$dbUrl$q",
     "SESSION_SECRET=$q$sessionSecret$q",
@@ -126,7 +132,7 @@ if ($fresh -or -not (Test-Path $envPath)) {
     "# dentro do proprio sistema e fica salva no banco. Os campos abaixo sao so",
     "# fallback e normalmente ficam vazios.",
     "MM_MODE=${q}pdv$q",
-    "STATION_ID=${q}1$q",
+    "STATION_ID=$q$station$q",
     "SYNC_TOKEN=${q}$q",
     "SYNC_REMOTE_URL=${q}$q"
   )

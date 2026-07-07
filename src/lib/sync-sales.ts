@@ -153,16 +153,24 @@ export async function applySalesPush(sales: SyncSale[]): Promise<SalesPushRespon
   const touchedProducts = new Set<string>();
 
   for (const s of sales) {
-    const existing = await prisma.order.findUnique({ where: { id: s.id }, select: { id: true } });
-    if (existing) {
-      acked.push(s.id); // ja aplicada -> so confirma
-      continue;
-    }
-    const canceled = s.status === "CANCELED";
-    const paidAt = s.paidAt ? new Date(s.paidAt) : null;
-    const createdAt = new Date(s.createdAt);
+    try {
+      const existing = await prisma.order.findUnique({ where: { id: s.id }, select: { id: true } });
+      if (existing) {
+        acked.push(s.id); // ja aplicada -> so confirma
+        continue;
+      }
+      const canceled = s.status === "CANCELED";
+      const paidAt = s.paidAt ? new Date(s.paidAt) : null;
+      const createdAt = new Date(s.createdAt);
 
-    await prisma.$transaction(async (tx) => {
+      // Dedup do numero: se OUTRA estacao ja usou este orderNumber (id diferente),
+      // acrescenta um sufixo p/ nao violar o unique e travar a fila. Acontece quando
+      // dois PDVs ficaram com a mesma estacao.
+      let orderNumber = s.orderNumber;
+      const clash = await prisma.order.findUnique({ where: { orderNumber }, select: { id: true } });
+      if (clash && clash.id !== s.id) orderNumber = `${s.orderNumber}-${s.id.slice(-4)}`;
+
+      await prisma.$transaction(async (tx) => {
       // 1) garante o cliente (pode ter sido criado offline no PDV)
       await tx.customer.upsert({
         where: { id: s.customer.id },
@@ -190,7 +198,7 @@ export async function applySalesPush(sales: SyncSale[]): Promise<SalesPushRespon
       await tx.order.create({
         data: {
           id: s.id,
-          orderNumber: s.orderNumber,
+          orderNumber,
           customerId: s.customerId,
           channel: "PDV",
           status: s.status,
@@ -284,8 +292,12 @@ export async function applySalesPush(sales: SyncSale[]): Promise<SalesPushRespon
       }
     });
 
-    acked.push(s.id);
-    if (!canceled) for (const it of s.items) touchedProducts.add(it.productId);
+      acked.push(s.id);
+      if (!canceled) for (const it of s.items) touchedProducts.add(it.productId);
+    } catch (e) {
+      // Uma venda com problema NAO pode travar a fila inteira nem o pull.
+      console.error(`[sync-sales] falha ao aplicar venda ${s.id} (${s.orderNumber}):`, e);
+    }
   }
 
   const stock =

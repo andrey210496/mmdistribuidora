@@ -122,18 +122,26 @@ async function syncTick(): Promise<void> {
     return;
   }
   syncStatus.running = true;
+  // Push e pull SAO INDEPENDENTES: se o envio das vendas falhar, o catalogo/estoque
+  // ainda desce (e vice-versa). Uma falha nao trava a outra ponta.
+  let anyOk = false;
+  let err: unknown = null;
   try {
     await pushOnce(cfg.remoteUrl, cfg.syncToken);
-    await doPull(cfg.remoteUrl, cfg.syncToken);
-    syncStatus.lastError = null;
-    syncStatus.online = true;
+    anyOk = true;
   } catch (e) {
-    syncStatus.online = false;
-    syncStatus.lastError = e instanceof Error ? e.message : String(e);
-  } finally {
-    syncStatus.running = false;
-    await persistStatus();
+    err = e;
   }
+  try {
+    await doPull(cfg.remoteUrl, cfg.syncToken);
+    anyOk = true;
+  } catch (e) {
+    err = e;
+  }
+  syncStatus.online = anyOk;
+  syncStatus.lastError = err ? (err instanceof Error ? err.message : String(err)) : null;
+  syncStatus.running = false;
+  await persistStatus();
 }
 
 /** Inicia o loop de sync (idempotente; so no modo pdv). */
