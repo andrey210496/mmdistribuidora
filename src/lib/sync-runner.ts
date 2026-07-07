@@ -2,13 +2,16 @@ import { prisma } from "./prisma";
 import { env } from "./env";
 import { IS_PDV } from "./mode";
 import { getPdvConfig } from "./pdv-config";
+import { APP_VERSION } from "./version";
 import { applyPullPayload, type PullPayload } from "./sync-pull";
 import { buildSalesToPush, type SalesPushResponse } from "./sync-sales";
 
-// Header do sync (mesmo valor de SYNC_HEADER em ./sync). Definido aqui p/ o
-// runner nao importar ./sync (que puxa node:crypto e quebra o bundle de edge
-// do instrumentation.ts).
+// Headers do sync (mesmos valores de ./sync). Definidos aqui p/ o runner nao
+// importar ./sync (que puxa node:crypto e quebra o bundle de edge do
+// instrumentation.ts).
 const SYNC_HEADER = "x-sync-token";
+const STATION_HEADER = "x-station";
+const APP_VERSION_HEADER = "x-app-version";
 
 // ============================================================
 // Runner de sync do PDV (F5.2) — loop in-process. Ver [[mm-arquitetura-f5]]
@@ -67,14 +70,20 @@ async function persistStatus(): Promise<void> {
 
 // SOBE as vendas do balcao (F5.3): empurra a fila e reconcilia o estoque com o
 // valor autoritativo devolvido pela gestao online.
-async function pushOnce(remote: string, token: string): Promise<void> {
+async function pushOnce(remote: string, token: string, station: string): Promise<void> {
   const sales = await buildSalesToPush(50);
   syncStatus.pendingSales = sales.length;
+  // envia o heartbeat mesmo sem vendas (via GET do pull); aqui so quando ha fila
   if (sales.length === 0) return;
 
   const res = await fetch(`${remote}/api/sync/sales`, {
     method: "POST",
-    headers: { [SYNC_HEADER]: token, "content-type": "application/json" },
+    headers: {
+      [SYNC_HEADER]: token,
+      [STATION_HEADER]: station,
+      [APP_VERSION_HEADER]: APP_VERSION,
+      "content-type": "application/json",
+    },
     body: JSON.stringify({ sales }),
     cache: "no-store",
   });
@@ -98,10 +107,13 @@ async function pushOnce(remote: string, token: string): Promise<void> {
 }
 
 // BAIXA o que mudou na gestao online desde o ultimo cursor.
-async function doPull(remote: string, token: string): Promise<void> {
+async function doPull(remote: string, token: string, station: string): Promise<void> {
   const since = await getCursor();
   const url = `${remote}/api/sync/pull${since ? `?since=${encodeURIComponent(since)}` : ""}`;
-  const res = await fetch(url, { headers: { [SYNC_HEADER]: token }, cache: "no-store" });
+  const res = await fetch(url, {
+    headers: { [SYNC_HEADER]: token, [STATION_HEADER]: station, [APP_VERSION_HEADER]: APP_VERSION },
+    cache: "no-store",
+  });
   if (!res.ok) throw new Error(`pull HTTP ${res.status}`);
   const data = (await res.json()) as { ok: boolean } & PullPayload;
   if (!data.ok) throw new Error("pull nao ok");
@@ -127,13 +139,13 @@ async function syncTick(): Promise<void> {
   let anyOk = false;
   let err: unknown = null;
   try {
-    await pushOnce(cfg.remoteUrl, cfg.syncToken);
+    await pushOnce(cfg.remoteUrl, cfg.syncToken, cfg.stationId);
     anyOk = true;
   } catch (e) {
     err = e;
   }
   try {
-    await doPull(cfg.remoteUrl, cfg.syncToken);
+    await doPull(cfg.remoteUrl, cfg.syncToken, cfg.stationId);
     anyOk = true;
   } catch (e) {
     err = e;

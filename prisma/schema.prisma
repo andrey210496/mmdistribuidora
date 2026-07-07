@@ -298,6 +298,10 @@ model Order {
   syncedToOnline Boolean   @default(false)
   syncedOnlineAt DateTime?
 
+  // F5.6: estacao/caixa que originou a venda (ex.: "1", "CX1", nome do PC).
+  // Alimenta o relatorio de vendas por PDV. Vazio para vendas ONLINE.
+  station        String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -317,6 +321,22 @@ model Order {
   @@index([pickToken])
   @@index([syncedToLocal])
   @@index([syncedToOnline])
+  @@index([station])
+}
+
+// ============================================================
+// PDVs instalados (F5.6) — registro/heartbeat de cada caixa.
+// O PDV se anuncia a cada sync (header x-station); a gestao mostra a lista
+// com "ultima vez visto" (online/offline) e a versao instalada.
+// ============================================================
+model PdvStation {
+  id         String   @id // codigo da estacao (STATION_ID)
+  name       String? // rotulo amigavel (opcional)
+  appVersion String? // versao do app instalada
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([lastSeenAt])
 }
 
 model OrderItem {

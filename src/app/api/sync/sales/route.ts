@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isSyncAuthorized } from "@/lib/sync";
+import { isSyncAuthorized, touchStation } from "@/lib/sync";
 import { applySalesPush, type SalesPushRequest } from "@/lib/sync-sales";
 
 export const runtime = "nodejs";
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
   if (!isSyncAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+  await touchStation(req);
   let body: SalesPushRequest;
   try {
     body = (await req.json()) as SalesPushRequest;

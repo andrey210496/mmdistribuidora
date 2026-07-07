@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isSyncAuthorized } from "@/lib/sync";
+import { isSyncAuthorized, touchStation } from "@/lib/sync";
 import { buildPullPayload } from "@/lib/sync-pull";
 
 export const runtime = "nodejs";
@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   if (!isSyncAuthorized(req)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
+  await touchStation(req);
   const sinceRaw = req.nextUrl.searchParams.get("since");
   let since: Date | null = null;
   if (sinceRaw) {

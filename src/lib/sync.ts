@@ -1,5 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { env } from "./env";
+import { prisma } from "./prisma";
 
 // ============================================================
 // Sincronização vitrine online <-> retaguarda instalada (F4.2)
@@ -12,6 +13,25 @@ import { env } from "./env";
 // ============================================================
 
 export const SYNC_HEADER = "x-sync-token";
+export const STATION_HEADER = "x-station";
+export const APP_VERSION_HEADER = "x-app-version";
+
+// F5.6: registra/atualiza o PDV que chamou (heartbeat). Chamado pelas rotas de
+// sync na gestao online. Nunca quebra o sync se falhar.
+export async function touchStation(req: Request): Promise<void> {
+  const station = (req.headers.get(STATION_HEADER) ?? "").trim();
+  if (!station) return;
+  const appVersion = (req.headers.get(APP_VERSION_HEADER) ?? "").trim() || null;
+  try {
+    await prisma.pdvStation.upsert({
+      where: { id: station },
+      update: appVersion ? { lastSeenAt: new Date(), appVersion } : { lastSeenAt: new Date() },
+      create: { id: station, appVersion },
+    });
+  } catch {
+    /* heartbeat e best-effort */
+  }
+}
 
 /** Compara o token recebido com o SYNC_TOKEN (tempo constante). */
 export function isSyncAuthorized(req: Request): boolean {

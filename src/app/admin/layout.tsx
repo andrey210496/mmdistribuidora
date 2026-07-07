@@ -16,6 +16,7 @@ import {
   Settings,
   ShieldCheck,
   Cloud,
+  Monitor,
   LogOut,
 } from "lucide-react";
 import { getAdminSession } from "@/lib/session";
@@ -44,6 +45,7 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: A
   { href: "/admin/entradas", label: "Entrada de Mercadoria", icon: PackagePlus, area: "entradas" },
   { href: "/admin/financeiro", label: "Financeiro", icon: CreditCard, area: "financeiro" },
   { href: "/admin/relatorios", label: "Relatórios", icon: BarChart3, area: "relatorios" },
+  { href: "/admin/pdvs", label: "PDVs / Caixas", icon: Monitor, area: "relatorios" },
   { href: "/admin/anuncios", label: "Anúncios", icon: Megaphone, area: "anuncios" },
   { href: "/admin/colaboradores", label: "Colaboradores", icon: ShieldCheck, area: "admin" },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings, area: "configuracoes" },

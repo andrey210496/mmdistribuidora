@@ -61,6 +61,7 @@ export type SyncSale = {
   amountReceivedCents: number | null;
   changeCents: number | null;
   fiscal: boolean;
+  station: string | null;
   canceledAt: string | null;
   canceledReason: string | null;
   createdAt: string;
@@ -118,6 +119,7 @@ export async function buildSalesToPush(limit = 50): Promise<SyncSale[]> {
     amountReceivedCents: o.amountReceivedCents,
     changeCents: o.changeCents,
     fiscal: o.fiscal,
+    station: o.station,
     canceledAt: o.canceledAt ? o.canceledAt.toISOString() : null,
     canceledReason: o.canceledReason,
     createdAt: o.createdAt.toISOString(),
@@ -223,6 +225,7 @@ export async function applySalesPush(sales: SyncSale[]): Promise<SalesPushRespon
           amountReceivedCents: s.amountReceivedCents,
           changeCents: s.changeCents,
           fiscal: s.fiscal,
+          station: s.station,
           canceledAt: s.canceledAt ? new Date(s.canceledAt) : null,
           canceledReason: s.canceledReason,
           syncedToLocal: true, // ja veio do balcao; nao precisa "baixar" de novo
