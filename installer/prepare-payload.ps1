@@ -84,6 +84,11 @@ Push-Location $root
 Pop-Location
 Copy-Item (Join-Path $inst "runtime") (Join-Path $appOut "runtime") -Recurse -Force
 
+# VERSION: versao embutida (usada pelo auto-update p/ comparar com o canal)
+$appVersion = ((Get-Content (Join-Path $root "package.json") -Raw | ConvertFrom-Json).version)
+Set-Content -Path (Join-Path $appOut "VERSION") -Value $appVersion -NoNewline -Encoding ascii
+Write-Host "==> VERSION do app: $appVersion" -ForegroundColor DarkGray
+
 # 6) atalho da Area de Trabalho (abre o navegador no sistema)
 @"
 [InternetShortcut]

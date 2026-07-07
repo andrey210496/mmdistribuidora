@@ -20,6 +20,8 @@ import {
 import { getAdminSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { hasArea, isSuperAdmin, firstAllowedPath, type AreaKey } from "@/lib/permissions";
+import { readInstalledUpdateStatus } from "@/lib/updates";
+import { UpdateBanner } from "./_components/UpdateBanner";
 import { logoutAction } from "./login/actions";
 
 export const metadata = { robots: { index: false } };
@@ -66,6 +68,9 @@ export default async function AdminLayout({
     session.destroy();
     redirect("/admin/login");
   }
+
+  // Só aparece na retaguarda INSTALADA (Windows) e para o ADMIN.
+  const updateStatus = isSuperAdmin(user) ? await readInstalledUpdateStatus() : null;
 
   return (
     <div className="min-h-screen flex bg-cream/30">
@@ -121,7 +126,16 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main */}
-      <main className="flex-1 min-w-0">{children}</main>
+      <main className="flex-1 min-w-0">
+        {updateStatus?.available && updateStatus.latestVersion ? (
+          <UpdateBanner
+            currentVersion={updateStatus.currentVersion}
+            latestVersion={updateStatus.latestVersion}
+            notes={updateStatus.notes}
+          />
+        ) : null}
+        {children}
+      </main>
     </div>
   );
 }

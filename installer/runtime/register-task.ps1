@@ -4,12 +4,13 @@
 #   "MM Retaguarda Backup" -> mm-backup.ps1 diario
 #   "MM Retaguarda Sync"   -> mm-sync.ps1 a cada N minutos (vitrine online)
 # ============================================================
-param([string]$BackupTime = "23:30", [int]$SyncMinutes = 5)
+param([string]$BackupTime = "23:30", [int]$SyncMinutes = 5, [string]$UpdateCheckTime = "05:00")
 $ErrorActionPreference = "Stop"
 
 $runPs    = Join-Path $PSScriptRoot "mm-run.ps1"
 $backupPs = Join-Path $PSScriptRoot "mm-backup.ps1"
 $syncPs   = Join-Path $PSScriptRoot "mm-sync.ps1"
+$updatePs = Join-Path $PSScriptRoot "mm-update.ps1"
 $pwsh = "powershell.exe"
 
 $runAction = New-ScheduledTaskAction -Execute $pwsh `
@@ -33,5 +34,17 @@ $syncTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) `
 $syncSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskName "MM Retaguarda Sync" -Action $syncAction -Trigger $syncTrigger `
   -Settings $syncSettings -RunLevel Highest -User "SYSTEM" -Force | Out-Null
+
+# Verificacao de atualizacao: diaria (so consulta o canal e grava o status; NAO
+# aplica sozinho -> o admin ve o aviso e clica "Atualizar agora").
+$updAction = New-ScheduledTaskAction -Execute $pwsh `
+  -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$updatePs`" -Check"
+$updDaily = New-ScheduledTaskTrigger -Daily -At $UpdateCheckTime
+# tambem checa ~2 min apos o boot, p/ o aviso aparecer sem esperar o dia seguinte
+$updBoot = New-ScheduledTaskTrigger -AtStartup
+$updBoot.Delay = "PT2M"
+$updSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName "MM Retaguarda Update" -Action $updAction -Trigger @($updDaily,$updBoot) `
+  -Settings $updSettings -RunLevel Highest -User "SYSTEM" -Force | Out-Null
 
 Write-Host "==> Tarefas agendadas registradas." -ForegroundColor Green

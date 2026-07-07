@@ -1,0 +1,699 @@
+// ============================================================
+// Doce Encanto — Schema do Banco
+// Princípio: backend é fonte da verdade. Snapshots são gravados
+// nos pedidos para que mudanças futuras de preço/produto não
+// reescrevam o histórico.
+// ============================================================
+
+generator client {
+  provider      = "prisma-client-js"
+  // Inclui binário pra Linux (deploy) além do nativo (Windows dev)
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USUÁRIOS DO SISTEMA (admin, separador, financeiro)
+// ============================================================
+enum UserRole {
+  ADMIN // acesso total (super-admin); gerencia colaboradores
+  STAFF // colaborador com acesso limitado às áreas liberadas
+  PICKER // legado
+  FINANCE // legado
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String
+  passwordHash        String
+  role                UserRole  @default(ADMIN)
+  // Cargo (rótulo livre: "Gerente", "Separação", "Financeiro"...)
+  jobTitle            String?
+  // Áreas liberadas para STAFF (ex.: ["pedidos","produtos"]). ADMIN ignora (vê tudo).
+  permissions         String[]  @default([])
+  active              Boolean   @default(true)
+  mustChangePassword  Boolean   @default(false)
+  lastLoginAt         DateTime?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+// ============================================================
+// CLIENTES DA LOJA
+// ============================================================
+model Customer {
+  id               String    @id @default(cuid())
+  name             String
+  // E-mail é OPCIONAL: o cadastro rápido usa apenas nome+telefone+CPF+senha.
+  email            String?   @unique
+  cpfCnpj          String?   @unique
+  phone            String?
+  passwordHash     String?
+  emailVerified    DateTime?
+  // Atacado: cliente marcado como atacadista paga o preço de atacado.
+  isWholesale      Boolean   @default(false)
+  // Crediário: limite de fiado em centavos (0 = sem crédito liberado).
+  creditLimitCents Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  addresses          Address[]
+  orders             Order[]
+  creditTransactions CreditTransaction[]
+  productPrices      CustomerProductPrice[]
+
+  @@index([email])
+  @@index([cpfCnpj])
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  customerId   String
+  label        String  @default("Principal")
+  zip          String
+  street       String
+  number       String
+  complement   String?
+  neighborhood String
+  city         String
+  state        String  @db.Char(2)
+  isDefault    Boolean @default(false)
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+// ============================================================
+// CATÁLOGO
+// ============================================================
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id                  String    @id @default(cuid())
+  name                String
+  slug                String    @unique
+  description         String    @db.Text
+  sku                 String    @unique
+  // Código de barras (EAN/UPC) — bipar no PDV adiciona o item ao carrinho.
+  barcode             String?   @unique
+  priceCents          Int
+  compareAtPriceCents Int?
+  // Preço por forma de pagamento (opcionais; vazio = usa priceCents).
+  // Ex.: dinheiro mais barato, cartão mais caro.
+  priceCashCents      Int?
+  pricePixCents       Int?
+  priceCardCents      Int?
+  // Atacado: preço especial a partir de uma quantidade mínima.
+  wholesalePriceCents Int?
+  wholesaleMinQty     Int       @default(0)
+  // Custo do produto (uso interno) — base para margem/lucro no financeiro.
+  costCents           Int?      @default(0)
+  stock               Int       @default(0)
+  // Unidade de medida de venda (UN, KG, CX, FD, PCT...).
+  unit                String    @default("UN")
+  weightGrams         Int       @default(0)
+  // Fiscal (base p/ NFC-e/NF-e — emissão depende de provedor + certificado).
+  ncm                 String?
+  cest                String?
+  origem              String    @default("0") // origem da mercadoria (0-8)
+  taxGroupId          String?
+  active              Boolean   @default(true)
+  featured            Boolean   @default(false)
+  // Validade do produto (uso interno). Alimenta a seção "Destaque do Clube",
+  // que destaca produtos com validade próxima — sem revelar isso ao cliente.
+  expiryDate          DateTime?
+  categoryId          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  category        Category?              @relation(fields: [categoryId], references: [id])
+  taxGroup        TaxGroup?              @relation(fields: [taxGroupId], references: [id])
+  images          ProductImage[]
+  orderItems      OrderItem[]
+  customerPrices  CustomerProductPrice[]
+  stockEntryItems StockEntryItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([active])
+  @@index([expiryDate])
+  @@index([barcode])
+}
+
+// Preço FIXO de um produto para um cliente específico (clientes "fortes" têm
+// preço próprio em cada item). Tem precedência sobre os demais preços.
+model CustomerProductPrice {
+  id         String   @id @default(cuid())
+  customerId String
+  productId  String
+  priceCents Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// ============================================================
+// PEDIDOS
+// ============================================================
+enum OrderStatus {
+  PENDING_PAYMENT // criado, aguardando confirmação do pagamento
+  PAID // pago, fila de separação
+  SEPARATING // em separação no estoque
+  READY_TO_SHIP // separado, aguardando envio
+  SHIPPED // enviado
+  DELIVERED // entregue
+  CANCELED // cancelado
+  REFUNDED // estornado
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  STORE_CREDIT // pagamento via crediário/fiado
+}
+
+// Canal de origem do pedido: loja online (e-commerce) ou balcão (PDV).
+enum OrderChannel {
+  ONLINE
+  PDV
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  REFUNDED
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String      @unique // Ex: DE-2025-0001
+  customerId  String
+  status      OrderStatus @default(PENDING_PAYMENT)
+
+  // Canal de origem: ONLINE (e-commerce) ou PDV (venda no balcão)
+  channel OrderChannel @default(ONLINE)
+
+  // Valores em centavos (Int) — nunca usar Float pra dinheiro
+  subtotalCents Int
+  discountCents Int @default(0)
+  shippingCents Int @default(0)
+  totalCents    Int
+
+  // Snapshot do endereço (não usa FK para preservar histórico)
+  shippingZip          String
+  shippingStreet       String
+  shippingNumber       String
+  shippingComplement   String?
+  shippingNeighborhood String
+  shippingCity         String
+  shippingState        String  @db.Char(2)
+
+  // Snapshot do cliente (idem)
+  customerNameSnapshot  String
+  customerEmailSnapshot String
+  customerCpfSnapshot   String?
+  customerPhoneSnapshot String?
+
+  // Pagamento (via Stripe Checkout — método só é conhecido após o pagamento)
+  paymentMethod         PaymentMethod?
+  paymentStatus         PaymentStatus  @default(PENDING)
+  stripeSessionId       String?        @unique
+  stripePaymentIntentId String?
+  paymentUrl            String?        @db.Text
+  paidAt                DateTime?
+  // Valor efetivamente devolvido no estorno (total ou parcial). Em centavos.
+  refundedCents         Int?
+  // Quando o estorno foi aplicado (para métricas de perda por período).
+  refundedAt            DateTime?
+
+  // Token único para QR de separação (não usar id sequencial)
+  pickToken String @unique @default(cuid())
+
+  // Nota fiscal
+  nfIssuedAt DateTime?
+  nfNumber   String?
+  nfPdfPath  String?
+
+  // Observações internas
+  internalNotes String? @db.Text
+
+  // PDV / Caixa — vínculo com a sessão de caixa e troco do dinheiro
+  cashSessionId       String?
+  amountReceivedCents Int? // valor em dinheiro recebido (para cálculo de troco)
+  changeCents         Int? // troco devolvido
+  // Venda no balcão emitida como cupom FISCAL (NFC-e) ou não-fiscal.
+  fiscal              Boolean   @default(false)
+  // Cancelamento (PDV/admin)
+  canceledAt          DateTime?
+  canceledReason      String?
+
+  // Sincronizacao vitrine->retaguarda: marca pedidos online ja baixados
+  // pela retaguarda instalada (F4.2). Na instancia online fica false ate
+  // a retaguarda puxar e dar ack.
+  syncedToLocal Boolean   @default(false)
+  syncedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  customer           Customer             @relation(fields: [customerId], references: [id])
+  items              OrderItem[]
+  statusHistory      OrderStatusHistory[]
+  financialEntry     FinancialEntry?
+  payments           OrderPayment[]
+  creditTransactions CreditTransaction[]
+  cashSession        CashRegisterSession? @relation(fields: [cashSessionId], references: [id])
+
+  @@index([customerId])
+  @@index([status])
+  @@index([channel])
+  @@index([cashSessionId])
+  @@index([createdAt])
+  @@index([pickToken])
+  @@index([syncedToLocal])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+
+  // Snapshot — preço/nome travados no momento do pedido
+  productNameSnapshot String
+  productSkuSnapshot  String
+  unitPriceCents      Int
+  quantity            Int
+  totalCents          Int
+  // Snapshot do CUSTO na venda (unitário e total) — base do lucro/CMV
+  unitCostCents       Int     @default(0)
+  costTotalCents      Int     @default(0)
+  // Observação do item (ex.: "3 fardos", "1 fardo = 10 pacotes") — entrega.
+  note                String?
+
+  // Controle de separação
+  picked   Boolean   @default(false)
+  pickedAt DateTime?
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id         String       @id @default(cuid())
+  orderId    String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  changedBy  String? // userId (null = sistema)
+  notes      String?
+  createdAt  DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ============================================================
+// PDV / CAIXA — sessão de caixa, sangria/suprimento e pagamento misto
+// ============================================================
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+
+model CashRegisterSession {
+  id                String            @id @default(cuid())
+  status            CashSessionStatus @default(OPEN)
+  // Fundo de troco no momento da abertura
+  openingFloatCents Int               @default(0)
+  // Conferência no fechamento: esperado (sistema) × contado (gaveta)
+  expectedCashCents Int?
+  countedCashCents  Int?
+  differenceCents   Int? // contado − esperado (negativo = falta)
+  openedBy          String // userId
+  closedBy          String? // userId
+  openedAt          DateTime          @default(now())
+  closedAt          DateTime?
+  notes             String?           @db.Text
+
+  movements CashMovement[]
+  orders    Order[]
+
+  @@index([status])
+  @@index([openedAt])
+}
+
+enum CashMovementType {
+  SANGRIA // retirada de dinheiro do caixa
+  SUPRIMENTO // entrada de dinheiro no caixa
+}
+
+model CashMovement {
+  id            String           @id @default(cuid())
+  cashSessionId String
+  type          CashMovementType
+  amountCents   Int
+  reason        String?
+  createdBy     String // userId
+  createdAt     DateTime         @default(now())
+
+  cashSession CashRegisterSession @relation(fields: [cashSessionId], references: [id], onDelete: Cascade)
+
+  @@index([cashSessionId])
+}
+
+// Pagamento misto: um pedido pode ter vários pagamentos (ex.: parte PIX, parte dinheiro).
+model OrderPayment {
+  id          String        @id @default(cuid())
+  orderId     String
+  method      PaymentMethod
+  amountCents Int
+  createdAt   DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ============================================================
+// CREDIÁRIO / FIADO — lançamentos de crédito do cliente
+// Saldo devedor = soma(CHARGE) − soma(PAYMENT).
+// ============================================================
+enum CreditTxType {
+  CHARGE // venda no fiado (aumenta o que o cliente deve)
+  PAYMENT // recebimento (abate o que o cliente deve)
+}
+
+model CreditTransaction {
+  id          String         @id @default(cuid())
+  customerId  String
+  type        CreditTxType
+  amountCents Int
+  orderId     String? // venda que originou o CHARGE
+  method      PaymentMethod? // forma de recebimento (no PAYMENT)
+  notes       String?
+  createdBy   String? // userId (null = sistema)
+  createdAt   DateTime       @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order    Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([customerId])
+  @@index([orderId])
+  @@index([type])
+}
+
+// ============================================================
+// ANÚNCIOS / POP-UPS — campanhas
+// Frequência e limite de exibições são controlados no cliente
+// (localStorage), mas o conteúdo e as regras vêm do admin.
+// ============================================================
+enum AnnouncementPlacement {
+  STOREFRONT // qualquer página da loja (pop-up)
+  HOME // só a página inicial
+  CATALOG // catálogo / página de produto
+  CHECKOUT // ao tentar finalizar a compra (interstitial)
+}
+
+enum AnnouncementAudience {
+  ALL // todos os visitantes
+  NON_MEMBERS // só quem NÃO é membro do clube
+  MEMBERS // só membros do clube
+}
+
+model Announcement {
+  id             String                @id @default(cuid())
+  title          String
+  body           String                @db.Text
+  imageUrl       String?
+  ctaText        String?
+  ctaHref        String?               @default("/clube")
+  active         Boolean               @default(true)
+  // Onde e para quem aparece
+  placement      AnnouncementPlacement @default(STOREFRONT)
+  audience       AnnouncementAudience  @default(ALL)
+  // Regras de exibição (pop-up passivo)
+  frequencyHours Int                   @default(24) // intervalo mínimo entre exibições p/ o mesmo visitante
+  maxDisplays    Int                   @default(3) // nº máximo de vezes que aparece p/ o mesmo visitante
+  delaySeconds   Int                   @default(4) // atraso antes de abrir o pop-up
+  priority       Int                   @default(0) // maior aparece primeiro
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  @@index([active])
+  @@index([placement, active])
+}
+
+// ============================================================
+// SEÇÕES DA HOME — configuráveis pelo admin (ordem + regra)
+// Os produtos exibidos são selecionados automaticamente pela regra do tipo.
+// ============================================================
+enum HomeSectionType {
+  BEST_SELLERS // Mais vendidos: inteligência baseada em vendas pagas
+  NEW_ARRIVALS // Acabou de chegar: novidades por data de cadastro
+  BEST_OFFERS // Ofertas: maior desconto sobre o preço cheio
+  FEATURED // Em destaque: marcados manualmente (featured)
+}
+
+model HomeSection {
+  id              String          @id @default(cuid())
+  type            HomeSectionType
+  title           String
+  subtitle        String?
+  enabled         Boolean         @default(true)
+  sortOrder       Int             @default(0)
+  productLimit    Int             @default(10)
+  // Config específica por tipo:
+  expiryDays      Int             @default(30) // CLUB_NEAR_EXPIRY: validade dentro de N dias
+  salesWindowDays Int             @default(90) // BEST_SELLERS: janela de análise (0 = todo período)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([enabled, sortOrder])
+}
+
+// ============================================================
+// FISCAL — grupos tributários (base para NFC-e/NF-e)
+// ============================================================
+model TaxGroup {
+  id           String   @id @default(cuid())
+  name         String
+  cfop         String? // ex.: 5102
+  // Simples Nacional usa CSOSN; regime normal usa CST.
+  csosn        String?
+  cst          String?
+  origem       String   @default("0")
+  // Alíquota de ICMS em centésimos de % (ex.: 1800 = 18,00%).
+  icmsAliquota Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  products Product[]
+
+  @@index([active])
+}
+
+// ============================================================
+// COMPRAS / ESTOQUE — fornecedores e entrada de mercadoria
+// ============================================================
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  cnpjCpf   String?
+  phone     String?
+  email     String?
+  notes     String?  @db.Text
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockEntries StockEntry[]
+
+  @@index([name])
+  @@index([cnpjCpf])
+}
+
+enum StockEntrySource {
+  XML // importada do XML da NF-e
+  MANUAL // lançada à mão
+}
+
+enum StockEntryStatus {
+  PENDING // rascunho/conferência (não mexeu no estoque)
+  CONFIRMED // confirmada (estoque/custo atualizados)
+  CANCELED
+}
+
+model StockEntry {
+  id                   String           @id @default(cuid())
+  source               StockEntrySource @default(MANUAL)
+  status               StockEntryStatus @default(PENDING)
+  supplierId           String?
+  supplierNameSnapshot String?
+  // Dados da NF-e (quando XML)
+  accessKey            String?          @unique // chave de 44 dígitos
+  number               String?
+  series               String?
+  issuedAt             DateTime?
+  totalCents           Int              @default(0)
+  notes                String?          @db.Text
+  createdBy            String? // userId
+  createdAt            DateTime         @default(now())
+  confirmedAt          DateTime?
+
+  supplier Supplier?        @relation(fields: [supplierId], references: [id])
+  items    StockEntryItem[]
+
+  @@index([status])
+  @@index([supplierId])
+  @@index([createdAt])
+}
+
+model StockEntryItem {
+  id            String  @id @default(cuid())
+  stockEntryId  String
+  productId     String? // casado com um produto do catálogo (ou nulo até casar)
+  description   String
+  ean           String?
+  ncm           String?
+  quantity      Int // quantidade da nota
+  unitCostCents Int     @default(0)
+  totalCents    Int     @default(0)
+  // Fator de conversão p/ o estoque (ex.: 1 fardo = 10 unidades → fator 10).
+  stockFactor   Int     @default(1)
+
+  stockEntry StockEntry @relation(fields: [stockEntryId], references: [id], onDelete: Cascade)
+  product    Product?   @relation(fields: [productId], references: [id])
+
+  @@index([stockEntryId])
+  @@index([productId])
+}
+
+// ============================================================
+// FINANCEIRO
+// ============================================================
+enum FinancialEntryType {
+  RECEIVABLE // a receber
+  PAYABLE // a pagar
+}
+
+enum FinancialEntryStatus {
+  OPEN
+  PAID
+  OVERDUE
+  CANCELED
+  REFUNDED
+}
+
+model FinancialEntry {
+  id          String               @id @default(cuid())
+  type        FinancialEntryType
+  status      FinancialEntryStatus @default(OPEN)
+  category    String // ex: "venda", "frete", "fornecedor"
+  description String
+  amountCents Int
+  dueDate     DateTime
+  paidAt      DateTime?
+  orderId     String?              @unique
+  notes       String?              @db.Text
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([type, status])
+  @@index([dueDate])
+}
+
+// ============================================================
+// WEBHOOK (Stripe) — idempotência
+// ============================================================
+model WebhookEvent {
+  id          String    @id @default(cuid())
+  provider    String    @default("stripe")
+  eventId     String    @unique // id do evento no provedor
+  eventType   String
+  payload     Json
+  receivedAt  DateTime  @default(now())
+  processedAt DateTime?
+  error       String?
+
+  @@index([eventType])
+}
+
+// ============================================================
+// AUDITORIA — quem fez o quê
+// ============================================================
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String // ex: "order.status.changed", "user.login"
+  entityType String?
+  entityId   String?
+  beforeJson Json?
+  afterJson  Json?
+  ip         String?
+  userAgent  String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ============================================================
+// CONFIGURAÇÕES — chave/valor
+// ============================================================
+model Setting {
+  key       String   @id
+  value     String   @db.Text
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
