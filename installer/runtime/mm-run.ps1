@@ -70,11 +70,16 @@ if ($ip) { Write-Host "    Terminais da rede:  http://$ip`:$($env:PORT)" -Foregr
 # mm-update.ps1 por process.cwd(); sem isso o caminho fica errado e o update nao dispara.
 Set-Location $appDir
 
-# Log do servidor Node (stdout+stderr) em app.log — antes NAO havia log nenhum.
-# CRITICO: o Next escreve no stderr; com ErrorActionPreference=Stop + redirecionamento
-# o PowerShell trata isso como erro terminante e MATA o mm-run (o app nem sobe).
-# Continue deixa o node rodar normal e so grava no log.
-$ErrorActionPreference = "Continue"
-$appLog = Join-Path $logs "app.log"
-if ((Test-Path $appLog) -and ((Get-Item $appLog).Length -gt 5MB)) { Remove-Item $appLog -Force -ErrorAction SilentlyContinue }
-& $node (Join-Path $appDir "server.js") *>> $appLog
+# Sobe o Node via Start-Process com stdout/stderr redirecionados p/ ARQUIVOS
+# (app.log / app-err.log). Motivo: `& node ... *>> log` com o stderr do Next fazia
+# o PowerShell matar o mm-run (o app nem subia). Start-Process nao roteia a saida
+# nativa pelos streams do PS -> sem esse problema, e ainda da log limpo. -PassThru
+# + WaitForExit mantem o mm-run vivo (a tarefa fica no ar com o node).
+$outLog = Join-Path $logs "app.log"
+$errLog = Join-Path $logs "app-err.log"
+foreach ($f in @($outLog, $errLog)) {
+  if ((Test-Path $f) -and ((Get-Item $f).Length -gt 5MB)) { Remove-Item $f -Force -ErrorAction SilentlyContinue }
+}
+$proc = Start-Process -FilePath $node -ArgumentList "`"$(Join-Path $appDir 'server.js')`"" `
+  -NoNewWindow -PassThru -RedirectStandardOutput $outLog -RedirectStandardError $errLog
+$proc.WaitForExit()
