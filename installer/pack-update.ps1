@@ -94,13 +94,29 @@ try {
   $sizeMB = "{0:N0} MB" -f ((Get-Item $zip).Length / 1MB)
   Write-Host "    Pacote: $zip ($sizeMB)" -ForegroundColor DarkGray
 
-  # 5) publica na vitrine online
-  Write-Host "==> Enviando para $RemoteUrl ..." -ForegroundColor Cyan
+  # 5) publica na vitrine online EM PEDACOS (< 10MB cada) — o proxy/Next corta o
+  #    corpo em ~10MB, entao 34MB de uma vez chegavam truncados. O servidor
+  #    anexa os chunks e finaliza no ultimo.
+  Write-Host "==> Enviando $file em pedacos para $RemoteUrl ..." -ForegroundColor Cyan
   $notesB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($Notes))
-  $headers = @{ "x-sync-token" = $Token; "x-app-version" = $version; "x-file-name" = $file; "x-notes" = $notesB64 }
-  $resp = Invoke-RestMethod -Uri "$RemoteUrl/api/updates/publish" -Method Post -Headers $headers `
-            -InFile $zip -ContentType "application/octet-stream" -TimeoutSec 600
-  if (-not $resp.ok) { throw "publish recusado: $($resp | ConvertTo-Json -Compress)" }
+  $bytes = [System.IO.File]::ReadAllBytes($zip)
+  $chunkSize = 8MB
+  $total = [Math]::Ceiling($bytes.Length / $chunkSize)
+  $resp = $null
+  for ($i = 0; $i -lt $total; $i++) {
+    $start = $i * $chunkSize
+    $len = [Math]::Min($chunkSize, $bytes.Length - $start)
+    $chunk = New-Object byte[] $len
+    [Array]::Copy($bytes, $start, $chunk, 0, $len)
+    $headers = @{
+      "x-sync-token" = $Token; "x-app-version" = $version; "x-file-name" = $file;
+      "x-notes" = $notesB64; "x-chunk-index" = "$i"; "x-chunk-total" = "$total"
+    }
+    $resp = Invoke-RestMethod -Uri "$RemoteUrl/api/updates/publish" -Method Post -Headers $headers `
+              -Body $chunk -ContentType "application/octet-stream" -TimeoutSec 300
+    if (-not $resp.ok) { throw "publish recusado no chunk ${i}: $($resp | ConvertTo-Json -Compress)" }
+    Write-Host ("    chunk {0}/{1} ok" -f ($i + 1), $total) -ForegroundColor DarkGray
+  }
   Write-Host "==> Publicado! versao $($resp.version), sha256 $($resp.sha256.Substring(0,12))..." -ForegroundColor Green
 
   # 6) avanca o baseline (proximo diff parte deste schema)
