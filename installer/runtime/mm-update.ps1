@@ -89,7 +89,13 @@ if ($dbUrl -match 'postgresql://postgres:([^@]+)@127\.0\.0\.1:(\d+)/([^?]+)') {
 function Get-Setting($key) {
   if (-not $dbPassE) { return "" }
   $env:PGPASSWORD = $dbPassE
-  $v = & "$pgbin\psql.exe" -h 127.0.0.1 -p $dbPortE -U postgres -w -d $dbNameE -tAc "SELECT value FROM ""Setting"" WHERE key='$key'" 2>$null
+  # A query vai num ARQUIVO: passar "Setting" (case-sensitive) direto no -c faz o
+  # PowerShell comer as aspas ao invocar o psql.exe, e o Postgres vira 'setting'
+  # (minusculo) -> "relation setting does not exist". Com -f o SQL fica intacto.
+  $qf = Join-Path $env:TEMP ("mmq_" + [guid]::NewGuid().ToString('N').Substring(0,8) + ".sql")
+  Set-Content -Path $qf -Value ('SELECT value FROM "Setting" WHERE key=' + "'$key';") -Encoding ascii
+  $v = & "$pgbin\psql.exe" -h 127.0.0.1 -p $dbPortE -U postgres -w -d $dbNameE -tA -f $qf 2>$null
+  Remove-Item $qf -Force -ErrorAction SilentlyContinue
   return (($v | Out-String).Trim())
 }
 $dbRemote = Get-Setting "pdv:remoteUrl"
