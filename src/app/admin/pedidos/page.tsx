@@ -158,6 +158,11 @@ export default async function AdminPedidosPage({
                             Balcão
                           </span>
                         )}
+                        {o.soldByName && (
+                          <div className="font-sans font-normal text-[11px] text-cocoa/55 mt-0.5">
+                            Operador: {o.soldByName}
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-3 text-cocoa">
                         <div className="font-medium">{o.customerNameSnapshot}</div>
