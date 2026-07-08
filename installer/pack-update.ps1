@@ -70,10 +70,11 @@ try {
     # o diff nao pode falhar ao "re-adicionar" algo que ja existe.
     $migFile = Join-Path $stage "migrate.sql"
     $mig = Get-Content $migFile -Raw
-    $mig = $mig -replace 'ADD COLUMN "', 'ADD COLUMN IF NOT EXISTS "'
-    $mig = $mig -replace 'CREATE TABLE "', 'CREATE TABLE IF NOT EXISTS "'
-    $mig = $mig -replace 'CREATE UNIQUE INDEX "', 'CREATE UNIQUE INDEX IF NOT EXISTS "'
-    $mig = $mig -replace 'CREATE INDEX "', 'CREATE INDEX IF NOT EXISTS "'
+    # \s+ tolera o espacamento do Prisma (ex.: 'ADD COLUMN     "x"').
+    $mig = $mig -replace 'ADD COLUMN\s+"', 'ADD COLUMN IF NOT EXISTS "'
+    $mig = $mig -replace 'CREATE TABLE\s+"', 'CREATE TABLE IF NOT EXISTS "'
+    $mig = $mig -replace 'CREATE UNIQUE INDEX\s+"', 'CREATE UNIQUE INDEX IF NOT EXISTS "'
+    $mig = $mig -replace 'CREATE INDEX\s+"', 'CREATE INDEX IF NOT EXISTS "'
     [System.IO.File]::WriteAllText($migFile, $mig, (New-Object System.Text.UTF8Encoding($false)))
   } else {
     Write-Host "==> Sem baseline: migrate.sql vazio (base instalada ja tem este schema)." -ForegroundColor Yellow
