@@ -8,7 +8,11 @@
 ; ============================================================
 
 #define MyAppName "MM Retaguarda"
-#define MyAppVersion "1.0.0"
+; A versao vem do build.ps1 (/DMyAppVersion=<versao do package.json>).
+; Default abaixo so vale se rodar o ISCC direto, sem passar a versao.
+#ifndef MyAppVersion
+  #define MyAppVersion "0.0.0"
+#endif
 #define MyAppPublisher "MM Distribuidora"
 
 [Setup]

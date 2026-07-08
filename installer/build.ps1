@@ -38,9 +38,10 @@ if (-not (Test-Path (Join-Path $inst "payload\app\server.js"))) {
   throw "payload incompleto (rode sem -SkipPayload)"
 }
 
-# 2) compila
-Write-Host "==> Compilando instalador..." -ForegroundColor Cyan
-& $iscc (Join-Path $inst "mm-retaguarda.iss")
+# 2) compila (passa a versao real do app p/ o instalador exibir a versao certa)
+$appVersion = ((Get-Content (Join-Path $inst "..\package.json") -Raw | ConvertFrom-Json).version)
+Write-Host "==> Compilando instalador (versao $appVersion)..." -ForegroundColor Cyan
+& $iscc "/DMyAppVersion=$appVersion" (Join-Path $inst "mm-retaguarda.iss")
 if ($LASTEXITCODE -ne 0) { throw "ISCC falhou" }
 
 $exe = Join-Path $inst "output\MM-Retaguarda-Setup.exe"
