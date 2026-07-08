@@ -69,4 +69,9 @@ if ($ip) { Write-Host "    Terminais da rede:  http://$ip`:$($env:PORT)" -Foregr
 # CWD no diretorio do app: o server action do botao "Atualizar agora" resolve o
 # mm-update.ps1 por process.cwd(); sem isso o caminho fica errado e o update nao dispara.
 Set-Location $appDir
-& $node (Join-Path $appDir "server.js")
+
+# Log do servidor Node (stdout+stderr) em app.log — antes NAO havia log nenhum,
+# o que impedia diagnosticar erros de servidor. Reseta se passar de 5MB.
+$appLog = Join-Path $logs "app.log"
+if ((Test-Path $appLog) -and ((Get-Item $appLog).Length -gt 5MB)) { Remove-Item $appLog -Force -ErrorAction SilentlyContinue }
+& $node (Join-Path $appDir "server.js") *>> $appLog

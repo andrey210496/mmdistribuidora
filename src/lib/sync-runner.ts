@@ -126,40 +126,62 @@ async function doPull(remote: string, token: string, station: string): Promise<v
 // depois BAIXA o catalogo/precos/etc. Tolerante a offline.
 async function syncTick(): Promise<void> {
   if (syncStatus.running) return;
-  const cfg = await getPdvConfig();
-  if (!cfg.remoteUrl || !cfg.syncToken) {
-    syncStatus.online = false;
-    syncStatus.lastError = "PDV nao conectado a gestao (configure em Conexao)";
-    await persistStatus();
-    return;
-  }
   syncStatus.running = true;
-  // Push e pull SAO INDEPENDENTES: se o envio das vendas falhar, o catalogo/estoque
-  // ainda desce (e vice-versa). Uma falha nao trava a outra ponta.
-  let anyOk = false;
-  let err: unknown = null;
+  // TUDO dentro de try/catch/finally: qualquer erro aqui (getPdvConfig,
+  // persistStatus, etc.) NAO pode virar unhandled rejection e derrubar o app.
   try {
-    await pushOnce(cfg.remoteUrl, cfg.syncToken, cfg.stationId);
-    anyOk = true;
+    const cfg = await getPdvConfig();
+    if (!cfg.remoteUrl || !cfg.syncToken) {
+      syncStatus.online = false;
+      syncStatus.lastError = "PDV nao conectado a gestao (configure em Conexao)";
+      return;
+    }
+    // Push e pull SAO INDEPENDENTES: se o envio das vendas falhar, o catalogo/estoque
+    // ainda desce (e vice-versa). Uma falha nao trava a outra ponta.
+    let anyOk = false;
+    let err: unknown = null;
+    try {
+      await pushOnce(cfg.remoteUrl, cfg.syncToken, cfg.stationId);
+      anyOk = true;
+    } catch (e) {
+      err = e;
+    }
+    try {
+      await doPull(cfg.remoteUrl, cfg.syncToken, cfg.stationId);
+      anyOk = true;
+    } catch (e) {
+      err = e;
+    }
+    syncStatus.online = anyOk;
+    syncStatus.lastError = err ? (err instanceof Error ? err.message : String(err)) : null;
   } catch (e) {
-    err = e;
+    syncStatus.online = false;
+    syncStatus.lastError = e instanceof Error ? e.message : String(e);
+  } finally {
+    syncStatus.running = false;
+    try {
+      await persistStatus();
+    } catch {
+      /* nem o status pode derrubar o loop */
+    }
   }
-  try {
-    await doPull(cfg.remoteUrl, cfg.syncToken, cfg.stationId);
-    anyOk = true;
-  } catch (e) {
-    err = e;
-  }
-  syncStatus.online = anyOk;
-  syncStatus.lastError = err ? (err instanceof Error ? err.message : String(err)) : null;
-  syncStatus.running = false;
-  await persistStatus();
 }
 
 /** Inicia o loop de sync (idempotente; so no modo pdv). */
 export function startSyncRunner(): void {
   if (started || !IS_PDV) return;
   started = true;
+
+  // Rede de seguranca: um PDV (caixa) NAO pode cair por causa de um erro de
+  // fundo. Sem estes handlers, uma promise rejeitada em qualquer lugar derruba
+  // o Node 20 -> o app fica inacessivel ate a tarefa reiniciar.
+  process.on("unhandledRejection", (reason) => {
+    console.error("[app] unhandledRejection (ignorado p/ manter o caixa no ar):", reason);
+  });
+  process.on("uncaughtException", (err) => {
+    console.error("[app] uncaughtException (ignorado p/ manter o caixa no ar):", err);
+  });
+
   const ms = env.SYNC_INTERVAL_SECONDS * 1000;
   // Primeira passada logo apos subir; depois no intervalo configurado.
   void syncTick();
