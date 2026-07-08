@@ -66,4 +66,7 @@ $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
 Write-Host "==> MM Retaguarda: http://localhost:$($env:PORT)" -ForegroundColor Green
 if ($ip) { Write-Host "    Terminais da rede:  http://$ip`:$($env:PORT)" -ForegroundColor Green }
 
+# CWD no diretorio do app: o server action do botao "Atualizar agora" resolve o
+# mm-update.ps1 por process.cwd(); sem isso o caminho fica errado e o update nao dispara.
+Set-Location $appDir
 & $node (Join-Path $appDir "server.js")
