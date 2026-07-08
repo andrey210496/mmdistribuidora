@@ -298,9 +298,13 @@ model Order {
   syncedToOnline Boolean   @default(false)
   syncedOnlineAt DateTime?
 
-  // F5.6: estacao/caixa que originou a venda (ex.: "1", "CX1", nome do PC).
-  // Alimenta o relatorio de vendas por PDV. Vazio para vendas ONLINE.
+  // F5.6: estacao/caixa (maquina) que originou a venda. Vazio p/ vendas ONLINE.
   station        String?
+
+  // F5.7: operador (colaborador logado no PDV) que fez a venda. soldByName e
+  // snapshot (o nome fica gravado mesmo que o colaborador seja removido depois).
+  soldById       String?
+  soldByName     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -322,6 +326,7 @@ model Order {
   @@index([syncedToLocal])
   @@index([syncedToOnline])
   @@index([station])
+  @@index([soldById])
 }
 
 // ============================================================

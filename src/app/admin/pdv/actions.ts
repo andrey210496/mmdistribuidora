@@ -453,18 +453,22 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
     },
   };
 
-  // No PDV local, o numero leva o prefixo da estacao p/ nunca colidir entre
-  // caixas ao subir para a gestao online (F5.3). A estacao tambem vai gravada
-  // no campo Order.station para o relatorio de vendas por PDV (F5.6).
+  // A maquina/estacao continua gravada (painel de caixas conectados, F5.6)...
   const stationValue = IS_PDV ? (await getStationId()) || null : null;
-  const orderPrefix = IS_PDV ? `PDV${stationValue || "0"}` : "DE";
+  // ...mas a IDENTIFICACAO da venda e por OPERADOR (colaborador logado, F5.7):
+  // o numero leva o 1o nome na frente e a venda guarda quem vendeu.
+  const opFirst = (user.name || "").trim().split(/\s+/)[0] || "";
+  const opCode = opFirst.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 12) || "PDV";
+  const orderPrefix = IS_PDV ? opCode : "DE";
   let created: { id: string; orderNumber: string } | null = null;
   for (let attempt = 0; attempt < 5; attempt++) {
     const orderCount = await prisma.order.count();
     const orderNumber = generateOrderNumber(orderCount + 1 + attempt, orderPrefix);
     try {
       created = await prisma.$transaction(async (tx) => {
-        const order = await tx.order.create({ data: { orderNumber, station: stationValue, ...orderBase } });
+        const order = await tx.order.create({
+          data: { orderNumber, station: stationValue, soldById: user.id, soldByName: user.name, ...orderBase },
+        });
 
         // Baixa de estoque
         for (const it of orderItemsData) {

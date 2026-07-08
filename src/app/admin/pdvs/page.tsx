@@ -1,9 +1,9 @@
-import { Monitor, Circle } from "lucide-react";
+import { Monitor, Circle, Users } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
 
-export const metadata = { title: "PDVs / Caixas" };
+export const metadata = { title: "PDVs / Operadores" };
 export const dynamic = "force-dynamic";
 
 // PDV considerado "online" se apareceu nos ultimos 3 minutos (o sync roda ~20s).
@@ -19,6 +19,23 @@ function agoLabel(d: Date): string {
   return `há ${Math.floor(h / 24)}d`;
 }
 
+type Metric = { count: number; total: number };
+function accumulate(
+  map: Map<string, { name: string; day: Metric; month: Metric }>,
+  key: string,
+  name: string,
+  period: "day" | "month",
+  count: number,
+  total: number
+) {
+  const cur =
+    map.get(key) ?? { name, day: { count: 0, total: 0 }, month: { count: 0, total: 0 } };
+  cur.name = name || cur.name;
+  cur[period].count += count;
+  cur[period].total += total;
+  map.set(key, cur);
+}
+
 export default async function PdvsPage() {
   await requireArea("relatorios");
 
@@ -26,132 +43,148 @@ export default async function PdvsPage() {
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
   const baseWhere = { channel: "PDV" as const, status: { not: "CANCELED" as const } };
 
-  const [stations, monthAgg, dayAgg] = await Promise.all([
+  const [stations, monthOps, dayOps] = await Promise.all([
     prisma.pdvStation.findMany({ orderBy: { lastSeenAt: "desc" } }),
     prisma.order.groupBy({
-      by: ["station"],
+      by: ["soldById", "soldByName"],
       where: { ...baseWhere, createdAt: { gte: startOfMonth } },
       _count: { _all: true },
       _sum: { totalCents: true },
     }),
     prisma.order.groupBy({
-      by: ["station"],
+      by: ["soldById", "soldByName"],
       where: { ...baseWhere, createdAt: { gte: startOfDay } },
       _count: { _all: true },
       _sum: { totalCents: true },
     }),
   ]);
 
-  const monthByStation = new Map(monthAgg.map((r) => [r.station ?? "", r]));
-  const dayByStation = new Map(dayAgg.map((r) => [r.station ?? "", r]));
+  // Vendas por operador (une por soldById; nome vem do snapshot soldByName).
+  const opMap = new Map<string, { name: string; day: Metric; month: Metric }>();
+  for (const r of monthOps)
+    accumulate(opMap, r.soldById ?? "?", r.soldByName ?? "— (sem operador)", "month", r._count._all, r._sum.totalCents ?? 0);
+  for (const r of dayOps)
+    accumulate(opMap, r.soldById ?? "?", r.soldByName ?? "— (sem operador)", "day", r._count._all, r._sum.totalCents ?? 0);
+  const operators = [...opMap.values()]
+    .map((o) => ({ ...o, avg: o.month.count > 0 ? Math.round(o.month.total / o.month.count) : 0 }))
+    .sort((a, b) => b.month.total - a.month.total);
 
-  // Une as estacoes conhecidas (registro) + as que aparecem nas vendas.
-  const keys = new Set<string>();
-  for (const s of stations) keys.add(s.id);
-  for (const r of monthAgg) keys.add(r.station ?? "");
-  const rows = [...keys].map((key) => {
-    const reg = stations.find((s) => s.id === key) ?? null;
-    const m = monthByStation.get(key);
-    const d = dayByStation.get(key);
-    const monthCount = m?._count._all ?? 0;
-    const monthTotal = m?._sum.totalCents ?? 0;
-    return {
-      key,
-      label: key === "" ? "— (sem estação)" : key,
-      online: reg ? now.getTime() - new Date(reg.lastSeenAt).getTime() < ONLINE_WINDOW_MS : false,
-      lastSeen: reg ? new Date(reg.lastSeenAt) : null,
-      version: reg?.appVersion ?? null,
-      registered: !!reg,
-      dayCount: d?._count._all ?? 0,
-      dayTotal: d?._sum.totalCents ?? 0,
-      monthCount,
-      monthTotal,
-      avgTicket: monthCount > 0 ? Math.round(monthTotal / monthCount) : 0,
-    };
-  });
-  // ordena por total do mes (mais produtivo primeiro)
-  rows.sort((a, b) => b.monthTotal - a.monthTotal);
-
-  const totalOnline = rows.filter((r) => r.online).length;
+  const totalOnline = stations.filter(
+    (s) => now.getTime() - new Date(s.lastSeenAt).getTime() < ONLINE_WINDOW_MS
+  ).length;
 
   return (
-    <div className="p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <span className="w-10 h-10 rounded-xl bg-cocoa/10 text-cocoa flex items-center justify-center">
-          <Monitor size={20} />
-        </span>
-        <div>
-          <h1 className="text-2xl font-bold text-ink">PDVs / Caixas</h1>
-          <p className="text-sm text-clay">
-            Caixas instalados, status de conexão e produtividade por PDV (mês atual).
-          </p>
+    <div className="p-8 space-y-10">
+      {/* ===== Vendas por operador ===== */}
+      <section>
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-10 h-10 rounded-xl bg-cocoa/10 text-cocoa flex items-center justify-center">
+            <Users size={20} />
+          </span>
+          <div>
+            <h1 className="text-2xl font-bold text-ink">Vendas por operador</h1>
+            <p className="text-sm text-clay">Produtividade por colaborador logado no PDV (mês atual).</p>
+          </div>
         </div>
-      </div>
 
-      <div className="mb-4 text-sm text-clay">
-        {stations.length} PDV(s) registrado(s) · <span className="text-emerald-600 font-medium">{totalOnline} online agora</span>
-      </div>
-
-      <div className="overflow-x-auto border border-line rounded-xl bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-clay border-b border-line">
-              <th className="px-4 py-3 font-medium">Estação</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Versão</th>
-              <th className="px-4 py-3 font-medium text-right">Vendas hoje</th>
-              <th className="px-4 py-3 font-medium text-right">Total hoje</th>
-              <th className="px-4 py-3 font-medium text-right">Vendas no mês</th>
-              <th className="px-4 py-3 font-medium text-right">Total no mês</th>
-              <th className="px-4 py-3 font-medium text-right">Ticket médio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-clay">
-                  Nenhum PDV registrou atividade ainda. Assim que um caixa sincronizar, ele aparece aqui.
-                </td>
+        <div className="overflow-x-auto border border-line rounded-xl bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-clay border-b border-line">
+                <th className="px-4 py-3 font-medium">Operador</th>
+                <th className="px-4 py-3 font-medium text-right">Vendas hoje</th>
+                <th className="px-4 py-3 font-medium text-right">Total hoje</th>
+                <th className="px-4 py-3 font-medium text-right">Vendas no mês</th>
+                <th className="px-4 py-3 font-medium text-right">Total no mês</th>
+                <th className="px-4 py-3 font-medium text-right">Ticket médio</th>
               </tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.key} className="border-b border-line/60 last:border-0">
-                  <td className="px-4 py-3 font-semibold text-ink">{r.label}</td>
-                  <td className="px-4 py-3">
-                    {r.registered ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Circle
-                          size={9}
-                          className={r.online ? "fill-emerald-500 text-emerald-500" : "fill-clay/40 text-clay/40"}
-                        />
-                        <span className={r.online ? "text-emerald-700" : "text-clay"}>
-                          {r.online ? "Online" : r.lastSeen ? agoLabel(r.lastSeen) : "Offline"}
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="text-clay/60">—</span>
-                    )}
+            </thead>
+            <tbody>
+              {operators.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-clay">
+                    Nenhuma venda de PDV ainda. Assim que os caixas venderem, a produtividade aparece aqui.
                   </td>
-                  <td className="px-4 py-3 text-clay">{r.version ?? "—"}</td>
-                  <td className="px-4 py-3 text-right">{r.dayCount}</td>
-                  <td className="px-4 py-3 text-right">{centsToBRL(r.dayTotal)}</td>
-                  <td className="px-4 py-3 text-right">{r.monthCount}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-ink">{centsToBRL(r.monthTotal)}</td>
-                  <td className="px-4 py-3 text-right text-clay">{centsToBRL(r.avgTicket)}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                operators.map((o) => (
+                  <tr key={o.name} className="border-b border-line/60 last:border-0">
+                    <td className="px-4 py-3 font-semibold text-ink">{o.name}</td>
+                    <td className="px-4 py-3 text-right">{o.day.count}</td>
+                    <td className="px-4 py-3 text-right">{centsToBRL(o.day.total)}</td>
+                    <td className="px-4 py-3 text-right">{o.month.count}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-ink">{centsToBRL(o.month.total)}</td>
+                    <td className="px-4 py-3 text-right text-clay">{centsToBRL(o.avg)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <p className="text-xs text-clay mt-4">
-        Um PDV aparece como <span className="text-emerald-600">Online</span> se sincronizou nos últimos 3 minutos.
-        As vendas são contadas pela estação gravada em cada pedido (não conta canceladas).
-      </p>
+      {/* ===== Caixas (maquinas) conectados ===== */}
+      <section>
+        <div className="flex items-center gap-3 mb-2">
+          <span className="w-9 h-9 rounded-xl bg-cocoa/10 text-cocoa flex items-center justify-center">
+            <Monitor size={18} />
+          </span>
+          <div>
+            <h2 className="text-lg font-bold text-ink">Caixas conectados</h2>
+            <p className="text-xs text-clay">
+              {stations.length} máquina(s) · <span className="text-emerald-600 font-medium">{totalOnline} online agora</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto border border-line rounded-xl bg-white mt-3">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-clay border-b border-line">
+                <th className="px-4 py-3 font-medium">Máquina (estação)</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Versão</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stations.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-4 py-6 text-center text-clay">
+                    Nenhuma máquina registrou atividade ainda.
+                  </td>
+                </tr>
+              ) : (
+                stations.map((s) => {
+                  const online = now.getTime() - new Date(s.lastSeenAt).getTime() < ONLINE_WINDOW_MS;
+                  return (
+                    <tr key={s.id} className="border-b border-line/60 last:border-0">
+                      <td className="px-4 py-3 font-semibold text-ink">{s.id}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Circle
+                            size={9}
+                            className={online ? "fill-emerald-500 text-emerald-500" : "fill-clay/40 text-clay/40"}
+                          />
+                          <span className={online ? "text-emerald-700" : "text-clay"}>
+                            {online ? "Online" : agoLabel(new Date(s.lastSeenAt))}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-clay">{s.appVersion ?? "—"}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-clay mt-3">
+          Cada máquina tem um nome de estação (definido em <strong>Conexão</strong> no próprio PDV). Renomeie
+          para diferenciar os caixas físicos (ex.: Balcão, Caixa 2).
+        </p>
+      </section>
     </div>
   );
 }
