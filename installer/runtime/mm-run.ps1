@@ -70,8 +70,11 @@ if ($ip) { Write-Host "    Terminais da rede:  http://$ip`:$($env:PORT)" -Foregr
 # mm-update.ps1 por process.cwd(); sem isso o caminho fica errado e o update nao dispara.
 Set-Location $appDir
 
-# Log do servidor Node (stdout+stderr) em app.log — antes NAO havia log nenhum,
-# o que impedia diagnosticar erros de servidor. Reseta se passar de 5MB.
+# Log do servidor Node (stdout+stderr) em app.log — antes NAO havia log nenhum.
+# CRITICO: o Next escreve no stderr; com ErrorActionPreference=Stop + redirecionamento
+# o PowerShell trata isso como erro terminante e MATA o mm-run (o app nem sobe).
+# Continue deixa o node rodar normal e so grava no log.
+$ErrorActionPreference = "Continue"
 $appLog = Join-Path $logs "app.log"
 if ((Test-Path $appLog) -and ((Get-Item $appLog).Length -gt 5MB)) { Remove-Item $appLog -Force -ErrorAction SilentlyContinue }
 & $node (Join-Path $appDir "server.js") *>> $appLog
