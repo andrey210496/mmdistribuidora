@@ -24,6 +24,79 @@ function parseBrl(v: string): number | null {
 }
 
 // ============================================================
+// Cadastro de cliente direto na gestão (sem depender de venda/site).
+// Já permite marcar atacadista e definir limite de crédito.
+// ============================================================
+const createCustomerSchema = z.object({
+  name: z.string().trim().min(2, "Nome muito curto").max(200),
+  phone: z.string().max(30).optional().default(""),
+  email: z.string().max(200).optional().default(""),
+  cpfCnpj: z.string().max(30).optional().default(""),
+  isWholesale: z.boolean().optional().default(false),
+  creditLimitBrl: z.string().optional().default(""),
+});
+
+export async function createCustomer(input: {
+  name: string;
+  phone?: string;
+  email?: string;
+  cpfCnpj?: string;
+  isWholesale?: boolean;
+  creditLimitBrl?: string;
+}): Promise<{ ok: boolean; error?: string; customerId?: string }> {
+  const user = await requireArea("clientes");
+  const parsed = createCustomerSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos" };
+  }
+  const { name, phone, email, cpfCnpj, isWholesale, creditLimitBrl } = parsed.data;
+  const cpf = cpfCnpj.trim();
+  const mail = email.trim().toLowerCase();
+
+  if (mail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) {
+    return { ok: false, error: "E-mail inválido." };
+  }
+  if (cpf && (await prisma.customer.findFirst({ where: { cpfCnpj: cpf }, select: { id: true } }))) {
+    return { ok: false, error: "Já existe um cliente com este CPF/CNPJ." };
+  }
+  if (mail && (await prisma.customer.findFirst({ where: { email: mail }, select: { id: true } }))) {
+    return { ok: false, error: "Já existe um cliente com este e-mail." };
+  }
+
+  let creditLimitCents = 0;
+  if (creditLimitBrl.trim()) {
+    const c = parseBrl(creditLimitBrl);
+    if (c == null || c < 0) return { ok: false, error: "Limite de crédito inválido." };
+    creditLimitCents = c;
+  }
+
+  const customer = await prisma.customer.create({
+    data: {
+      name: name.trim(),
+      phone: phone.trim() || null,
+      email: mail || null,
+      cpfCnpj: cpf || null,
+      isWholesale: Boolean(isWholesale),
+      creditLimitCents,
+    },
+  });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "customer.created",
+    entityType: "Customer",
+    entityId: customer.id,
+    afterJson: { name: customer.name, isWholesale, creditLimitCents },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath("/admin/clientes");
+  return { ok: true, customerId: customer.id };
+}
+
+// ============================================================
 // Marca/desmarca o cliente como atacadista. Atacadistas pagam o
 // preço de atacado (resolveUnitPrice) no PDV, carrinho e checkout.
 // ============================================================

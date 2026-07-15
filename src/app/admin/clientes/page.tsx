@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Eye, Users, Mail, Phone } from "lucide-react";
+import { Search, Eye, Users, Mail, Phone, UserPlus } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
@@ -51,6 +51,12 @@ export default async function AdminClientesPage({
             {customers.length} de {total} clientes
           </p>
         </div>
+        <Link
+          href="/admin/clientes/novo"
+          className="inline-flex items-center gap-2 bg-cocoa text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-cocoa/90"
+        >
+          <UserPlus size={16} /> Novo cliente
+        </Link>
       </header>
 
       {/* Busca */}
