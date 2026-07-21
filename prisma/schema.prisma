@@ -299,12 +299,12 @@ model Order {
   syncedOnlineAt DateTime?
 
   // F5.6: estacao/caixa (maquina) que originou a venda. Vazio p/ vendas ONLINE.
-  station        String?
+  station String?
 
   // F5.7: operador (colaborador logado no PDV) que fez a venda. soldByName e
   // snapshot (o nome fica gravado mesmo que o colaborador seja removido depois).
-  soldById       String?
-  soldByName     String?
+  soldById   String?
+  soldByName String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -565,8 +565,44 @@ model TaxGroup {
   updatedAt    DateTime @updatedAt
 
   products Product[]
+  ncmCodes NcmCode[]
 
   @@index([active])
+}
+
+// ============================================================
+// FISCAL — tabela de NCM (Nomenclatura Comum do Mercosul)
+// ------------------------------------------------------------
+// Codigo de 8 digitos que classifica a mercadoria na nota fiscal e
+// determina a tributacao. A tabela oficial da Receita e importada em
+// prisma/data/ncm.json; a loja pode definir, por NCM, o CEST e o grupo
+// tributario padrao — que sao aplicados ao produto ao escolher o NCM.
+// Product.ncm guarda o codigo (8 digitos, sem pontuacao).
+// ============================================================
+model NcmCode {
+  code        String  @id // 8 digitos, sem pontuacao
+  // Nivel mais especifico (o que identifica o produto).
+  description String  @db.Text
+  // Caminho da hierarquia ate ele — contexto, porque muita folha e so "Outros".
+  path        String  @default("") @db.Text
+  // description + path em minusculas e SEM ACENTO. A tabela oficial e cheia de
+  // acento ("Aguas minerais") e ninguem digita acento na busca — sem isso,
+  // procurar "agua mineral" nao acha nada.
+  search      String  @default("") @db.Text
+  // Padroes da loja aplicados ao produto quando este NCM e escolhido.
+  cest        String?
+  taxGroupId  String?
+  // Cadastrado manualmente pelo usuario (nao veio da tabela oficial).
+  custom      Boolean @default(false)
+  active      Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  taxGroup TaxGroup? @relation(fields: [taxGroupId], references: [id])
+
+  @@index([active])
+  @@index([taxGroupId])
 }
 
 // ============================================================

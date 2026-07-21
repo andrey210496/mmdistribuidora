@@ -138,6 +138,20 @@ export async function requireArea(area: AreaKey) {
   return user;
 }
 
+/**
+ * Garante que o usuário pode acessar PELO MENOS UMA das áreas informadas.
+ * Usado por recursos compartilhados entre telas — ex.: cadastrar um NCM, que
+ * acontece tanto na tela fiscal (configuracoes) quanto no cadastro de produto
+ * (produtos). Exigir uma área só travaria metade dos usuários legítimos.
+ */
+export async function requireAnyArea(...areas: AreaKey[]) {
+  const user = await requireAdmin();
+  if (!areas.some((a) => hasArea(user, a))) {
+    redirect(`/admin/sem-acesso?area=${areas[0]}`);
+  }
+  return user;
+}
+
 /** Garante que o usuário é ADMIN (super-admin) — ex.: gerir colaboradores. */
 export async function requireSuperAdmin() {
   const user = await requireAdmin();

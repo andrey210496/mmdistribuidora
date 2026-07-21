@@ -9,6 +9,12 @@ const config: NextConfig = {
   // standalone aninhado (.next/standalone/PDV-MM/...). Aqui ele sai liso:
   // .next/standalone/server.js — que e o que os scripts de instalacao esperam.
   outputFileTracingRoot: path.join(process.cwd()),
+  // A tabela oficial de NCM e lida do disco em runtime (fs), entao o tracing do
+  // Next nao a detecta sozinho. Sem isso, o build standalone sobe sem o arquivo
+  // e a importacao de NCM falha em producao.
+  outputFileTracingIncludes: {
+    "/admin/configuracoes/ncm": ["./prisma/data/ncm.json"],
+  },
   // Lint é checagem de desenvolvimento — não deve derrubar o deploy.
   // (O TypeScript continua validando tipos no build.)
   eslint: { ignoreDuringBuilds: true },

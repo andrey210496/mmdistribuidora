@@ -4,6 +4,7 @@ import { useActionState, useState, useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft, AlertCircle, Save, Image as ImageIcon, Upload, Loader2, X } from "lucide-react";
 import { createProduct, updateProduct, type ProductActionState } from "./actions";
+import { NcmPicker } from "./NcmPicker";
 import { slugify } from "@/lib/utils";
 
 const initial: ProductActionState = {};
@@ -42,10 +43,13 @@ export function ProductForm({
   product,
   categories,
   taxGroups = [],
+  ncmDescription = null,
 }: {
   product?: Product;
   categories: Category[];
   taxGroups?: { id: string; name: string }[];
+  /** Descrição do NCM já salvo no produto (para o seletor mostrar ao editar). */
+  ncmDescription?: string | null;
 }) {
   const action = product
     ? updateProduct.bind(null, product.id)
@@ -58,6 +62,10 @@ export function ProductForm({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Fiscal: controlados porque escolher o NCM preenche CEST e grupo tributário.
+  const [cest, setCest] = useState(product?.cest ?? "");
+  const [taxGroupId, setTaxGroupId] = useState(product?.taxGroupId ?? "");
+  const [ncmHerdou, setNcmHerdou] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -388,26 +396,49 @@ export function ProductForm({
               Base para a emissão de NFC-e/NF-e. (A emissão em si depende do provedor + certificado A1.)
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="label" htmlFor="ncm">NCM</label>
-                <input id="ncm" name="ncm" defaultValue={product?.ncm ?? ""} maxLength={20} className="input-field font-mono" placeholder="00000000" />
+              <div className="col-span-2">
+                <label className="label">NCM</label>
+                <NcmPicker
+                  name="ncm"
+                  defaultCode={product?.ncm ?? ""}
+                  defaultDescription={ncmDescription ?? ""}
+                  onPick={(opt) => {
+                    // Herda a tributação cadastrada no NCM (o motivo de existir
+                    // o cadastro de NCM). Só preenche o que o NCM define.
+                    let herdou = false;
+                    if (opt.cest) { setCest(opt.cest); herdou = true; }
+                    if (opt.taxGroupId) { setTaxGroupId(opt.taxGroupId); herdou = true; }
+                    setNcmHerdou(herdou);
+                  }}
+                />
               </div>
               <div>
                 <label className="label" htmlFor="cest">CEST</label>
-                <input id="cest" name="cest" defaultValue={product?.cest ?? ""} maxLength={20} className="input-field font-mono" />
+                <input id="cest" name="cest" value={cest} onChange={(e) => setCest(e.target.value)} maxLength={20} className="input-field font-mono" />
               </div>
               <div>
                 <label className="label" htmlFor="origem">Origem</label>
                 <input id="origem" name="origem" defaultValue={product?.origem ?? "0"} maxLength={2} className="input-field" placeholder="0" />
               </div>
-              <div>
+              <div className="col-span-2 md:col-span-4">
                 <label className="label" htmlFor="taxGroupId">Grupo tributário</label>
-                <select id="taxGroupId" name="taxGroupId" defaultValue={product?.taxGroupId ?? ""} className="input-field bg-white">
+                <select id="taxGroupId" name="taxGroupId" value={taxGroupId} onChange={(e) => setTaxGroupId(e.target.value)} className="input-field bg-white">
                   <option value="">—</option>
                   {taxGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
             </div>
+            {ncmHerdou && (
+              <p className="text-[11px] text-olive font-bold mt-2">
+                CEST e grupo tributário preenchidos a partir do NCM escolhido.
+              </p>
+            )}
+            <p className="text-[11px] text-cocoa/50 mt-2">
+              A tributação padrão de cada NCM é definida em{" "}
+              <a href="/admin/configuracoes/ncm" className="text-rose-brand hover:underline" target="_blank">
+                Configurações › NCM
+              </a>.
+            </p>
           </section>
         </div>
 

@@ -1,4 +1,5 @@
-import { Settings } from "lucide-react";
+import Link from "next/link";
+import { Settings, FileDigit } from "lucide-react";
 import { requireArea } from "@/lib/auth";
 import { getStoreSettings, getPdvShortcuts, getProductHotkeys } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
@@ -17,6 +18,7 @@ export default async function ConfigPage() {
   const s = await getStoreSettings();
   const shortcuts = await getPdvShortcuts();
   const taxGroups = await prisma.taxGroup.findMany({ orderBy: { name: "asc" } });
+  const ncmCount = await prisma.ncmCode.count();
 
   // Atalhos de produto: resolve os nomes p/ exibição.
   const hotkeys = await getProductHotkeys();
@@ -60,6 +62,28 @@ export default async function ConfigPage() {
           origem: g.origem, icmsAliquota: g.icmsAliquota, active: g.active,
         }))}
       />
+
+      {/* NCM fica em tela própria: são mais de 10 mil códigos, precisa de busca. */}
+      <section className="bg-white rounded-2xl border border-cocoa/10 p-6">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="font-display text-xl font-bold text-cocoa flex items-center gap-2">
+              <FileDigit size={18} className="text-rose-brand" /> NCM
+            </h2>
+            <p className="text-cocoa/55 text-sm mt-1">
+              {ncmCount > 0
+                ? `${ncmCount.toLocaleString("pt-BR")} códigos na lista. Defina o CEST e o grupo tributário de cada NCM que a loja usa — o produto herda ao escolher o NCM.`
+                : "A lista de NCM está vazia. Importe a tabela oficial da Receita para poder classificar os produtos."}
+            </p>
+          </div>
+          <Link
+            href="/admin/configuracoes/ncm"
+            className="inline-flex items-center gap-2 bg-cocoa text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-cocoa/90 shrink-0"
+          >
+            <FileDigit size={16} /> {ncmCount > 0 ? "Gerenciar NCM" : "Importar tabela de NCM"}
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

@@ -29,6 +29,11 @@ export default async function EditarProdutoPage({
 
   if (!product) notFound();
 
+  // Descrição do NCM já salvo, para o seletor mostrar em vez de só o número.
+  const ncmRow = product.ncm
+    ? await prisma.ncmCode.findUnique({ where: { code: product.ncm }, select: { description: true } })
+    : null;
+
   return (
     <div className="p-6 lg:p-8">
       <ProductForm
@@ -64,6 +69,7 @@ export default async function EditarProdutoPage({
         }}
         categories={categories}
         taxGroups={taxGroups}
+        ncmDescription={ncmRow?.description ?? null}
       />
 
       <div className="max-w-4xl mt-6">
