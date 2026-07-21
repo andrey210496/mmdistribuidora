@@ -47,14 +47,21 @@ Name: "{autoprograms}\MM Retaguarda"; Filename: "{app}\MM Retaguarda.url"
 Filename: "{sys}\netsh.exe"; \
   Parameters: "advfirewall firewall add rule name=""MM Retaguarda (TCP 3000)"" dir=in action=allow protocol=TCP localport=3000 profile=private"; \
   Flags: runhidden; StatusMsg: "Liberando a porta na rede local..."
-; 2) Configura o banco de dados na primeira instalacao
+; 2) Configura o banco de dados na primeira instalacao.
+;    SEM runhidden de proposito: se este passo falhar (ex.: falta o runtime do
+;    Visual C++), o erro precisa aparecer na tela. Escondido, a instalacao
+;    terminava "com sucesso" e a loja ficava sem banco.
+;    O log completo tambem fica em %ProgramData%\MM Retaguarda\logs\firstrun.log
 Filename: "powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\app\runtime\mm-firstrun.ps1"""; \
-  Flags: runhidden; StatusMsg: "Configurando o banco de dados (pode demorar)..."
-; 3) Registra auto-start (boot) + backup diario
+  StatusMsg: "Configurando o banco de dados (pode demorar)..."
+; 3) Registra auto-start (boot) + backup diario.
+;    Tambem SEM runhidden: numa instalacao real este passo falhou em silencio e
+;    o sistema nao subia sozinho no boot (ninguem percebeu ate a loja abrir).
+;    Log em %ProgramData%\MM Retaguarda\logs\register-task.log
 Filename: "powershell.exe"; \
   Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\app\runtime\register-task.ps1"""; \
-  Flags: runhidden; StatusMsg: "Configurando inicializacao automatica..."
+  StatusMsg: "Configurando inicializacao automatica..."
 ; 4) Inicia o sistema agora
 Filename: "schtasks.exe"; Parameters: "/run /tn ""MM Retaguarda"""; Flags: runhidden
 ; 5) Oferece abrir no navegador ao finalizar

@@ -14,6 +14,12 @@ $backupPs = Join-Path $PSScriptRoot "mm-backup.ps1"
 $updatePs = Join-Path $PSScriptRoot "mm-update.ps1"
 $pwsh = "powershell.exe"
 
+# Log: numa instalacao real este script falhou rodando escondido pelo instalador
+# e o sistema nao subia no boot. Sem log, nao havia como saber o porque.
+$logs = Join-Path (Join-Path $env:ProgramData "MM Retaguarda") "logs"
+New-Item -ItemType Directory -Force -Path $logs | Out-Null
+try { Start-Transcript -Path (Join-Path $logs "register-task.log") -Force | Out-Null } catch {}
+
 # Remove a tarefa de sync antiga (modelo F4.2), se existir de instalacao previa.
 Unregister-ScheduledTask -TaskName "MM Retaguarda Sync" -Confirm:$false -ErrorAction SilentlyContinue
 
@@ -42,4 +48,16 @@ $updSettings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstanc
 Register-ScheduledTask -TaskName "MM Retaguarda Update" -Action $updAction -Trigger @($updDaily,$updBoot) `
   -Settings $updSettings -RunLevel Highest -User "SYSTEM" -Force | Out-Null
 
+# Confere que as 3 tarefas existem mesmo. Registrar "sem erro" nao e garantia:
+# se faltar alguma, o sistema nao sobe no boot e ninguem descobre ate a loja abrir.
+$esperadas = @("MM Retaguarda","MM Retaguarda Backup","MM Retaguarda Update")
+$faltando = @($esperadas | Where-Object { -not (Get-ScheduledTask -TaskName $_ -ErrorAction SilentlyContinue) })
+if ($faltando.Count -gt 0) {
+  Write-Host "ERRO: tarefas nao registradas: $($faltando -join ', ')" -ForegroundColor Red
+  Write-Host "      O sistema NAO vai subir sozinho no boot desta maquina." -ForegroundColor Yellow
+  Write-Host "      Rode este script como Administrador: register-task.ps1" -ForegroundColor Yellow
+  try { Stop-Transcript | Out-Null } catch {}
+  exit 1
+}
 Write-Host "==> Tarefas agendadas registradas." -ForegroundColor Green
+try { Stop-Transcript | Out-Null } catch {}

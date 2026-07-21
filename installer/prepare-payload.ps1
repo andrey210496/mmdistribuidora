@@ -16,6 +16,9 @@ $NODE_VER = "20.18.1"
 $PG_VER   = "16.4-1"
 $NODE_URL = "https://nodejs.org/dist/v$NODE_VER/node-v$NODE_VER-win-x64.zip"
 $PG_URL   = "https://get.enterprisedb.com/postgresql/postgresql-$PG_VER-windows-x64-binaries.zip"
+# Runtime do Visual C++ (x64). Os binarios do PostgreSQL NAO rodam sem ele: num
+# Windows recem-formatado o initdb morre com 0xC0000135 (DLL nao encontrada).
+$VC_URL   = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
 
 $root    = Resolve-Path (Join-Path $PSScriptRoot "..")
 $inst    = $PSScriptRoot
@@ -57,6 +60,12 @@ foreach ($d in @("pgAdmin 4","StackBuilder","doc","include","symbols")) {
 }
 Copy-Item $pgInner (Join-Path $payload "pgsql") -Recurse -Force
 Write-Host "==> PostgreSQL pronto (enxuto)." -ForegroundColor Green
+
+# 2b) Runtime do Visual C++ — o mm-firstrun instala se o PostgreSQL nao subir.
+$vcExe = Get-Cached $VC_URL "vc_redist.x64.exe"
+New-Item -ItemType Directory -Force -Path (Join-Path $payload "vcredist") | Out-Null
+Copy-Item $vcExe (Join-Path $payload "vcredist\vc_redist.x64.exe") -Force
+Write-Host "==> VC++ Redist incluido." -ForegroundColor Green
 
 # 3) Build do app (standalone)
 $standalone = Join-Path $root ".next\standalone\server.js"

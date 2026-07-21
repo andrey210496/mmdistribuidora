@@ -45,6 +45,36 @@ function New-FriendlyPass([int]$len = 10) {
 
 $logFile = Join-Path $logs "postgres.log"
 
+# 0) Runtime do Visual C++: os binarios do PostgreSQL NAO rodam sem ele.
+#    Num Windows recem-formatado o initdb morre em 0xC0000135 (-1073741515,
+#    DLL nao encontrada) SEM imprimir nada, e a instalacao seguia "com sucesso"
+#    deixando a loja sem banco. Aqui testamos e instalamos o redist embutido.
+function Test-PgRuntime {
+  $prev = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+  try { & "$pgbin\initdb.exe" --version 2>$null | Out-Null } catch {}
+  $ok = ($LASTEXITCODE -eq 0)
+  $ErrorActionPreference = $prev
+  return $ok
+}
+if (-not (Test-PgRuntime)) {
+  Write-Host "==> Instalando runtime do Visual C++ (necessario para o banco)..." -ForegroundColor Cyan
+  $vc = Join-Path $installRoot "vcredist\vc_redist.x64.exe"
+  if (Test-Path $vc) {
+    $p = Start-Process -FilePath $vc -ArgumentList "/install","/quiet","/norestart" -Wait -PassThru
+    Write-Host "    vc_redist terminou com codigo $($p.ExitCode)." -ForegroundColor DarkGray
+  } else {
+    Write-Host "AVISO: vc_redist.x64.exe nao veio no pacote." -ForegroundColor Yellow
+  }
+  if (-not (Test-PgRuntime)) {
+    Write-Host "ERRO: o PostgreSQL nao consegue iniciar nesta maquina." -ForegroundColor Red
+    Write-Host "      Falta o runtime do Visual C++ x64. Instale manualmente:" -ForegroundColor Yellow
+    Write-Host "      https://aka.ms/vs/17/release/vc_redist.x64.exe" -ForegroundColor Yellow
+    Write-Host "      Depois rode este script novamente." -ForegroundColor Yellow
+    exit 1
+  }
+  Write-Host "==> Runtime do Visual C++ OK." -ForegroundColor Green
+}
+
 # 1) initdb (so na 1a vez)
 if (-not (Test-Path (Join-Path $pgdata "PG_VERSION"))) {
   Write-Host "==> Inicializando banco embutido..." -ForegroundColor Cyan
@@ -52,13 +82,26 @@ if (-not (Test-Path (Join-Path $pgdata "PG_VERSION"))) {
   $pwfile = Join-Path $env:TEMP "mm_pw.txt"
   Set-Content -Path $pwfile -Value $dbPass -NoNewline -Encoding ascii
   New-Item -ItemType Directory -Force -Path $pgdata | Out-Null
+  # Sem PG_VERSION nao existe cluster valido: qualquer coisa aqui e sobra de uma
+  # tentativa que falhou. O initdb recusa diretorio nao-vazio, entao limpamos.
+  if ((Get-ChildItem $pgdata -Force -ErrorAction SilentlyContinue | Measure-Object).Count -gt 0) {
+    Write-Host "==> Limpando resto de instalacao anterior em pgdata..." -ForegroundColor Yellow
+    Remove-Item (Join-Path $pgdata "*") -Recurse -Force -ErrorAction SilentlyContinue
+  }
   # Cluster em LATIN1: no Windows PT-BR o initdb falha ao importar os locales
   # do sistema (nomes em CP1252) num cluster UTF8. O banco do APP e criado
   # logo abaixo em UTF8 (a partir do template0 + locale C), entao os dados
   # ficam 100% UTF8 mesmo com o cluster/templates em LATIN1.
-  & "$pgbin\initdb.exe" -D "$pgdata" -U postgres -A scram-sha-256 --pwfile="$pwfile" -E LATIN1 --locale=C | Out-Null
+  $initLog = Join-Path $logs "initdb.log"
+  $prevEa = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+  & "$pgbin\initdb.exe" -D "$pgdata" -U postgres -A scram-sha-256 --pwfile="$pwfile" -E LATIN1 --locale=C *> $initLog
+  $ErrorActionPreference = $prevEa
   Remove-Item $pwfile -Force -ErrorAction SilentlyContinue
-  if (-not (Test-Path (Join-Path $pgdata "PG_VERSION"))) { Write-Host "ERRO: initdb falhou." -ForegroundColor Red; exit 1 }
+  if (-not (Test-Path (Join-Path $pgdata "PG_VERSION"))) {
+    Write-Host "ERRO: initdb falhou. Log completo em: $initLog" -ForegroundColor Red
+    if (Test-Path $initLog) { Get-Content $initLog -Tail 20 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray } }
+    exit 1
+  }
   $fresh = $true
 } else {
   $fresh = $false
