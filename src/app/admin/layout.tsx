@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Cloud,
   Monitor,
+  BookOpen,
   LogOut,
 } from "lucide-react";
 import { getAdminSession } from "@/lib/session";
@@ -31,7 +32,15 @@ import { logoutAction } from "./login/actions";
 export const metadata = { robots: { index: false } };
 
 // area: undefined = sempre visível; "admin" = só super-admin; pdvOnly = só modo pdv
-const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: AreaKey | "admin"; pdvOnly?: boolean }[] = [
+// always: aparece para qualquer usuário logado, inclusive no PDV (ex.: Ajuda)
+const NAV: {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  area?: AreaKey | "admin";
+  pdvOnly?: boolean;
+  always?: boolean;
+}[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, area: "dashboard" },
   // PDV e Conexão só existem no PDV-servidor instalado (modo pdv), não na gestão online.
   { href: "/admin/pdv", label: "PDV / Caixa", icon: Store, area: "pdv", pdvOnly: true },
@@ -49,6 +58,8 @@ const NAV: { href: string; label: string; icon: typeof LayoutDashboard; area?: A
   { href: "/admin/anuncios", label: "Anúncios", icon: Megaphone, area: "anuncios" },
   { href: "/admin/colaboradores", label: "Colaboradores", icon: ShieldCheck, area: "admin" },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings, area: "configuracoes" },
+  // Ajuda: todo mundo que usa o sistema precisa alcançar o manual.
+  { href: "/admin/ajuda", label: "Ajuda", icon: BookOpen, always: true },
 ];
 
 // No PDV-servidor (modo pdv) a barra lateral mostra só o essencial do caixa;
@@ -100,7 +111,8 @@ export default async function AdminLayout({
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {NAV.filter(({ area, pdvOnly }) => {
+          {NAV.filter(({ area, pdvOnly, always }) => {
+            if (always) return true;
             if (pdvOnly && !IS_PDV) return false;
             if (IS_PDV && (!area || !PDV_AREAS.includes(area))) return false;
             if (!area) return true; // Dashboard
