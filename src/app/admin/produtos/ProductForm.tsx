@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, AlertCircle, Save, Image as ImageIcon, Upload, Loader2, X } from "lucide-react";
 import { createProduct, updateProduct, type ProductActionState } from "./actions";
 import { NcmPicker } from "./NcmPicker";
+import { ORIGEM } from "@/lib/fiscal-tables";
 import { slugify } from "@/lib/utils";
 
 const initial: ProductActionState = {};
@@ -418,7 +419,11 @@ export function ProductForm({
               </div>
               <div>
                 <label className="label" htmlFor="origem">Origem</label>
-                <input id="origem" name="origem" defaultValue={product?.origem ?? "0"} maxLength={2} className="input-field" placeholder="0" />
+                <select id="origem" name="origem" defaultValue={product?.origem ?? "0"} className="input-field bg-white">
+                  {ORIGEM.map((o) => (
+                    <option key={o.code} value={o.code}>{o.code} — {o.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="col-span-2 md:col-span-4">
                 <label className="label" htmlFor="taxGroupId">Grupo tributário</label>

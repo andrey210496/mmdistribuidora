@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { PDV_ACTIONS, serializeShortcuts, DEFAULT_SHORTCUTS, type ShortcutMap } from "@/lib/pdv-shortcuts";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
+import { isValidCfop, isValidCsosn, isValidCst, isValidOrigem } from "@/lib/fiscal-tables";
 
 export type ActionResult = { ok: boolean; error?: string };
 
@@ -202,13 +203,31 @@ export async function saveTaxGroup(
   const parsed = taxGroupSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "Dados inválidos" };
   const d = parsed.data;
+
+  // Valida contra as tabelas oficiais. A tela usa listas, mas a action e
+  // chamavel direto — e um codigo invalido so apareceria na rejeicao da nota.
+  const cfop = d.cfop.trim();
+  const csosn = d.csosn.trim();
+  const cst = d.cst.trim();
+  const origem = d.origem.trim() || "0";
+  if (cfop && !isValidCfop(cfop)) return { ok: false, error: "CFOP inválido (precisa ter 4 dígitos)." };
+  if (csosn && !isValidCsosn(csosn)) return { ok: false, error: "CSOSN inválido." };
+  if (cst && !isValidCst(cst)) return { ok: false, error: "CST inválido." };
+  if (!isValidOrigem(origem)) return { ok: false, error: "Origem da mercadoria inválida (0 a 8)." };
+  if (csosn && cst) {
+    return { ok: false, error: "Preencha CSOSN (Simples) ou CST (regime normal) — não os dois." };
+  }
+
+  const icmsPct = Number(d.icmsPct) || 0;
+  if (icmsPct < 0 || icmsPct > 100) return { ok: false, error: "Alíquota de ICMS deve ficar entre 0 e 100." };
+
   const data = {
     name: d.name.trim(),
-    cfop: d.cfop.trim() || null,
-    csosn: d.csosn.trim() || null,
-    cst: d.cst.trim() || null,
-    origem: d.origem.trim() || "0",
-    icmsAliquota: Math.round((Number(d.icmsPct) || 0) * 100),
+    cfop: cfop || null,
+    csosn: csosn || null,
+    cst: cst || null,
+    origem,
+    icmsAliquota: Math.round(icmsPct * 100),
   };
   if (id) await prisma.taxGroup.update({ where: { id }, data });
   else await prisma.taxGroup.create({ data });

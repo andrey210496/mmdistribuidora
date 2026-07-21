@@ -38,19 +38,28 @@ export const fiscal: Chapter = {
     { t: "path", text: "Menu lateral › Configurações › Grupos tributários" },
     {
       t: "p",
-      text: "Peça esses dados ao contador da loja. Cada grupo tem:",
+      text: "**Não existe tabela oficial de grupos tributários para baixar** — diferente do NCM. Ele depende do regime da empresa, do estado e do tipo de operação, então quem monta é o contador da loja. O que o sistema faz é oferecer os códigos oficiais em listas, para você só escolher.",
     },
     {
       t: "table",
-      head: ["Campo", "Exemplo", "Observação"],
+      head: ["Campo", "Como preencher"],
       rows: [
-        ["Nome", "Tributado 18%", "Só um apelido para você reconhecer."],
-        ["CFOP", "5102", "Código da operação."],
-        ["CSOSN", "102", "Use se a empresa é do **Simples Nacional**."],
-        ["CST", "00", "Use se a empresa é do **regime normal**."],
-        ["Origem", "0", "Origem da mercadoria (0 a 8). 0 = nacional."],
-        ["Alíquota ICMS (%)", "18", "Percentual de ICMS."],
+        ["Nome", "Um apelido para você reconhecer (ex.: 'Tributado 18%')."],
+        ["CFOP", "Escolha na lista, agrupada por situação (venda no estado, fora do estado, devolução). Se precisar de um código fora da lista, use **Outro código**."],
+        ["Origem da mercadoria", "Lista de 0 a 8. O padrão `0` é mercadoria nacional."],
+        ["Alíquota ICMS (%)", "Percentual de ICMS informado pelo contador."],
+        ["CSOSN", "Só se a empresa é do **Simples Nacional**."],
+        ["CST", "Só se a empresa é do **regime normal**."],
       ],
+    },
+    {
+      t: "warn",
+      title: "CSOSN ou CST — nunca os dois",
+      text: "São campos de regimes diferentes. Preencher os dois faz a nota ser rejeitada, e o sistema bloqueia ao salvar. Na dúvida sobre o regime da empresa, pergunte ao contador.",
+    },
+    {
+      t: "tip",
+      text: "Todas as listas mostram o código **junto com a descrição** (ex.: '5102 — Venda de mercadoria adquirida de terceiros'), então dá para conferir se é o certo sem decorar número.",
     },
 
     { t: "h", text: "Passo 2 — Importar a tabela de NCM" },
