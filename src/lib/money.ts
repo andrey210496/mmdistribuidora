@@ -7,6 +7,15 @@ export function centsToBRL(cents: number): string {
   }).format(cents / 100);
 }
 
+/**
+ * Valor em reais SEM símbolo, com vírgula decimal (ex.: 123456 -> "1234,56").
+ * Para CSV: o Excel pt-BR lê como número. Sem separador de milhar de propósito
+ * (o ponto de milhar confundiria o parser em algumas configurações).
+ */
+export function centsToPlain(cents: number): string {
+  return (cents / 100).toFixed(2).replace(".", ",");
+}
+
 export function brlToCents(input: string): number {
   // Aceita "1.234,56" ou "1234,56" ou "1234.56"
   // Mantém apenas dígitos, vírgula, ponto e sinal.

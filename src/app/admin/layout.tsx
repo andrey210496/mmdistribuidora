@@ -95,7 +95,12 @@ export default async function AdminLayout({
   const updateStatus = isSuperAdmin(user) ? await readInstalledUpdateStatus() : null;
 
   return (
-    <div className="min-h-screen flex bg-cream/30">
+    <div className="min-h-screen flex bg-cream/30 print:block print:bg-white">
+      {/* Ao imprimir um relatório: esconde a barra lateral e mostra só o conteúdo. */}
+      <style>{`@media print {
+        aside { display: none !important; }
+        .admin-main { padding: 0 !important; }
+      }`}</style>
       {/* Sidebar */}
       <aside className="w-64 bg-espresso text-cream flex flex-col shrink-0 sticky top-0 h-screen">
         <div className="p-5 border-b border-cream/10">
@@ -156,7 +161,7 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main */}
-      <main className="flex-1 min-w-0">
+      <main className="admin-main flex-1 min-w-0">
         {updateStatus?.available && updateStatus.latestVersion ? (
           <UpdateBanner
             currentVersion={updateStatus.currentVersion}

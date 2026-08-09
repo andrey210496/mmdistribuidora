@@ -585,6 +585,8 @@ export async function cancelPdvSale(orderId: string, reason: string): Promise<Ac
         paymentStatus: "REFUNDED",
         canceledAt: now,
         canceledReason: reason?.trim() || "Cancelada no PDV",
+        canceledById: user.id,
+        canceledByName: user.name,
       },
     });
     // receita reconhecida → cancelada

@@ -317,7 +317,13 @@ export async function cancelOrder(orderId: string, reason?: string): Promise<Act
   await prisma.$transaction([
     prisma.order.update({
       where: { id: order.id },
-      data: { status: "CANCELED" },
+      data: {
+        status: "CANCELED",
+        canceledAt: new Date(),
+        canceledReason: reason?.trim() || "Cancelado pelo admin",
+        canceledById: user.id,
+        canceledByName: user.name,
+      },
     }),
     prisma.orderStatusHistory.create({
       data: {

@@ -6,6 +6,7 @@ import { centsToBRL } from "@/lib/money";
 import { getStoreSettings } from "@/lib/settings";
 import { ToggleProductActiveButton } from "./ToggleProductActiveButton";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { DuplicateProductButton } from "./DuplicateProductButton";
 
 export const metadata = { title: "Produtos · Admin" };
 export const dynamic = "force-dynamic";
@@ -192,6 +193,7 @@ export default async function AdminProdutosPage({
                         >
                           <Edit3 size={15} />
                         </Link>
+                        <DuplicateProductButton productId={p.id} />
                         <DeleteProductButton productId={p.id} productName={p.name} />
                       </div>
                     </td>

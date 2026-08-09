@@ -338,6 +338,93 @@ export async function deleteProduct(productId: string): Promise<{ ok: boolean; e
 }
 
 // ============================================================
+// Duplicar produto: copia todos os campos, gera SKU/slug únicos, zera o
+// estoque e nasce INATIVO (para o usuário revisar antes de publicar).
+// Retorna o id do novo produto para redirecionar direto à edição.
+// ============================================================
+export async function duplicateProduct(
+  productId: string
+): Promise<{ ok: boolean; error?: string; newId?: string }> {
+  const user = await requireArea("produtos");
+  const id = z.string().min(1).safeParse(productId);
+  if (!id.success) return { ok: false, error: "Produto inválido" };
+
+  const src = await prisma.product.findUnique({
+    where: { id: id.data },
+    include: { images: { orderBy: { sortOrder: "asc" } } },
+  });
+  if (!src) return { ok: false, error: "Produto não encontrado" };
+
+  // SKU e slug precisam ser únicos. Tenta "-COPIA", "-COPIA-2", ... até achar
+  // um livre (o banco tem @unique nos dois).
+  async function uniqueSku(base: string): Promise<string> {
+    for (let i = 1; i < 50; i++) {
+      const cand = (i === 1 ? `${base}-COPIA` : `${base}-COPIA-${i}`).slice(0, 50);
+      if (!(await prisma.product.findUnique({ where: { sku: cand }, select: { id: true } }))) return cand;
+    }
+    return `${base}-${Date.now()}`.slice(0, 50);
+  }
+  async function uniqueSlug(base: string): Promise<string> {
+    for (let i = 1; i < 50; i++) {
+      const cand = (i === 1 ? `${base}-copia` : `${base}-copia-${i}`).slice(0, 200);
+      if (!(await prisma.product.findUnique({ where: { slug: cand }, select: { id: true } }))) return cand;
+    }
+    return `${base}-${Date.now()}`.slice(0, 200);
+  }
+
+  const newSku = await uniqueSku(src.sku);
+  const newSlug = await uniqueSlug(src.slug);
+
+  const copy = await prisma.product.create({
+    data: {
+      name: `${src.name} (cópia)`,
+      slug: newSlug,
+      description: src.description,
+      sku: newSku,
+      // Código de barras NÃO é copiado: é único por produto físico e o banco
+      // rejeitaria a duplicata. O usuário informa o novo na edição.
+      barcode: null,
+      priceCents: src.priceCents,
+      compareAtPriceCents: src.compareAtPriceCents,
+      priceCashCents: src.priceCashCents,
+      pricePixCents: src.pricePixCents,
+      priceCardCents: src.priceCardCents,
+      wholesalePriceCents: src.wholesalePriceCents,
+      wholesaleMinQty: src.wholesaleMinQty,
+      costCents: src.costCents,
+      stock: 0, // cópia nasce sem estoque
+      unit: src.unit,
+      weightGrams: src.weightGrams,
+      ncm: src.ncm,
+      cest: src.cest,
+      origem: src.origem,
+      taxGroupId: src.taxGroupId,
+      categoryId: src.categoryId,
+      featured: false,
+      active: false, // nasce inativa: some da loja até o usuário revisar
+      // copia a primeira imagem (mesmo arquivo no disco — apenas referencia)
+      images: src.images[0]
+        ? { create: { url: src.images[0].url, alt: src.images[0].alt, sortOrder: 0 } }
+        : undefined,
+    },
+  });
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "product.duplicated",
+    entityType: "Product",
+    entityId: copy.id,
+    afterJson: { fromId: src.id, fromSku: src.sku, newSku },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  revalidatePath("/admin/produtos");
+  return { ok: true, newId: copy.id };
+}
+
+// ============================================================
 // Ajuste de estoque (inventário): define a nova quantidade e registra
 // o motivo na auditoria (entrada/saída/contagem).
 // ============================================================

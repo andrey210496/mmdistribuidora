@@ -283,9 +283,12 @@ model Order {
   changeCents         Int? // troco devolvido
   // Venda no balcão emitida como cupom FISCAL (NFC-e) ou não-fiscal.
   fiscal              Boolean   @default(false)
-  // Cancelamento (PDV/admin)
+  // Cancelamento (PDV/admin). canceledByName e snapshot (fica gravado mesmo
+  // que o colaborador seja removido depois) — usado nos relatorios.
   canceledAt          DateTime?
   canceledReason      String?
+  canceledById        String?
+  canceledByName      String?
 
   // Sincronizacao vitrine->retaguarda: marca pedidos online ja baixados
   // pela retaguarda instalada (F4.2). Na instancia online fica false ate
