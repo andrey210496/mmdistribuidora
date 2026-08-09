@@ -5,7 +5,7 @@
 // Ctrl/Alt/Meta SEMPRE disparam.
 // ============================================================
 
-export type PdvAction = "focusSearch" | "finalize" | "credit" | "clearSale";
+export type PdvAction = "focusSearch" | "finalize" | "credit" | "clearSale" | "openCustomer";
 
 // Obs.: F1–F4 são reservados às formas de pagamento no PDV (dinheiro/débito/
 // crédito/Pix), então os atalhos abaixo evitam essas teclas.
@@ -14,6 +14,7 @@ export const PDV_ACTIONS: { key: PdvAction; label: string; default: string }[] =
   { key: "finalize", label: "Finalizar venda (à vista)", default: "F9" },
   { key: "credit", label: "Vender no fiado", default: "F8" },
   { key: "clearSale", label: "Limpar a venda atual", default: "Escape" },
+  { key: "openCustomer", label: "Abrir cliente / fiado a receber", default: "B" },
 ];
 
 export type ShortcutMap = Record<PdvAction, string>;

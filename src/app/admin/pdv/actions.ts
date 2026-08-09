@@ -15,7 +15,7 @@ import { getStationId } from "@/lib/pdv-config";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
 import { getOpenCashSession, getOrCreateWalkInCustomer } from "@/lib/cash";
-import { getCustomerCreditSummary } from "@/lib/credit";
+import { getCustomerCreditSummary, registerCreditPayment } from "@/lib/credit";
 
 export type ActionResult = { ok: boolean; error?: string };
 
@@ -126,6 +126,117 @@ export async function searchCustomers(query: string): Promise<PdvCustomer[]> {
     });
   }
   return out;
+}
+
+// ============================================================
+// Fiado do cliente no PDV (atalho "B"): saldo + vendas em aberto + histórico.
+// ============================================================
+export type PdvFiadoOrder = { id: string; orderNumber: string; createdAt: string; totalCents: number };
+export type PdvCustomerFiado = {
+  id: string;
+  name: string;
+  phone: string | null;
+  limitCents: number;
+  owedCents: number;
+  availableCents: number;
+  openOrders: PdvFiadoOrder[];
+  recentOrders: { orderNumber: string; createdAt: string; totalCents: number; status: string; paid: boolean }[];
+};
+
+export async function getCustomerFiado(customerId: string): Promise<PdvCustomerFiado | null> {
+  await requireArea("pdv");
+  const id = idSchema.safeParse(customerId);
+  if (!id.success) return null;
+
+  const customer = await prisma.customer.findUnique({
+    where: { id: id.data },
+    select: { id: true, name: true, phone: true },
+  });
+  if (!customer) return null;
+
+  const summary = await getCustomerCreditSummary(customer.id);
+
+  // Vendas no fiado ainda não pagas (STORE_CREDIT + pagamento pendente).
+  const open = await prisma.order.findMany({
+    where: { customerId: customer.id, paymentMethod: "STORE_CREDIT", paymentStatus: "PENDING", status: { not: "CANCELED" } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, orderNumber: true, createdAt: true, totalCents: true },
+  });
+
+  const recent = await prisma.order.findMany({
+    where: { customerId: customer.id, status: { not: "CANCELED" } },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: { orderNumber: true, createdAt: true, totalCents: true, status: true, paymentStatus: true },
+  });
+
+  return {
+    id: customer.id,
+    name: customer.name,
+    phone: customer.phone,
+    limitCents: summary.limitCents,
+    owedCents: summary.owedCents,
+    availableCents: summary.availableCents,
+    openOrders: open.map((o) => ({ id: o.id, orderNumber: o.orderNumber, createdAt: o.createdAt.toISOString(), totalCents: o.totalCents })),
+    recentOrders: recent.map((o) => ({
+      orderNumber: o.orderNumber,
+      createdAt: o.createdAt.toISOString(),
+      totalCents: o.totalCents,
+      status: o.status,
+      paid: o.paymentStatus === "CONFIRMED",
+    })),
+  };
+}
+
+const RECEIVE_METHODS = ["CASH", "PIX", "DEBIT_CARD", "CREDIT_CARD"] as const;
+
+/**
+ * Recebe (quita) fiado direto do PDV. Exige área "pdv" (o operador de caixa não
+ * tem, tipicamente, a área "clientes"). O motor é o mesmo registerCreditPayment.
+ */
+export async function pdvReceiveCredit(
+  customerId: string,
+  amountBrl: string,
+  method: string
+): Promise<ActionResult & { appliedCents?: number; owedCents?: number }> {
+  const user = await requireArea("pdv");
+  const id = idSchema.safeParse(customerId);
+  if (!id.success) return { ok: false, error: "Cliente inválido" };
+
+  let cents: number;
+  try {
+    cents = brlToCents(amountBrl);
+  } catch {
+    return { ok: false, error: "Valor inválido" };
+  }
+  if (cents <= 0) return { ok: false, error: "Valor inválido" };
+  if (!RECEIVE_METHODS.includes(method as (typeof RECEIVE_METHODS)[number])) {
+    return { ok: false, error: "Forma de pagamento inválida" };
+  }
+
+  const r = await registerCreditPayment({
+    customerId: id.data,
+    amountCents: cents,
+    method: method as PaymentMethod,
+    createdBy: user.id,
+  });
+  if (!r.ok) return { ok: false, error: r.error };
+
+  const h = await headers();
+  await logAudit({
+    userId: user.id,
+    action: "pdv.credit.payment",
+    entityType: "Customer",
+    entityId: id.data,
+    afterJson: { amountCents: r.appliedCents, method },
+    ip: clientIp(h),
+    userAgent: h.get("user-agent") ?? undefined,
+  });
+
+  const summary = await getCustomerCreditSummary(id.data);
+  revalidatePath("/admin/pdv");
+  revalidatePath(`/admin/clientes/${id.data}`);
+  return { ok: true, appliedCents: r.appliedCents, owedCents: summary.owedCents };
 }
 
 const quickCustomerSchema = z.object({

@@ -35,13 +35,25 @@ export const atalhos: Chapter = {
         ["F6", "Ir para a busca de produto"],
         ["F9", "Finalizar a venda à vista"],
         ["F8", "Vender no fiado"],
+        ["B", "Abrir cliente / fiado a receber"],
         ["Esc", "Limpar a venda atual (não grava nada)"],
         ["Enter", "Na busca: adiciona o produto bipado ou o único resultado"],
       ],
     },
     {
       t: "note",
-      text: "Estas quatro (F6, F9, F8 e Esc) podem ser trocadas em **Configurações › Atalhos de teclado do PDV**. As de pagamento (F1 a F4) são fixas.",
+      text: "Estas cinco (F6, F9, F8, B e Esc) podem ser trocadas em **Configurações › Atalhos de teclado do PDV**. As de pagamento (F1 a F4) são fixas.",
+    },
+    {
+      t: "h", text: "Cliente / Fiado a receber (tecla B)",
+    },
+    {
+      t: "p",
+      text: "A tecla **B** abre a janela do cliente: mostra o saldo devedor, as vendas no fiado em aberto e o histórico. Ali você **recebe o pagamento** (quita a dívida), pode **marcar várias vendas** para somar o valor de uma vez, e ainda **iniciar uma nova venda já com o cliente** vinculado.",
+    },
+    {
+      t: "note",
+      text: "As vendas no fiado passam a 'Pago' quando a dívida do cliente é **quitada por completo** — pagamento parcial reduz o saldo, mas os pedidos só mudam quando ele zera.",
     },
 
     { t: "h", text: "As combinações do dia a dia" },

@@ -3,8 +3,9 @@
 import { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import {
   Search, Plus, Minus, Trash2, X, User, ShoppingCart, Banknote,
-  Lock, Unlock, ArrowDownCircle, ArrowUpCircle, Printer, Check, CreditCard,
+  Lock, Unlock, ArrowDownCircle, ArrowUpCircle, Printer, Check, CreditCard, HandCoins,
 } from "lucide-react";
+import { CustomerFiadoModal } from "./CustomerFiadoModal";
 import { centsToBRL, brlToCents } from "@/lib/money";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
@@ -125,6 +126,8 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
 
   // Cliente
   const [customer, setCustomer] = useState<PdvCustomer | null>(null);
+  // Modal de fiado/cliente (atalho "B")
+  const [fiadoOpen, setFiadoOpen] = useState(false);
 
   // Pagamento
   const [pay, setPay] = useState<Record<PayKey, string>>({ CASH: "", PIX: "", DEBIT_CARD: "", CREDIT_CARD: "" });
@@ -299,6 +302,8 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
   // pedido do cliente); demais ações vêm da config (/admin/configuracoes).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Com o modal de fiado aberto, o PDV não reage a teclas (o modal cuida).
+      if (fiadoOpen) return;
       // F1 dinheiro · F2 débito · F3 crédito · F4 Pix (preenche o restante)
       const fixed: Record<string, PayKey> = {
         F1: "CASH",
@@ -325,6 +330,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
         else if (action === "finalize") submit(false);
         else if (action === "credit") submit(true);
         else if (action === "clearSale") resetSale();
+        else if (action === "openCustomer") setFiadoOpen(true);
         return;
       }
 
@@ -345,7 +351,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [shortcuts, submit, resetSale, quickPay, productHotkeys]);
+  }, [shortcuts, submit, resetSale, quickPay, productHotkeys, fiadoOpen]);
 
   return (
     <div className="p-4 lg:p-6">
@@ -451,6 +457,16 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
 
         {/* Coluna direita: cliente + pagamento */}
         <div className="space-y-4">
+          <button
+            type="button"
+            onClick={() => setFiadoOpen(true)}
+            className="w-full inline-flex items-center justify-center gap-2 bg-white border border-cocoa/15 hover:border-rose-brand/40 text-cocoa rounded-xl py-2.5 text-sm font-semibold"
+            title="Abrir cliente / fiado a receber (tecla B)"
+          >
+            <HandCoins size={16} className="text-rose-brand" /> Cliente / Fiado
+            <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded px-1.5 py-0.5">B</kbd>
+          </button>
+
           <CustomerPicker customer={customer} onChange={setCustomer} />
 
           <div className="bg-white rounded-2xl border border-cocoa/10 p-4">
@@ -584,6 +600,14 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
 
       {receipt && (
         <ReceiptModal storeName={storeName} receipt={receipt} onClose={() => setReceipt(null)} />
+      )}
+
+      {fiadoOpen && (
+        <CustomerFiadoModal
+          initialCustomer={customer}
+          onClose={() => setFiadoOpen(false)}
+          onUseInSale={(c) => setCustomer(c)}
+        />
       )}
     </div>
   );
