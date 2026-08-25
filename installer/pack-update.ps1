@@ -75,6 +75,16 @@ try {
     $mig = $mig -replace 'CREATE TABLE\s+"', 'CREATE TABLE IF NOT EXISTS "'
     $mig = $mig -replace 'CREATE UNIQUE INDEX\s+"', 'CREATE UNIQUE INDEX IF NOT EXISTS "'
     $mig = $mig -replace 'CREATE INDEX\s+"', 'CREATE INDEX IF NOT EXISTS "'
+    # ADD CONSTRAINT nao aceita "IF NOT EXISTS": se a base instalada JA tem a
+    # constraint (ex.: FK do NcmCode de uma migracao anterior), o ALTER falharia
+    # e (ON_ERROR_STOP=1) abortaria o update inteiro. Fazemos DROP IF EXISTS
+    # antes de cada ADD CONSTRAINT -> idempotente.
+    $mig = [regex]::Replace($mig, 'ALTER TABLE "([^"]+)" ADD CONSTRAINT "([^"]+)"', {
+      param($m)
+      $t = $m.Groups[1].Value; $c = $m.Groups[2].Value
+      'ALTER TABLE "' + $t + '" DROP CONSTRAINT IF EXISTS "' + $c + '";' + "`n" +
+      'ALTER TABLE "' + $t + '" ADD CONSTRAINT "' + $c + '"'
+    })
     [System.IO.File]::WriteAllText($migFile, $mig, (New-Object System.Text.UTF8Encoding($false)))
   } else {
     Write-Host "==> Sem baseline: migrate.sql vazio (base instalada ja tem este schema)." -ForegroundColor Yellow
