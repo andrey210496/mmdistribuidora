@@ -189,13 +189,50 @@ export async function applyPullPayload(p: PullPayload): Promise<void> {
     });
   }
   for (const c of p.customers) {
-    await prisma.customer.upsert({ where: { id: c.id }, update: c, create: c });
+    // O online e a fonte da verdade. Se um registro LOCAL de id diferente ja
+    // ocupa o mesmo email/CPF (ex.: o "Consumidor" que cada lado cria sozinho,
+    // ou um cadastro rapido offline), liberamos o valor do duplicado local para
+    // o upsert por id nao quebrar o UNIQUE — senao um unico choque travava o
+    // ciclo INTEIRO e nenhum cliente descia. Cada cliente e isolado num
+    // try/catch para um problema pontual nao abortar o restante.
+    try {
+      if (c.email) {
+        await prisma.customer.updateMany({
+          where: { email: c.email, id: { not: c.id } },
+          data: { email: null },
+        });
+      }
+      if (c.cpfCnpj) {
+        await prisma.customer.updateMany({
+          where: { cpfCnpj: c.cpfCnpj, id: { not: c.id } },
+          data: { cpfCnpj: null },
+        });
+      }
+      await prisma.customer.upsert({ where: { id: c.id }, update: c, create: c });
+    } catch (e) {
+      console.error(`[sync-pull] cliente ${c.id} falhou (seguindo):`, e instanceof Error ? e.message : e);
+    }
   }
   for (const cp of p.customerPrices) {
-    await prisma.customerProductPrice.upsert({ where: { id: cp.id }, update: cp, create: cp });
+    try {
+      await prisma.customerProductPrice.upsert({ where: { id: cp.id }, update: cp, create: cp });
+    } catch (e) {
+      console.error(`[sync-pull] preco ${cp.id} falhou (seguindo):`, e instanceof Error ? e.message : e);
+    }
   }
   for (const u of p.users) {
-    await prisma.user.upsert({ where: { id: u.id }, update: u, create: u });
+    // Mesma protecao para o email UNIQUE de colaborador.
+    try {
+      if (u.email) {
+        await prisma.user.updateMany({
+          where: { email: u.email, id: { not: u.id } },
+          data: { email: `dup-${u.id}@local.invalid` },
+        });
+      }
+      await prisma.user.upsert({ where: { id: u.id }, update: u, create: u });
+    } catch (e) {
+      console.error(`[sync-pull] usuario ${u.id} falhou (seguindo):`, e instanceof Error ? e.message : e);
+    }
   }
   for (const s of p.settings) {
     await prisma.setting.upsert({

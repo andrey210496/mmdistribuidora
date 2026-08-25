@@ -99,11 +99,18 @@ export async function searchCustomers(query: string): Promise<PdvCustomer[]> {
 
   const customers = await prisma.customer.findMany({
     where: {
-      email: { not: "consumidor@pdv.local" },
-      OR: [
-        { name: { contains: q, mode: "insensitive" } },
-        { phone: { contains: q } },
-        { cpfCnpj: { contains: q } },
+      AND: [
+        {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { phone: { contains: q } },
+            { cpfCnpj: { contains: q } },
+          ],
+        },
+        // Exclui o "Consumidor" (balcao) SEM derrubar quem tem email nulo:
+        // em SQL, `email <> 'x'` e desconhecido para email NULL e sumia da
+        // busca — e quase todo cliente de balcao nao tem email cadastrado.
+        { OR: [{ email: null }, { email: { not: "consumidor@pdv.local" } }] },
       ],
     },
     take: 10,
