@@ -18,6 +18,7 @@ import { getCustomerCreditSummary } from "@/lib/credit";
 import { WholesaleToggle } from "./WholesaleToggle";
 import { CreditPanel } from "./CreditPanel";
 import { CustomerPriceList } from "./CustomerPriceList";
+import { EditCustomerButton } from "./EditCustomerButton";
 
 export const metadata = { title: "Cliente · Admin" };
 export const dynamic = "force-dynamic";
@@ -103,12 +104,14 @@ export default async function ClienteDetailPage({
               )}
             </div>
             <div className="text-cocoa/60 text-sm flex items-center gap-3 flex-wrap mt-1">
-              <span className="flex items-center gap-1.5">
-                <Mail size={13} />
-                <a href={`mailto:${customer.email}`} className="hover:text-rose-brand">
-                  {customer.email}
-                </a>
-              </span>
+              {customer.email && (
+                <span className="flex items-center gap-1.5">
+                  <Mail size={13} />
+                  <a href={`mailto:${customer.email}`} className="hover:text-rose-brand">
+                    {customer.email}
+                  </a>
+                </span>
+              )}
               {customer.phone && (
                 <span className="flex items-center gap-1.5">
                   <Phone size={13} />
@@ -127,6 +130,9 @@ export default async function ClienteDetailPage({
             </div>
           </div>
         </div>
+        <EditCustomerButton
+          customer={{ id: customer.id, name: customer.name, phone: customer.phone, email: customer.email, cpfCnpj: customer.cpfCnpj }}
+        />
       </header>
 
       {/* Métricas */}
