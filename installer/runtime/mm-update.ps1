@@ -72,7 +72,7 @@ function Write-Status($cur, $latest, $available, $notes) {
   $json = $obj | ConvertTo-Json -Compress
   # NAO-FATAL: o -Check roda como SYSTEM (tarefa agendada) e cria o arquivo dono
   # SYSTEM; um apply rodado na mao por um admin nao conseguia sobrescrever e o
-  # UPDATE INTEIRO abortava so por causa do status. O status e informativo —
+  # UPDATE INTEIRO abortava so por causa do status. O status e informativo -
   # se nao der pra gravar, seguimos.
   try {
     [System.IO.File]::WriteAllText($statusFile, $json, (New-Object System.Text.UTF8Encoding($false)))
@@ -206,9 +206,36 @@ try {
   & robocopy $ext $appDir /E /XF ".env" /R:2 /W:1 /NFL /NDL /NP /NJH /NJS | Out-Null
   if ($LASTEXITCODE -ge 8) { throw "robocopy falhou (codigo $LASTEXITCODE)" }
 
-  # 7) religa o app
+  # 7) religa o app - ROBUSTO. O Start-ScheduledTask sozinho nao pegava: a
+  # tarefa ficava presa como "rodando" (a instancia antiga do mm-run ainda
+  # constava) e o app ficava fora do ar sem ninguem perceber. Encerramos a
+  # tarefa de verdade, religamos via schtasks e VERIFICAMOS a porta 3000.
   Write-Host "==> Reiniciando o app..." -ForegroundColor Cyan
-  Start-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+  & schtasks /end /tn "$taskName" 2>$null | Out-Null
+  Start-Sleep -Seconds 2
+  & schtasks /run /tn "$taskName" 2>$null | Out-Null
+
+  $up = $false
+  for ($i = 0; $i -lt 25; $i++) {
+    Start-Sleep -Seconds 2
+    if (Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue) { $up = $true; break }
+  }
+  if ($up) {
+    Write-Host "==> App no ar (porta 3000)." -ForegroundColor Green
+  } else {
+    # Fallback: sobe o app diretamente, destacado, para nao deixar a loja fora.
+    Write-Host "AVISO: a tarefa nao subiu o app; iniciando direto..." -ForegroundColor Yellow
+    $runPs = Join-Path $PSScriptRoot "mm-run.ps1"
+    Start-Process -FilePath "powershell.exe" `
+      -ArgumentList "-NoProfile","-WindowStyle","Hidden","-ExecutionPolicy","Bypass","-File","`"$runPs`"" `
+      -WindowStyle Hidden
+    for ($i = 0; $i -lt 20; $i++) {
+      Start-Sleep -Seconds 2
+      if (Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue) { $up = $true; break }
+    }
+    if ($up) { Write-Host "==> App no ar (fallback)." -ForegroundColor Green }
+    else { Write-Host "ERRO: o app nao subiu. Rode manualmente: mm-run.ps1" -ForegroundColor Red }
+  }
 
   Write-Status $latest.version $latest.version $false $latest.notes
   Write-Host "==> Atualizado para a versao $($latest.version)." -ForegroundColor Green
