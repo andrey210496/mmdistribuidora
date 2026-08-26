@@ -127,7 +127,12 @@ model Product {
   wholesaleMinQty     Int       @default(0)
   // Custo do produto (uso interno) — base para margem/lucro no financeiro.
   costCents           Int?      @default(0)
-  stock               Int       @default(0)
+  // Estoque. Float para suportar produtos vendidos por PESO (ex.: 8,650 kg).
+  // Produtos por unidade continuam com valores inteiros.
+  stock               Float     @default(0)
+  // Vendido por peso: o preço (priceCents) é por KG e a venda usa a balança
+  // (peso digitado no PDV × preço/kg). Estoque baixa o peso exato.
+  soldByWeight        Boolean   @default(false)
   // Unidade de medida de venda (UN, KG, CX, FD, PCT...).
   unit                String    @default("UN")
   weightGrams         Int       @default(0)
@@ -355,8 +360,10 @@ model OrderItem {
   // Snapshot — preço/nome travados no momento do pedido
   productNameSnapshot String
   productSkuSnapshot  String
+  // Para produto por peso: unitPriceCents = preço/kg e quantity = peso em kg
+  // (ex.: 0.35). Para produto por unidade, quantity é inteiro.
   unitPriceCents      Int
-  quantity            Int
+  quantity            Float
   totalCents          Int
   // Snapshot do CUSTO na venda (unitário e total) — base do lucro/CMV
   unitCostCents       Int     @default(0)
