@@ -141,7 +141,8 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
   type Receipt = {
     orderId: string;
     orderNumber: string;
-    items: { name: string; qty: number; note?: string }[];
+    items: { name: string; qty: number; unitPriceCents: number; lineTotal: number; soldByWeight: boolean; note?: string }[];
+    subtotalCents: number;
     totalCents: number;
     changeCents: number;
     onCredit: boolean;
@@ -284,7 +285,15 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
       const rec: Receipt = {
         orderId: r.orderId!,
         orderNumber: r.orderNumber!,
-        items: snapshot.lines.map((l) => ({ name: l.product.name, qty: l.qty, note: l.note })),
+        items: snapshot.lines.map((l) => ({
+          name: l.product.name,
+          qty: l.qty,
+          unitPriceCents: l.unitPriceCents,
+          lineTotal: l.lineTotal,
+          soldByWeight: l.product.soldByWeight,
+          note: l.note,
+        })),
+        subtotalCents: snapshot.total,
         totalCents: snapshot.total,
         changeCents: r.changeCents ?? 0,
         onCredit,
@@ -880,7 +889,8 @@ function ReceiptModal({
   storeName: string;
   receipt: {
     orderNumber: string;
-    items: { name: string; qty: number; note?: string }[];
+    items: { name: string; qty: number; unitPriceCents: number; lineTotal: number; soldByWeight: boolean; note?: string }[];
+    subtotalCents: number;
     totalCents: number;
     changeCents: number;
     onCredit: boolean;
@@ -889,6 +899,11 @@ function ReceiptModal({
   };
   onClose: () => void;
 }) {
+  // Quantidade: peso mostra "0,350 kg"; unidade mostra "2x".
+  const qtyLabel = (l: { qty: number; soldByWeight: boolean }) =>
+    l.soldByWeight
+      ? `${l.qty.toLocaleString("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} kg`
+      : `${l.qty}x`;
   const [format, setFormat] = useState<"thermal" | "a4">("thermal");
 
   const print = (fmt: "thermal" | "a4") => {
@@ -914,16 +929,34 @@ function ReceiptModal({
             {receipt.fiscal ? "CUPOM FISCAL" : "NÃO FISCAL"}
           </div>
           <div className="border-t border-dashed border-black my-2" />
+          {/* Cabeçalho das colunas */}
+          <div className="flex justify-between text-[10px] font-bold">
+            <span>ITEM</span>
+            <span>VALOR</span>
+          </div>
           {receipt.items.map((l, i) => (
-            <div key={i}>
-              <div className="flex justify-between gap-2">
-                <span className="truncate">{l.qty}x {l.name}</span>
+            <div key={i} className="mt-1">
+              <div className="truncate">{l.name}</div>
+              <div className="flex justify-between gap-2 text-[11px]">
+                <span>
+                  {qtyLabel(l)} {" x "} {centsToBRL(l.unitPriceCents)}
+                  {l.soldByWeight ? "/kg" : ""}
+                </span>
+                <span className="font-bold whitespace-nowrap">{centsToBRL(l.lineTotal)}</span>
               </div>
               {l.note && <div className="pl-3 text-[11px] italic">→ {l.note}</div>}
             </div>
           ))}
           <div className="border-t border-dashed border-black my-2" />
-          <div className="flex justify-between font-bold">
+          <div className="flex justify-between text-[11px]">
+            <span>Itens</span>
+            <span>{receipt.items.length}</span>
+          </div>
+          <div className="flex justify-between text-[11px]">
+            <span>Subtotal</span>
+            <span>{centsToBRL(receipt.subtotalCents)}</span>
+          </div>
+          <div className="flex justify-between font-bold text-sm mt-1">
             <span>TOTAL</span>
             <span>{centsToBRL(receipt.totalCents)}</span>
           </div>
