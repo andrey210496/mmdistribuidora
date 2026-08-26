@@ -3,9 +3,10 @@
 import { useState, useTransition, useRef, useEffect, useMemo } from "react";
 import {
   Search, Plus, Minus, Trash2, X, User, ShoppingCart, Banknote,
-  Lock, Unlock, ArrowDownCircle, ArrowUpCircle, Printer, Check, CreditCard, HandCoins,
+  Lock, Unlock, ArrowDownCircle, ArrowUpCircle, Printer, Check, CreditCard, HandCoins, Scale,
 } from "lucide-react";
 import { CustomerFiadoModal } from "./CustomerFiadoModal";
+import { WeightModal } from "./WeightModal";
 import { centsToBRL, brlToCents } from "@/lib/money";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
@@ -126,8 +127,9 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
 
   // Cliente
   const [customer, setCustomer] = useState<PdvCustomer | null>(null);
-  // Modal de fiado/cliente (atalho "B")
+  // Modal de fiado/cliente (atalho "B") e de venda por peso (atalho "P")
   const [fiadoOpen, setFiadoOpen] = useState(false);
+  const [weightOpen, setWeightOpen] = useState(false);
 
   // Pagamento
   const [pay, setPay] = useState<Record<PayKey, string>>({ CASH: "", PIX: "", DEBIT_CARD: "", CREDIT_CARD: "" });
@@ -169,6 +171,13 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
   }, [query]);
 
   const addToCart = (p: PdvProduct) => {
+    // Produto por peso vai pelo popup de balança (tecla P), não pela busca.
+    if (p.soldByWeight) {
+      setWeightOpen(true);
+      setQuery("");
+      setResults([]);
+      return;
+    }
     setCart((prev) => {
       const i = prev.findIndex((l) => l.product.id === p.id);
       if (i >= 0) {
@@ -181,6 +190,20 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     setQuery("");
     setResults([]);
     searchRef.current?.focus();
+  };
+
+  // Venda por peso: a quantidade da linha é o PESO em kg (substitui, não soma —
+  // pesa-se uma vez). O preço/kg × peso é calculado pelo resolveUnitPrice.
+  const addWeightToCart = (p: PdvProduct, weightKg: number) => {
+    setCart((prev) => {
+      const i = prev.findIndex((l) => l.product.id === p.id);
+      if (i >= 0) {
+        const next = [...prev];
+        next[i] = { ...next[i]!, qty: weightKg };
+        return next;
+      }
+      return [...prev, { product: p, qty: weightKg }];
+    });
   };
 
   const onSearchKey = (e: React.KeyboardEvent) => {
@@ -274,11 +297,33 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     });
   };
 
-  // F1–F4: preenche o restante na forma de pagamento (operar por teclado).
+  // A forma de pagamento define qual TABELA de preço usar: dinheiro→CASH,
+  // Pix→PIX, débito/crédito→CARD. Assim o preço acompanha o pagamento.
+  const priceModeForPay = (method: PayKey): PriceMode =>
+    method === "PIX" ? "PIX" : method === "CASH" ? "CASH" : "CARD";
+
+  // Total do carrinho recalculado para um modo de preço especifico (sincrono,
+  // sem depender do re-render do useMemo).
+  const totalForMode = (mode: PriceMode) =>
+    cart.reduce((sum, l) => {
+      const r = resolveUnitPrice(l.product, {
+        isWholesale: customer?.isWholesale ?? false,
+        qty: l.qty,
+        paymentMode: mode,
+        customerPriceCents: customer?.productPrices?.[l.product.id] ?? null,
+      });
+      return sum + r.unitPriceCents * l.qty;
+    }, 0);
+
+  // F1–F4: muda a tabela de preço para a da forma escolhida E preenche o
+  // restante (com o total ja recalculado nesse preço).
   const quickPay = (method: PayKey) => {
+    const mode = priceModeForPay(method);
+    setPriceMode(mode);
+    const newTotal = totalForMode(mode);
     setPay((prev) => {
       const others = PAY_METHODS.filter((m) => m !== method).reduce((s, m) => s + safeCents(prev[m]), 0);
-      const remaining = Math.max(0, priced.total - others);
+      const remaining = Math.max(0, newTotal - others);
       return { ...prev, [method]: (remaining / 100).toFixed(2).replace(".", ",") };
     });
   };
@@ -302,8 +347,8 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
   // pedido do cliente); demais ações vêm da config (/admin/configuracoes).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Com o modal de fiado aberto, o PDV não reage a teclas (o modal cuida).
-      if (fiadoOpen) return;
+      // Com um modal aberto, o PDV não reage a teclas (o modal cuida).
+      if (fiadoOpen || weightOpen) return;
       // F1 dinheiro · F2 débito · F3 crédito · F4 Pix (preenche o restante)
       const fixed: Record<string, PayKey> = {
         F1: "CASH",
@@ -331,6 +376,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
         else if (action === "credit") submit(true);
         else if (action === "clearSale") resetSale();
         else if (action === "openCustomer") setFiadoOpen(true);
+        else if (action === "openWeight") setWeightOpen(true);
         return;
       }
 
@@ -351,7 +397,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [shortcuts, submit, resetSale, quickPay, productHotkeys, fiadoOpen]);
+  }, [shortcuts, submit, resetSale, quickPay, productHotkeys, fiadoOpen, weightOpen]);
 
   return (
     <div className="p-4 lg:p-6">
@@ -389,10 +435,11 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                       <div className="text-sm text-cocoa font-medium truncate">{p.name}</div>
                       <div className="text-[11px] text-cocoa/50 font-mono">
                         {p.sku}
-                        {p.barcode ? ` · ${p.barcode}` : ""} · estoque {p.stock}
+                        {p.barcode ? ` · ${p.barcode}` : ""} · estoque {p.soldByWeight ? `${p.stock.toFixed(3)} kg` : p.stock}
+                        {p.soldByWeight ? " · por peso" : ""}
                       </div>
                     </div>
-                    <div className="text-sm font-bold text-cocoa whitespace-nowrap">{centsToBRL(p.priceCents)}</div>
+                    <div className="text-sm font-bold text-cocoa whitespace-nowrap">{centsToBRL(p.priceCents)}{p.soldByWeight ? "/kg" : ""}</div>
                   </button>
                 ))}
               </div>
@@ -416,7 +463,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-cocoa font-medium truncate">{l.product.name}</div>
                         <div className="text-[11px] text-cocoa/55 flex items-center gap-1.5">
-                          {centsToBRL(l.unitPriceCents)} cada
+                          {centsToBRL(l.unitPriceCents)} {l.product.soldByWeight ? "/kg" : "cada"}
                           {l.source === "wholesale" && (
                             <span className="text-caramel font-bold uppercase">atacado</span>
                           )}
@@ -428,15 +475,27 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center border border-cocoa/15 rounded-full">
-                        <button onClick={() => setQty(l.product.id, l.qty - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5">
-                          <Minus size={13} />
+                      {l.product.soldByWeight ? (
+                        // Produto por peso: mostra o peso (clique reabre a balança).
+                        <button
+                          onClick={() => setWeightOpen(true)}
+                          className="flex items-center gap-1.5 border border-cocoa/15 rounded-full px-3 h-8 text-sm font-bold text-cocoa hover:border-rose-brand/40"
+                          title="Alterar peso"
+                        >
+                          <Scale size={13} className="text-rose-brand" />
+                          {l.qty.toLocaleString("pt-BR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} kg
                         </button>
-                        <span className="w-9 text-center text-sm font-bold">{l.qty}</span>
-                        <button onClick={() => setQty(l.product.id, l.qty + 1)} disabled={l.qty >= l.product.stock} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5 disabled:opacity-30">
-                          <Plus size={13} />
-                        </button>
-                      </div>
+                      ) : (
+                        <div className="flex items-center border border-cocoa/15 rounded-full">
+                          <button onClick={() => setQty(l.product.id, l.qty - 1)} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5">
+                            <Minus size={13} />
+                          </button>
+                          <span className="w-9 text-center text-sm font-bold">{l.qty}</span>
+                          <button onClick={() => setQty(l.product.id, l.qty + 1)} disabled={l.qty >= l.product.stock} className="w-8 h-8 flex items-center justify-center hover:bg-cocoa/5 disabled:opacity-30">
+                            <Plus size={13} />
+                          </button>
+                        </div>
+                      )}
                       <div className="w-20 text-right font-bold text-cocoa text-sm">{centsToBRL(l.lineTotal)}</div>
                       <button onClick={() => removeLine(l.product.id)} className="text-cocoa/30 hover:text-red-500">
                         <Trash2 size={15} />
@@ -465,6 +524,16 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
           >
             <HandCoins size={16} className="text-rose-brand" /> Cliente / Fiado
             <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded px-1.5 py-0.5">B</kbd>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setWeightOpen(true)}
+            className="w-full inline-flex items-center justify-center gap-2 bg-white border border-cocoa/15 hover:border-rose-brand/40 text-cocoa rounded-xl py-2.5 text-sm font-semibold"
+            title="Vender por peso / balança (tecla P)"
+          >
+            <Scale size={16} className="text-rose-brand" /> Vender por peso
+            <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded px-1.5 py-0.5">P</kbd>
           </button>
 
           <CustomerPicker customer={customer} onChange={setCustomer} />
@@ -531,6 +600,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                     <input
                       value={pay[m]}
                       onChange={(e) => setPay((prev) => ({ ...prev, [m]: e.target.value }))}
+                      onFocus={() => setPriceMode(priceModeForPay(m))}
                       inputMode="decimal"
                       placeholder="0,00"
                       className="w-full px-2 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
@@ -608,6 +678,10 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
           onClose={() => setFiadoOpen(false)}
           onUseInSale={(c) => setCustomer(c)}
         />
+      )}
+
+      {weightOpen && (
+        <WeightModal onClose={() => setWeightOpen(false)} onAdd={addWeightToCart} />
       )}
     </div>
   );

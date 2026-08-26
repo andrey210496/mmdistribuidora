@@ -29,6 +29,7 @@ type Product = {
   stock: number;
   unit: string;
   weightGrams: number;
+  soldByWeight?: boolean;
   active: boolean;
   featured: boolean;
   expiryDate?: string | null; // "YYYY-MM-DD"
@@ -59,6 +60,8 @@ export function ProductForm({
 
   const [name, setName] = useState(product?.name ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
+  // Vendido por peso: preço vira "por kg" e o estoque aceita decimais.
+  const [soldByWeight, setSoldByWeight] = useState(product?.soldByWeight ?? false);
   const [imageUrl, setImageUrl] = useState(product?.imageUrl ?? "");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -343,10 +346,12 @@ export function ProductForm({
                   name="stock"
                   type="number"
                   min={0}
+                  step={soldByWeight ? "0.001" : "1"}
                   required
                   defaultValue={product?.stock ?? 0}
                   className="input-field"
                 />
+                {soldByWeight && <p className="text-[11px] text-cocoa/50 mt-1">Em kg (aceita decimais, ex.: 8,650).</p>}
               </div>
               <div>
                 <label className="label" htmlFor="unit">Unidade de medida</label>
@@ -371,6 +376,22 @@ export function ProductForm({
                   defaultValue={product?.weightGrams ?? 0}
                   className="input-field"
                 />
+              </div>
+              <div className="md:col-span-2">
+                <label className="flex items-center gap-2.5 text-sm text-cocoa cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="soldByWeight"
+                    className="w-4 h-4 accent-rose-brand"
+                    checked={soldByWeight}
+                    onChange={(e) => setSoldByWeight(e.target.checked)}
+                  />
+                  <span>
+                    <strong>Vendido por peso (balança)</strong> — o preço de venda passa a ser <strong>por kg</strong> e,
+                    no PDV, o operador usa a tecla <kbd className="font-mono text-[11px] bg-cocoa/10 rounded px-1">P</kbd> para
+                    informar o peso. O estoque é controlado em kg.
+                  </span>
+                </label>
               </div>
               <div className="md:col-span-2">
                 <label className="label" htmlFor="expiryDate">

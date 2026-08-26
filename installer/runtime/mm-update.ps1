@@ -70,7 +70,15 @@ function Write-Status($cur, $latest, $available, $notes) {
   # UTF8 SEM BOM: o Set-Content -Encoding utf8 do PS 5.1 grava BOM, que faz o
   # JSON.parse do lado Node (readInstalledUpdateStatus) estourar.
   $json = $obj | ConvertTo-Json -Compress
-  [System.IO.File]::WriteAllText($statusFile, $json, (New-Object System.Text.UTF8Encoding($false)))
+  # NAO-FATAL: o -Check roda como SYSTEM (tarefa agendada) e cria o arquivo dono
+  # SYSTEM; um apply rodado na mao por um admin nao conseguia sobrescrever e o
+  # UPDATE INTEIRO abortava so por causa do status. O status e informativo —
+  # se nao der pra gravar, seguimos.
+  try {
+    [System.IO.File]::WriteAllText($statusFile, $json, (New-Object System.Text.UTF8Encoding($false)))
+  } catch {
+    Write-Host "AVISO: nao consegui gravar o update-status.json (seguindo): $($_.Exception.Message)" -ForegroundColor Yellow
+  }
 }
 
 # ---- config ----

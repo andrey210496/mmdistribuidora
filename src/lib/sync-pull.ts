@@ -27,6 +27,7 @@ export type PullProduct = {
   wholesaleMinQty: number;
   costCents: number | null;
   stock: number;
+  soldByWeight: boolean;
   unit: string;
   weightGrams: number;
   ncm: string | null;
@@ -125,7 +126,7 @@ export async function buildPullPayload(since: Date | null): Promise<PullPayload>
           id: true, name: true, slug: true, description: true, sku: true, barcode: true,
           priceCents: true, compareAtPriceCents: true, priceCashCents: true, pricePixCents: true,
           priceCardCents: true, wholesalePriceCents: true, wholesaleMinQty: true, costCents: true,
-          stock: true, unit: true, weightGrams: true, ncm: true, cest: true, origem: true,
+          stock: true, soldByWeight: true, unit: true, weightGrams: true, ncm: true, cest: true, origem: true,
           taxGroupId: true, active: true, featured: true, categoryId: true,
           images: { select: { url: true, alt: true, sortOrder: true }, orderBy: { sortOrder: "asc" } },
         },

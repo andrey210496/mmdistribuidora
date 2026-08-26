@@ -39,9 +39,16 @@ export type PdvProduct = {
   sku: string;
   barcode: string | null;
   priceCents: number;
+  // Preço por forma de pagamento — SEM isto, o cliente não conseguia mudar o
+  // preço ao trocar dinheiro/pix/cartão (caía sempre no priceCents).
+  priceCashCents: number | null;
+  pricePixCents: number | null;
+  priceCardCents: number | null;
   wholesalePriceCents: number | null;
   wholesaleMinQty: number;
   stock: number;
+  soldByWeight: boolean;
+  unit: string;
   imageUrl: string | null;
 };
 
@@ -70,9 +77,14 @@ export async function searchProducts(query: string): Promise<PdvProduct[]> {
     sku: p.sku,
     barcode: p.barcode,
     priceCents: p.priceCents,
+    priceCashCents: p.priceCashCents,
+    pricePixCents: p.pricePixCents,
+    priceCardCents: p.priceCardCents,
     wholesalePriceCents: p.wholesalePriceCents,
     wholesaleMinQty: p.wholesaleMinQty,
     stock: p.stock,
+    soldByWeight: p.soldByWeight,
+    unit: p.unit,
     imageUrl: p.images[0]?.url ?? null,
   }));
 }
@@ -471,10 +483,15 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
   let normalSubtotalCents = 0;
   for (const item of input.items) {
     const product = products.find((p) => p.id === item.productId)!;
-    const qty = Math.floor(item.quantity);
-    if (qty <= 0) return { ok: false, error: `Quantidade inválida para "${product.name}".` };
+    // Produto por PESO: quantidade é o peso em kg (fracionário, ex.: 0,350).
+    // Por unidade: inteiro (piso). unitPriceCents é sempre por kg/por unidade,
+    // então total = round(unitPrice × qty) — arredonda o centavo do peso.
+    const isWeight = product.soldByWeight;
+    const qty = isWeight ? Math.round(item.quantity * 1000) / 1000 : Math.floor(item.quantity);
+    if (!(qty > 0)) return { ok: false, error: `Quantidade inválida para "${product.name}".` };
     if (qty > product.stock) {
-      return { ok: false, error: `Estoque insuficiente para "${product.name}" (${product.stock}).` };
+      const est = isWeight ? `${product.stock.toFixed(3)} kg` : String(product.stock);
+      return { ok: false, error: `Estoque insuficiente para "${product.name}" (${est}).` };
     }
     const unitPriceCents = resolveUnitPrice(product, {
       isWholesale,
@@ -482,10 +499,10 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
       paymentMode,
       customerPriceCents: customerPriceMap.get(product.id) ?? null,
     }).unitPriceCents;
-    const totalCents = unitPriceCents * qty;
+    const totalCents = Math.round(unitPriceCents * qty);
     const unitCostCents = product.costCents ?? 0;
     subtotalCents += totalCents;
-    normalSubtotalCents += product.priceCents * qty;
+    normalSubtotalCents += Math.round(product.priceCents * qty);
     orderItemsData.push({
       productId: product.id,
       productNameSnapshot: product.name,
@@ -494,7 +511,7 @@ export async function finalizeSale(input: SaleInput): Promise<SaleResult> {
       quantity: qty,
       totalCents,
       unitCostCents,
-      costTotalCents: unitCostCents * qty,
+      costTotalCents: Math.round(unitCostCents * qty),
       note: (item.note ?? "").trim() || null,
     });
   }

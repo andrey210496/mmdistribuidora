@@ -32,7 +32,9 @@ const productFormSchema = z.object({
   wholesalePriceCents: z.number().int().positive().nullable().optional(),
   wholesaleMinQty: z.number().int().nonnegative(),
   costCents: z.number().int().nonnegative().nullable().optional(),
-  stock: z.number().int().nonnegative(),
+  // Float p/ produtos por peso (kg com decimais). Por unidade fica inteiro.
+  stock: z.number().nonnegative(),
+  soldByWeight: z.boolean().optional().default(false),
   unit: z.string().min(1).max(8),
   ncm: z.string().max(20).nullable().optional(),
   cest: z.string().max(20).nullable().optional(),
@@ -94,7 +96,8 @@ function parseFormData(formData: FormData) {
     wholesalePriceCents: wholesalePrice && wholesalePrice > 0 ? wholesalePrice : null,
     wholesaleMinQty: Math.max(0, Number(formData.get("wholesaleMinQty") ?? 0) || 0),
     costCents: cost && cost > 0 ? cost : 0,
-    stock: Number(formData.get("stock") ?? 0),
+    stock: Number(String(formData.get("stock") ?? "0").replace(",", ".")) || 0,
+    soldByWeight: formData.get("soldByWeight") === "on",
     unit: String(formData.get("unit") ?? "UN").trim().toUpperCase() || "UN",
     ncm: String(formData.get("ncm") ?? "").trim() || null,
     cest: String(formData.get("cest") ?? "").trim() || null,
@@ -393,6 +396,7 @@ export async function duplicateProduct(
       wholesaleMinQty: src.wholesaleMinQty,
       costCents: src.costCents,
       stock: 0, // cópia nasce sem estoque
+      soldByWeight: src.soldByWeight,
       unit: src.unit,
       weightGrams: src.weightGrams,
       ncm: src.ncm,
@@ -436,14 +440,17 @@ export async function adjustStock(
   const user = await requireArea("produtos");
   const pid = z.string().min(1).safeParse(productId);
   if (!pid.success) return { ok: false, error: "Produto inválido" };
-  const qty = Math.max(0, Math.floor(Number(newQty)));
-  if (!Number.isFinite(qty)) return { ok: false, error: "Quantidade inválida" };
 
   const product = await prisma.product.findUnique({
     where: { id: pid.data },
-    select: { id: true, stock: true, name: true },
+    select: { id: true, stock: true, name: true, soldByWeight: true },
   });
   if (!product) return { ok: false, error: "Produto não encontrado" };
+
+  // Produto por peso: aceita kg com decimais (3 casas). Por unidade: inteiro.
+  const n = Number(newQty);
+  if (!Number.isFinite(n) || n < 0) return { ok: false, error: "Quantidade inválida" };
+  const qty = product.soldByWeight ? Math.round(n * 1000) / 1000 : Math.floor(n);
 
   await prisma.product.update({ where: { id: product.id }, data: { stock: qty } });
 

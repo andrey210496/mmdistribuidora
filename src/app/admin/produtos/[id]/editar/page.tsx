@@ -53,6 +53,7 @@ export default async function EditarProdutoPage({
           wholesaleMinQty: product.wholesaleMinQty,
           costCents: product.costCents,
           stock: product.stock,
+          soldByWeight: product.soldByWeight,
           unit: product.unit,
           weightGrams: product.weightGrams,
           active: product.active,
