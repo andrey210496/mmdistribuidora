@@ -1,11 +1,27 @@
 "use server";
 
 import { spawn } from "child_process";
+import { existsSync } from "fs";
 import path from "path";
 import { getAdminSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { isSuperAdmin } from "@/lib/permissions";
 import { readInstalledUpdateStatus } from "@/lib/updates";
+
+// Resolve o mm-update.ps1 de forma ROBUSTA. Antes usava so process.cwd()+runtime,
+// mas se o app subisse com o cwd errado (launcher sem Set-Location) o caminho
+// ficava invalido, o PowerShell nao achava o -File e saia calado -> o botao
+// "Atualizar agora" nao fazia nada. Agora testamos varios caminhos conhecidos.
+function resolveUpdateScript(): string | null {
+  const candidates = [
+    path.join(process.cwd(), "runtime", "mm-update.ps1"),
+    // {app}\app\runtime (server.js roda em {app}\app)
+    path.join(process.cwd(), "app", "runtime", "mm-update.ps1"),
+    // caminho padrao de instalacao (fallback absoluto)
+    "C:\\Program Files\\MM Retaguarda\\app\\runtime\\mm-update.ps1",
+  ];
+  return candidates.find((p) => existsSync(p)) ?? null;
+}
 
 // Dispara a atualização da retaguarda instalada. Roda o mm-update.ps1 de forma
 // destacada (o script espera alguns segundos, para o app, troca os arquivos,
@@ -27,12 +43,15 @@ export async function startUpdateAction(): Promise<{ ok: boolean; error?: string
   if (!status) return { ok: false, error: "atualização indisponível neste ambiente" };
   if (!status.available) return { ok: false, error: "o sistema já está atualizado" };
 
-  const script = path.join(process.cwd(), "runtime", "mm-update.ps1");
+  const script = resolveUpdateScript();
+  if (!script) {
+    return { ok: false, error: "atualizador nao encontrado (mm-update.ps1). Atualize manualmente." };
+  }
   try {
     const child = spawn(
       "powershell.exe",
       ["-NoProfile", "-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-File", script],
-      { detached: true, stdio: "ignore", windowsHide: true }
+      { detached: true, stdio: "ignore", windowsHide: true, cwd: path.dirname(path.dirname(script)) }
     );
     child.unref();
     return { ok: true };
