@@ -375,43 +375,60 @@ export async function duplicateProduct(
     return `${base}-${Date.now()}`.slice(0, 200);
   }
 
-  const newSku = await uniqueSku(src.sku);
-  const newSlug = await uniqueSlug(src.slug);
+  // Campos copiados (menos slug/sku, que variam por tentativa).
+  const baseData = {
+    name: `${src.name} (cópia)`,
+    description: src.description,
+    // Código de barras NÃO é copiado: é único por produto físico e o banco
+    // rejeitaria a duplicata. O usuário informa o novo na edição.
+    barcode: null,
+    priceCents: src.priceCents,
+    compareAtPriceCents: src.compareAtPriceCents,
+    priceCashCents: src.priceCashCents,
+    pricePixCents: src.pricePixCents,
+    priceCardCents: src.priceCardCents,
+    wholesalePriceCents: src.wholesalePriceCents,
+    wholesaleMinQty: src.wholesaleMinQty,
+    costCents: src.costCents,
+    stock: 0, // cópia nasce sem estoque
+    soldByWeight: src.soldByWeight,
+    unit: src.unit,
+    weightGrams: src.weightGrams,
+    ncm: src.ncm,
+    cest: src.cest,
+    origem: src.origem,
+    taxGroupId: src.taxGroupId,
+    categoryId: src.categoryId,
+    featured: false,
+    active: false, // nasce inativa: some da loja até o usuário revisar
+    images: src.images[0]
+      ? { create: { url: src.images[0].url, alt: src.images[0].alt, sortOrder: 0 } }
+      : undefined,
+  };
 
-  const copy = await prisma.product.create({
-    data: {
-      name: `${src.name} (cópia)`,
-      slug: newSlug,
-      description: src.description,
-      sku: newSku,
-      // Código de barras NÃO é copiado: é único por produto físico e o banco
-      // rejeitaria a duplicata. O usuário informa o novo na edição.
-      barcode: null,
-      priceCents: src.priceCents,
-      compareAtPriceCents: src.compareAtPriceCents,
-      priceCashCents: src.priceCashCents,
-      pricePixCents: src.pricePixCents,
-      priceCardCents: src.priceCardCents,
-      wholesalePriceCents: src.wholesalePriceCents,
-      wholesaleMinQty: src.wholesaleMinQty,
-      costCents: src.costCents,
-      stock: 0, // cópia nasce sem estoque
-      soldByWeight: src.soldByWeight,
-      unit: src.unit,
-      weightGrams: src.weightGrams,
-      ncm: src.ncm,
-      cest: src.cest,
-      origem: src.origem,
-      taxGroupId: src.taxGroupId,
-      categoryId: src.categoryId,
-      featured: false,
-      active: false, // nasce inativa: some da loja até o usuário revisar
-      // copia a primeira imagem (mesmo arquivo no disco — apenas referencia)
-      images: src.images[0]
-        ? { create: { url: src.images[0].url, alt: src.images[0].alt, sortOrder: 0 } }
-        : undefined,
-    },
-  });
+  // Cria com RETRY: se dois "duplicar" rodarem juntos (duplo clique), ambos
+  // acham o mesmo slug/SKU livre e o segundo estoura UNIQUE (P2002). Nesse caso,
+  // regeramos com sufixo único e tentamos de novo — sem derrubar a página.
+  let copy: { id: string } | null = null;
+  let newSku = "";
+  for (let attempt = 0; attempt < 6; attempt++) {
+    if (attempt === 0) {
+      newSku = await uniqueSku(src.sku);
+    } else {
+      const sfx = Date.now().toString(36) + attempt;
+      newSku = `${src.sku}-COPIA-${sfx}`.slice(0, 50);
+    }
+    const newSlug =
+      attempt === 0 ? await uniqueSlug(src.slug) : `${src.slug}-copia-${Date.now().toString(36)}${attempt}`.slice(0, 200);
+    try {
+      copy = await prisma.product.create({ data: { slug: newSlug, sku: newSku, ...baseData } });
+      break;
+    } catch (e) {
+      if ((e as { code?: string })?.code === "P2002") continue; // colisão: tenta de novo
+      throw e; // outro erro real
+    }
+  }
+  if (!copy) return { ok: false, error: "Não foi possível duplicar. Tente novamente." };
 
   const h = await headers();
   await logAudit({
