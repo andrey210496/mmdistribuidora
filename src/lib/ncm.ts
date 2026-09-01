@@ -210,6 +210,16 @@ async function searchNcmByText(q: string, take: number): Promise<RawRow[]> {
 }
 
 export async function searchNcm(query: string, take = 20): Promise<NcmOption[]> {
+  try {
+    return await searchNcmInner(query, take);
+  } catch {
+    // Se a tabela NcmCode ainda nao existe no banco, degrada para vazio em vez
+    // de derrubar a tela do produto.
+    return [];
+  }
+}
+
+async function searchNcmInner(query: string, take: number): Promise<NcmOption[]> {
   const q = String(query ?? "").trim();
   if (q.length < 2) return [];
   const digits = q.replace(/\D/g, "");
@@ -241,10 +251,15 @@ export async function searchNcm(query: string, take = 20): Promise<NcmOption[]> 
 export async function getNcm(code: string): Promise<NcmOption | null> {
   const c = normalizeNcm(code);
   if (!isValidNcm(c)) return null;
-  const r = await prisma.ncmCode.findUnique({
-    where: { code: c },
-    include: { taxGroup: { select: { name: true } } },
-  });
+  let r;
+  try {
+    r = await prisma.ncmCode.findUnique({
+      where: { code: c },
+      include: { taxGroup: { select: { name: true } } },
+    });
+  } catch {
+    return null; // tabela ausente: nao derruba a tela
+  }
   if (!r) return null;
   return {
     code: r.code,

@@ -30,9 +30,16 @@ export default async function EditarProdutoPage({
   if (!product) notFound();
 
   // Descrição do NCM já salvo, para o seletor mostrar em vez de só o número.
-  const ncmRow = product.ncm
-    ? await prisma.ncmCode.findUnique({ where: { code: product.ncm }, select: { description: true } })
-    : null;
+  // Defensivo: se a tabela NcmCode ainda não existir no banco (ex.: gestão
+  // recém-implantada sem a migração), NÃO derruba a página — mostra só o código.
+  let ncmRow: { description: string } | null = null;
+  if (product.ncm) {
+    try {
+      ncmRow = await prisma.ncmCode.findUnique({ where: { code: product.ncm }, select: { description: true } });
+    } catch {
+      ncmRow = null;
+    }
+  }
 
   return (
     <div className="p-6 lg:p-8">
