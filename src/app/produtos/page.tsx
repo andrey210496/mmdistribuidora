@@ -62,16 +62,22 @@ export default async function ProdutosPage({
       <Header />
 
       {/* Faixa de título */}
-      <section className="bg-cocoa-gradient text-cream py-16 lg:py-20 relative overflow-hidden">
-        <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-caramel/10 blur-[100px] pointer-events-none" />
-        <div className="container-default relative">
-          <nav className="text-cream/60 text-sm mb-3 flex items-center gap-2">
-            <Link href="/" className="hover:text-gold">Início</Link>
-            <span>/</span>
-            <span className="text-gold">{title}</span>
+      <section className="bg-cream tex-dots relative overflow-hidden border-b border-line">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-32 -right-24 w-[460px] h-[460px] rounded-full opacity-50 blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(242,178,62,.5), transparent 70%)" }}
+        />
+        <div className="container-default relative py-10 lg:py-14">
+          <nav className="text-cocoa/60 text-[13px] mb-3 flex items-center gap-2">
+            <Link href="/" className="hover:text-rose-brand font-semibold">Início</Link>
+            <span className="text-clay">/</span>
+            <span className="text-rose-brand font-semibold">{title}</span>
           </nav>
-          <h1 className="display-lg text-gold-gradient">{title}</h1>
-          <p className="text-cream/70 mt-3">
+          <span className="kicker">Atacado &amp; varejo</span>
+          <h1 className="display-xl text-ink mt-3">{title}</h1>
+          <p className="mt-3 inline-flex items-center gap-2 bg-white border border-line rounded-full px-3.5 py-1.5 text-[13px] font-semibold text-cocoa">
+            <span className="w-2 h-2 rounded-full bg-rose-brand" />
             {products.length} produto{products.length !== 1 ? "s" : ""} encontrado{products.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -81,17 +87,15 @@ export default async function ProdutosPage({
         <div className="grid lg:grid-cols-[260px_1fr] gap-8 lg:gap-12">
           {/* Sidebar de filtros */}
           <aside className="lg:sticky lg:top-44 lg:self-start">
-            <h3 className="font-display text-lg font-bold text-cocoa mb-4">
-              Categorias
-            </h3>
+            <h3 className="kicker mb-4">Departamentos</h3>
             <ul className="space-y-1.5">
               <li>
                 <Link
                   href="/produtos"
-                  className={`block px-4 py-2.5 rounded-full text-sm transition ${
+                  className={`block px-4 py-2.5 rounded-full text-sm font-semibold transition ${
                     !filters.categoria && filters.ofertas !== "1"
-                      ? "bg-espresso text-cream font-semibold"
-                      : "text-cocoa hover:bg-cocoa/5"
+                      ? "bg-rose-brand text-white shadow-[0_8px_18px_-10px_rgba(209,43,43,0.8)]"
+                      : "text-cocoa hover:bg-rose-brand/8 hover:text-rose-brand"
                   }`}
                 >
                   Todos os produtos
@@ -101,26 +105,26 @@ export default async function ProdutosPage({
                 <li key={cat.id}>
                   <Link
                     href={`/produtos?categoria=${cat.slug}`}
-                    className={`block px-4 py-2.5 rounded-full text-sm transition ${
+                    className={`block px-4 py-2.5 rounded-full text-sm font-semibold transition ${
                       filters.categoria === cat.slug
-                        ? "bg-espresso text-cream font-semibold"
-                        : "text-cocoa hover:bg-cocoa/5"
+                        ? "bg-rose-brand text-white shadow-[0_8px_18px_-10px_rgba(209,43,43,0.8)]"
+                        : "text-cocoa hover:bg-rose-brand/8 hover:text-rose-brand"
                     }`}
                   >
                     {cat.name}
                   </Link>
                 </li>
               ))}
-              <li>
+              <li className="pt-1.5 mt-1.5 border-t border-line">
                 <Link
                   href="/produtos?ofertas=1"
-                  className={`block px-4 py-2.5 rounded-full text-sm transition ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition ${
                     filters.ofertas === "1"
-                      ? "bg-caramel text-white font-semibold"
-                      : "text-caramel hover:bg-caramel/10 font-semibold"
+                      ? "bg-gold text-espressoDark"
+                      : "text-[#b7893c] hover:bg-gold/15"
                   }`}
                 >
-                  ✦ Ofertas
+                  <span aria-hidden>★</span> Ofertas
                 </Link>
               </li>
             </ul>
@@ -129,15 +133,15 @@ export default async function ProdutosPage({
           {/* Grid de produtos */}
           <div>
             {products.length === 0 ? (
-              <div className="card p-16 text-center">
-                <div className="font-display text-6xl text-cocoa/10 mb-4">∅</div>
-                <h3 className="font-display text-xl font-bold text-cocoa mb-2">
+              <div className="bg-white rounded-3xl border border-line p-16 text-center">
+                <div className="font-display font-extrabold text-6xl text-rose-brand/15 mb-4">∅</div>
+                <h3 className="font-display font-bold text-xl text-ink mb-2">
                   Nenhum produto encontrado
                 </h3>
                 <p className="text-cocoa/60 mb-6">
                   Tente outra busca ou navegue pelo catálogo.
                 </p>
-                <Link href="/produtos" className="btn-primary">
+                <Link href="/produtos" className="btn-pink">
                   Ver todos os produtos
                 </Link>
               </div>

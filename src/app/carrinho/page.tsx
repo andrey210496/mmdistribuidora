@@ -15,18 +15,21 @@ export default async function CarrinhoPage() {
     <>
       <Header />
       <main className="container-default py-10 lg:py-14 min-h-[60vh]">
-        <h1 className="font-display text-3xl lg:text-4xl font-bold text-cocoa mb-8">
+        <span className="kicker">Seu pedido</span>
+        <h1 className="font-display text-3xl lg:text-5xl font-extrabold text-ink mt-3 mb-8">
           Seu carrinho
         </h1>
 
         {cart.lines.length === 0 ? (
-          <div className="bg-cream rounded-2xl border border-cocoa/10 p-16 text-center">
-            <ShoppingBag className="inline-block text-rose-brand mb-4" size={48} />
-            <h2 className="font-display text-2xl font-bold text-cocoa mb-2">
+          <div className="bg-cream rounded-3xl border border-line p-16 text-center">
+            <div className="w-16 h-16 rounded-full bg-rose-brand/10 flex items-center justify-center mx-auto mb-4">
+              <ShoppingBag className="text-rose-brand" size={30} />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-ink mb-2">
               Seu carrinho está vazio
             </h2>
             <p className="text-cocoa/65 mb-6">
-              Que tal explorar nosso catálogo e adicionar seus produtos favoritos?
+              Monte seu pedido no atacado — sem pedido mínimo.
             </p>
             <Link href="/produtos" className="btn-pink">
               Ver produtos

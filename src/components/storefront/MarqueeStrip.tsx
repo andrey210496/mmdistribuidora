@@ -1,38 +1,28 @@
-import { CacaoLeaf } from "./Decorations";
+import { Star } from "lucide-react";
 
 const phrases = [
-  "Chocolate premium",
-  "Embalagens lindas",
-  "Ingredientes frescos",
-  "Granulado artesanal",
-  "Forminhas pra brigadeiro",
-  "Marcas de confiança",
-  "Despacho em 24h",
-  "Frete pra todo Brasil",
+  "Atacado sem pedido mínimo",
+  "Entrega no Vale do Paraíba",
+  "Preço que cai por quantidade",
+  "Pix, cartão, dinheiro ou fiado",
+  "+3.000 produtos pro seu balcão",
+  "Despacho rápido",
+  "Atendimento humano no WhatsApp",
 ];
 
+// Faixa de ofertas rolando — energia de atacadao, vermelho MM com estrelas douradas.
 export function MarqueeStrip() {
   return (
-    <section
-      className="bg-caramel text-cream py-5 overflow-hidden border-y border-cocoa/20 relative"
-      style={{
-        backgroundImage:
-          "linear-gradient(135deg, #bf6e27 0%, #a85e1e 50%, #bf6e27 100%)",
-      }}
-    >
-      {/* gradients laterais para fade */}
-      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-caramel to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-caramel to-transparent z-10 pointer-events-none" />
-
+    <section className="bg-rose-brand text-white py-3.5 overflow-hidden tex-diag">
       <div className="anim-marquee marquee-track">
         {[...Array(2)].map((_, dup) => (
-          <div key={dup} className="flex items-center gap-10 shrink-0">
+          <div key={dup} className="flex items-center gap-8 shrink-0 pr-8" aria-hidden={dup === 1}>
             {phrases.map((p, i) => (
-              <div key={`${dup}-${i}`} className="flex items-center gap-10 shrink-0">
-                <span className="font-display font-bold text-2xl lg:text-3xl tracking-tight whitespace-nowrap italic">
-                  <span className="font-serif">{p}</span>
+              <div key={`${dup}-${i}`} className="flex items-center gap-8 shrink-0">
+                <span className="font-display font-extrabold text-[15px] lg:text-[17px] uppercase tracking-[0.04em] whitespace-nowrap">
+                  {p}
                 </span>
-                <CacaoLeaf className="w-5 h-5 text-cream/70 anim-spin-slow shrink-0" />
+                <Star size={15} className="text-gold fill-gold shrink-0" />
               </div>
             ))}
           </div>

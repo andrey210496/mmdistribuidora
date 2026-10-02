@@ -163,6 +163,68 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ============================================================
+   REBRAND "ATACADO APETITOSO" — linguagem visual (vermelho + dourado)
+   ============================================================ */
+@layer components {
+  /* Kicker de seção: barrinha dourada + rótulo condensado vermelho */
+  .kicker {
+    @apply inline-flex items-center gap-2.5 text-[11px] font-extrabold uppercase tracking-[0.22em] text-rose-brand;
+  }
+  .kicker::before {
+    content: "";
+    @apply inline-block w-7 h-[3px] rounded-full bg-gold;
+  }
+  .kicker-light { @apply text-gold; }
+  .kicker-light::before { @apply bg-white/70; }
+
+  /* Títulos ainda maiores e mais fortes que o display padrao */
+  .display-mega {
+    @apply font-display font-extrabold text-[40px] sm:text-6xl lg:text-7xl xl:text-[84px]
+           leading-[0.95] tracking-[-0.03em];
+  }
+  .display-xl {
+    @apply font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl
+           leading-[1.02] tracking-[-0.02em];
+  }
+
+  /* Etiqueta de preço com ponta (price tag) */
+  .pricetag {
+    clip-path: polygon(12px 0, 100% 0, 100% 100%, 12px 100%, 0 50%);
+  }
+
+  /* Botão dourado (acao de economia/atacado) */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full
+           bg-gold text-espressoDark font-extrabold text-[14px] uppercase tracking-[0.05em]
+           transition-all duration-300
+           hover:bg-[#e2a32e] hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-12px_rgba(242,178,62,0.8)];
+  }
+}
+
+/* Preço estilizado: R$ pequeno em cima, inteiro grande, centavos menor */
+.price { @apply font-display font-extrabold leading-none inline-flex items-start; }
+.price .cur { @apply text-[0.5em] font-bold mt-[0.25em] mr-0.5; }
+.price .cents { @apply text-[0.55em] font-bold mt-[0.18em] ml-0.5; }
+
+/* Texturas para blocos vermelhos/escuros */
+.tex-diag {
+  background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.055) 0 2px, transparent 2px 11px);
+}
+.tex-dots {
+  background-image: radial-gradient(rgba(242,178,62,.22) 1.5px, transparent 1.6px);
+  background-size: 20px 20px;
+}
+
+/* Divisa pontilhada estilo cupom */
+.rule-dashed { border-top: 2px dashed rgba(90,50,20,.18); }
+
+/* Marquee (faixa de ofertas rolando) */
+.marquee-track { display: flex; width: max-content; }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.anim-spin-slow { animation: spin-slow 9s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .anim-spin-slow { animation: none !important; } }
+
 /* Scrollbar hide */
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }

@@ -135,8 +135,8 @@ export function AddToCartButton({
         handle();
       }}
       disabled={pending}
-      className={`mt-3 w-full h-11 border text-[12px] font-semibold uppercase tracking-[0.09em] flex items-center justify-center gap-2 transition disabled:opacity-50 ${
-        added ? "bg-olive border-olive text-white" : "border-ink text-ink hover:bg-ink hover:text-paper"
+      className={`mt-3 w-full h-11 rounded-full text-[12px] font-bold uppercase tracking-[0.08em] flex items-center justify-center gap-2 transition disabled:opacity-50 ${
+        added ? "bg-olive text-white" : "bg-rose-brand text-white hover:bg-redDeep hover:-translate-y-0.5 hover:shadow-[0_10px_24px_-10px_rgba(168,30,30,0.7)]"
       }`}
     >
       {pending ? (

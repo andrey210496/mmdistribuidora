@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Truck, ShieldCheck } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
 import { useCart } from "./CartProvider";
+import { Price } from "@/components/storefront/Price";
 
 export function CartDrawer() {
   const { cart, isOpen, close, setQty, removeItem, pending } = useCart();
@@ -140,14 +141,14 @@ export function CartDrawer() {
                       <span
                         className={
                           line.wholesalePriceApplied
-                            ? "text-caramel font-semibold"
+                            ? "text-rose-brand font-bold"
                             : ""
                         }
                       >
                         {centsToBRL(line.unitPriceCents)} cada
                       </span>
                       {line.wholesalePriceApplied && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-caramel/15 text-caramel">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gold text-espressoDark">
                           Atacado
                         </span>
                       )}
@@ -202,12 +203,10 @@ export function CartDrawer() {
                   {centsToBRL(cart?.subtotalCents ?? 0)}
                 </span>
               </div>
-              <div className="flex justify-between items-baseline">
-                <span className="font-bold text-cocoa">Total</span>
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-ink">Total</span>
                 <div className="text-right">
-                  <div className="font-display text-2xl font-bold text-cocoa leading-none">
-                    {centsToBRL(cart?.totalCents ?? 0)}
-                  </div>
+                  <Price cents={cart?.totalCents ?? 0} className="text-[26px] text-rose-brand" />
                   <div className="text-[11px] text-cocoa/60 mt-0.5">
                     {cart && cart.shippingCents === 0
                       ? "Frete grátis incluso"
@@ -229,7 +228,7 @@ export function CartDrawer() {
 
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-cocoa/55">
                 <ShieldCheck size={12} className="text-olive" />
-                Compra segura · pagamento via Stripe
+                Compra segura · Pix, cartão, dinheiro ou fiado
               </div>
             </div>
           </>

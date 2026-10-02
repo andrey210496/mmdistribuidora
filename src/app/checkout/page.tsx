@@ -25,7 +25,8 @@ export default async function CheckoutPage() {
     <>
       <Header />
       <main className="container-default py-10 lg:py-14 min-h-[60vh]">
-        <h1 className="font-display text-3xl lg:text-4xl font-bold text-cocoa mb-8">
+        <span className="kicker">Quase lá</span>
+        <h1 className="font-display text-3xl lg:text-5xl font-extrabold text-ink mt-3 mb-8">
           Finalizar compra
         </h1>
         <CheckoutForm

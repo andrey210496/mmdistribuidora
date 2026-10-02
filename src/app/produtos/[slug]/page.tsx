@@ -3,9 +3,10 @@ import { notFound } from "next/navigation";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { AddToCartButton } from "@/components/storefront/AddToCartButton";
+import { Price } from "@/components/storefront/Price";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
-import { ShieldCheck, Truck, RotateCcw, Award, Heart, Share2 } from "lucide-react";
+import { ShieldCheck, Truck, BadgePercent, Headset, Heart, Share2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export default async function ProdutoPage({
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
           {/* Galeria */}
           <div className="lg:sticky lg:top-44 lg:self-start space-y-3">
-            <div className="relative aspect-square bg-cream rounded-2xl overflow-hidden border border-cocoa/10">
+            <div className="relative aspect-square bg-cream rounded-3xl overflow-hidden border border-line">
               {product.images[0] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -89,13 +90,13 @@ export default async function ProdutoPage({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-cocoa/15 font-display font-bold text-[140px] tracking-tighter">
-                  DE
+                <div className="w-full h-full flex items-center justify-center text-ink/10 font-display font-extrabold text-[140px] tracking-tighter">
+                  MM
                 </div>
               )}
               {hasDiscount && (
-                <div className="absolute top-5 left-5 bg-rose-brand text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg">
-                  −{discountPct}% OFF
+                <div className="pricetag absolute top-5 right-0 bg-gold text-espressoDark text-[15px] font-display font-extrabold pl-5 pr-4 py-2 shadow-lg">
+                  −{discountPct}%
                 </div>
               )}
             </div>
@@ -105,7 +106,7 @@ export default async function ProdutoPage({
                 {product.images.slice(0, 5).map((img) => (
                   <div
                     key={img.id}
-                    className="aspect-square bg-cream rounded-xl overflow-hidden border border-cocoa/10 hover:border-rose-brand cursor-pointer transition"
+                    className="aspect-square bg-cream rounded-xl overflow-hidden border border-line hover:border-rose-brand cursor-pointer transition"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -120,13 +121,13 @@ export default async function ProdutoPage({
             {product.category && (
               <Link
                 href={`/produtos?categoria=${product.category.slug}`}
-                className="eyebrow hover:text-cocoa"
+                className="kicker hover:opacity-80"
               >
                 {product.category.name}
               </Link>
             )}
 
-            <h1 className="font-display text-3xl lg:text-4xl font-bold text-cocoa mt-3 mb-4 leading-tight tracking-tight">
+            <h1 className="font-display text-3xl lg:text-[44px] font-extrabold text-ink mt-3 mb-4 leading-[1.05] tracking-tight">
               {product.name}
             </h1>
 
@@ -139,24 +140,24 @@ export default async function ProdutoPage({
               </span>
             </div>
 
-            <div className="bg-cream rounded-2xl p-6 mb-6 border border-cocoa/10">
+            <div className="bg-cream rounded-3xl p-6 mb-6 border border-line">
+              <span className="kicker">Preço de atacado</span>
               {hasDiscount && (
-                <div className="text-sm text-cocoa/40 line-through mb-1">
+                <div className="text-sm text-clay line-through mt-2">
                   De {centsToBRL(product.compareAtPriceCents!)}
                 </div>
               )}
-              <div className="flex items-baseline gap-3 mb-2">
-                <span className="font-display text-4xl lg:text-5xl font-bold text-cocoa">
-                  {centsToBRL(product.priceCents)}
-                </span>
+              <div className="flex items-end gap-3 mt-1 flex-wrap">
+                <Price cents={product.priceCents} className="text-[48px] lg:text-[56px] text-rose-brand" />
                 {hasDiscount && (
-                  <span className="bg-rose-brand/15 text-rose-brand font-bold text-sm px-2.5 py-1 rounded-full">
+                  <span className="mb-2 inline-flex items-center gap-1 bg-olive/15 text-[#6b7033] font-bold text-sm px-3 py-1 rounded-full">
                     Economize {centsToBRL(product.compareAtPriceCents! - product.priceCents)}
                   </span>
                 )}
               </div>
-              <div className="text-sm text-cocoa/70">
-                Em até <strong className="text-cocoa">6x de {centsToBRL(Math.round(product.priceCents / 6))}</strong> sem juros
+              <div className="text-sm text-cocoa/70 mt-3 flex items-center gap-1.5">
+                <BadgePercent size={15} className="text-rose-brand" />
+                O preço cai ainda mais na quantidade — <strong className="text-ink">sem pedido mínimo</strong>.
               </div>
             </div>
 
@@ -172,18 +173,18 @@ export default async function ProdutoPage({
             {/* Trust badges */}
             <div className="grid grid-cols-2 gap-3 mb-8">
               {[
-                { Icon: Truck, label: "Envio em 24h", sub: "Vale do Paraíba e Litoral Norte" },
-                { Icon: ShieldCheck, label: "Compra segura", sub: "Pagamento via Stripe" },
-                { Icon: RotateCcw, label: "Troca fácil", sub: "Em até 7 dias" },
-                { Icon: Award, label: "Qualidade", sub: "Marcas premium" },
+                { Icon: BadgePercent, label: "Atacado sem mínimo", sub: "Preço por quantidade" },
+                { Icon: Truck, label: "Entrega na região", sub: "Vale do Paraíba e Litoral Norte" },
+                { Icon: ShieldCheck, label: "Compra segura", sub: "Pix, cartão, dinheiro ou fiado" },
+                { Icon: Headset, label: "Atendimento humano", sub: "Fale no WhatsApp" },
               ].map(({ Icon, label, sub }) => (
-                <div key={label} className="flex gap-3 items-start p-3 rounded-xl bg-cream border border-cocoa/10">
-                  <div className="w-9 h-9 rounded-lg bg-rose-brand/15 text-rose-brand flex items-center justify-center shrink-0">
-                    <Icon size={16} />
+                <div key={label} className="flex gap-3 items-start p-3.5 rounded-2xl bg-cream border border-line">
+                  <div className="w-10 h-10 rounded-full bg-rose-brand text-white flex items-center justify-center shrink-0">
+                    <Icon size={17} strokeWidth={2.2} />
                   </div>
                   <div>
-                    <div className="font-bold text-cocoa text-sm">{label}</div>
-                    <div className="text-cocoa/60 text-xs">{sub}</div>
+                    <div className="font-display font-bold text-ink text-sm leading-tight">{label}</div>
+                    <div className="text-cocoa/60 text-xs mt-0.5">{sub}</div>
                   </div>
                 </div>
               ))}
@@ -192,7 +193,7 @@ export default async function ProdutoPage({
             {/* Descrição */}
             <section className="border-t border-cocoa/10 pt-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-display text-xl font-bold text-cocoa">
+                <h2 className="font-display text-xl font-bold text-ink">
                   Sobre o produto
                 </h2>
                 <div className="flex items-center gap-3">

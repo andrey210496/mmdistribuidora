@@ -5,6 +5,7 @@ import { CategoryTiles } from "@/components/storefront/CategoryTiles";
 import { BenefitsBar } from "@/components/storefront/BenefitsBar";
 import { ProductShelf } from "@/components/storefront/ProductShelf";
 import { PromoQuad } from "@/components/storefront/PromoQuad";
+import { MarqueeStrip } from "@/components/storefront/MarqueeStrip";
 import {
   getHomeSections,
   resolveSectionProducts,
@@ -25,6 +26,9 @@ export default async function HomePage() {
       <Header />
       {/* Hero comercial (atacado + varejo) */}
       <Hero />
+
+      {/* Faixa de ofertas rolando */}
+      <MarqueeStrip />
 
       {/* Faixa de confiança logo abaixo do hero */}
       <BenefitsBar />

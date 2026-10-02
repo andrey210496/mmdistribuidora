@@ -72,8 +72,8 @@ export function CategoryNav({ items, dark = false }: { items: NavItem[]; dark?: 
           ? "text-gold font-extrabold uppercase"
           : "text-white/85 hover:text-white hover:bg-white/10 font-extrabold uppercase"
         : active
-          ? "text-ink font-semibold"
-          : "text-clay hover:text-wine font-medium"
+          ? "text-rose-brand font-bold"
+          : "text-cocoa hover:text-rose-brand font-medium"
     }`;
 
   return (
@@ -102,7 +102,7 @@ export function CategoryNav({ items, dark = false }: { items: NavItem[]; dark?: 
           <Link key={item.label} href={item.href} className={linkClass(item.active)}>
             {item.label}
             {item.active && (
-              <span className={`absolute left-1/2 -translate-x-1/2 bottom-1 h-0.5 w-5 ${dark ? "bg-gold" : "bg-wine"}`} />
+              <span className={`absolute left-1/2 -translate-x-1/2 bottom-1 h-0.5 w-5 ${dark ? "bg-gold" : "bg-rose-brand"}`} />
             )}
           </Link>
         ))}

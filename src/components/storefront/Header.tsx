@@ -24,11 +24,11 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-50">
       {/* Anúncio fino */}
-      <div className="bg-ink text-white/75 text-[12.5px] tracking-wide">
+      <div className="bg-rose-brand text-white/90 text-[12.5px] tracking-wide">
         <div className="container-wide flex items-center justify-center gap-8 h-9 px-4 text-center flex-wrap">
-          <span>Entrega no <b className="text-brass font-semibold">Vale do Paraíba</b> e Litoral Norte</span>
-          <span className="hidden sm:inline">Atacado &amp; varejo — <b className="text-brass font-semibold">sem pedido mínimo</b></span>
-          <a href={`tel:${COMPANY.whatsapp}`} className="hidden md:inline hover:text-white transition"><b className="text-white/90 font-semibold">{COMPANY.phoneDisplay}</b></a>
+          <span>Entrega no <b className="text-gold font-bold">Vale do Paraíba</b> e Litoral Norte</span>
+          <span className="hidden sm:inline">Atacado &amp; varejo — <b className="text-gold font-bold">sem pedido mínimo</b></span>
+          <a href={`tel:${COMPANY.whatsapp}`} className="hidden md:inline hover:text-white transition"><b className="text-white font-semibold">{COMPANY.phoneDisplay}</b></a>
         </div>
       </div>
 
@@ -49,13 +49,13 @@ export async function Header() {
                 name="q"
                 placeholder="Buscar produto, marca ou categoria…"
                 maxLength={100}
-                className="w-full pl-11 pr-4 h-11 rounded-full bg-white border border-line text-ink placeholder-clay/80 text-[14px] focus:outline-none focus:border-wine/50 focus:ring-2 focus:ring-wine/10 transition"
+                className="w-full pl-11 pr-4 h-11 rounded-full bg-white border border-line text-ink placeholder-clay/80 text-[14px] focus:outline-none focus:border-rose-brand/50 focus:ring-2 focus:ring-rose-brand/15 transition"
               />
             </form>
           </div>
 
           <div className="flex items-center gap-4 lg:gap-6 shrink-0 text-cocoa">
-            <Link href={customer ? "/conta" : "/entrar"} className="hidden md:flex items-center gap-2 hover:text-wine transition">
+            <Link href={customer ? "/conta" : "/entrar"} className="hidden md:flex items-center gap-2 hover:text-rose-brand transition">
               <User size={22} strokeWidth={1.5} />
               <div className="leading-tight">
                 <div className="font-semibold text-[13px] text-ink">{customer ? firstName : "Entrar"}</div>

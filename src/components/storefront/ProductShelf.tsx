@@ -39,8 +39,8 @@ export function ProductShelf({
   const trackRef = useRef<HTMLDivElement>(null);
   if (products.length === 0) return null;
 
-  // superfícies alternadas premium
-  const bg = bgClass === "bg-smoke" || bgClass === "bg-cream" ? "bg-sand" : bgClass === "bg-white" ? "bg-paper" : bgClass;
+  // superfícies alternadas: branco / creme quente
+  const bg = bgClass === "bg-smoke" ? "bg-cream" : bgClass === "bg-white" ? "bg-white" : bgClass;
 
   const scrollBy = (dir: 1 | -1) => {
     const el = trackRef.current;
@@ -52,23 +52,21 @@ export function ProductShelf({
       <div className="container-wide">
         <div className="flex items-end justify-between gap-4 mb-8">
           <div>
-            <span className="text-[11px] font-semibold tracking-[0.22em] uppercase text-brass">
-              {subtitle ?? "Seleção da casa"}
-            </span>
-            <h2 className="font-serif text-[30px] lg:text-[36px] text-ink tracking-tight mt-1.5">{title}</h2>
+            <span className="kicker">{subtitle ?? "Seleção da casa"}</span>
+            <h2 className="display-xl text-ink mt-3">{title}</h2>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden sm:flex items-center gap-1.5">
               <button type="button" onClick={() => scrollBy(-1)} aria-label="Anterior"
-                className="w-9 h-9 rounded-full border border-line text-cocoa hover:border-ink hover:text-ink transition flex items-center justify-center">
-                <ChevronLeft size={17} />
+                className="w-10 h-10 rounded-full border border-line text-cocoa hover:bg-rose-brand hover:border-rose-brand hover:text-white transition flex items-center justify-center">
+                <ChevronLeft size={18} />
               </button>
               <button type="button" onClick={() => scrollBy(1)} aria-label="Próximo"
-                className="w-9 h-9 rounded-full border border-line text-cocoa hover:border-ink hover:text-ink transition flex items-center justify-center">
-                <ChevronRight size={17} />
+                className="w-10 h-10 rounded-full border border-line text-cocoa hover:bg-rose-brand hover:border-rose-brand hover:text-white transition flex items-center justify-center">
+                <ChevronRight size={18} />
               </button>
             </div>
-            <Link href={href} className="text-wine hover:text-[#8e201c] font-semibold text-[12.5px] uppercase tracking-[0.08em] transition whitespace-nowrap">
+            <Link href={href} className="text-rose-brand hover:text-redDeep font-bold text-[13px] uppercase tracking-[0.06em] transition whitespace-nowrap">
               {ctaLabel} →
             </Link>
           </div>

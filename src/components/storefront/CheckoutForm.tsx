@@ -3,6 +3,7 @@
 import { useActionState, useState, useEffect, useRef, useTransition } from "react";
 import { ShieldCheck, Lock, CreditCard, Crown, ArrowRight, X } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
+import { Price } from "./Price";
 import { submitCheckout, type CheckoutState } from "@/app/actions/checkout";
 import { quoteShipping } from "@/app/actions/cart";
 import type { CartSummary } from "@/lib/cart";
@@ -144,12 +145,12 @@ export function CheckoutForm({
               <X size={18} />
             </button>
 
-            <div className="h-20 bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] flex items-center justify-center">
+            <div className="h-20 tex-diag flex items-center justify-center" style={{ background: "linear-gradient(135deg,#D12B2B,#A81E1E)" }}>
               <Crown size={32} className="text-gold" fill="currentColor" />
             </div>
 
             <div className="p-6 text-center">
-              <h3 className="font-display text-2xl font-bold text-cocoa mb-2">
+              <h3 className="font-display text-2xl font-bold text-ink mb-2">
                 {checkoutUpsell.title}
               </h3>
               <p className="text-cocoa/70 text-sm whitespace-pre-line">{checkoutUpsell.body}</p>
@@ -177,8 +178,8 @@ export function CheckoutForm({
       {/* Coluna principal */}
       <div className="space-y-6">
         {/* Identificação */}
-        <section className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8">
-          <h2 className="font-display text-xl font-bold text-cocoa mb-1">1. Seus dados</h2>
+        <section className="bg-white rounded-3xl border border-line p-6 lg:p-8">
+          <h2 className="font-display text-xl font-bold text-ink mb-1">1. Seus dados</h2>
           <p className="text-sm text-cocoa/60 mb-5">
             Esses dados são usados para emissão da nota fiscal e contato sobre o pedido.
           </p>
@@ -236,8 +237,8 @@ export function CheckoutForm({
         </section>
 
         {/* Endereço */}
-        <section className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8">
-          <h2 className="font-display text-xl font-bold text-cocoa mb-5">2. Endereço de entrega</h2>
+        <section className="bg-white rounded-3xl border border-line p-6 lg:p-8">
+          <h2 className="font-display text-xl font-bold text-ink mb-5">2. Endereço de entrega</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
             <div className="sm:col-span-2">
@@ -286,26 +287,24 @@ export function CheckoutForm({
         </section>
 
         {/* Pagamento */}
-        <section className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8">
-          <h2 className="font-display text-xl font-bold text-cocoa mb-1">3. Pagamento</h2>
+        <section className="bg-white rounded-3xl border border-line p-6 lg:p-8">
+          <h2 className="font-display text-xl font-bold text-ink mb-1">3. Pagamento</h2>
           <p className="text-sm text-cocoa/60 mb-5 flex items-center gap-1.5">
             <Lock size={13} className="text-olive" />
-            Pagamento processado de forma segura pelo Stripe
+            Ambiente seguro — seus dados são protegidos
           </p>
 
-          <div className="rounded-xl border border-cocoa/15 bg-cream/40 p-5">
+          <div className="rounded-2xl border border-line bg-cream p-5">
             <p className="text-sm text-cocoa/80 mb-4">
-              Ao confirmar, você será levado para a página segura do Stripe,
-              onde poderá pagar com:
+              Ao confirmar, você vai para a etapa de pagamento, onde pode pagar com:
             </p>
-            <div className="flex flex-wrap gap-3">
-              <div className="flex items-center gap-2 bg-white border border-cocoa/10 rounded-lg px-3 py-2">
-                <CreditCard size={16} className="text-rose-brand" />
-                <span className="text-sm font-semibold text-cocoa">Cartão de crédito</span>
-                <span className="text-[10px] uppercase tracking-wider bg-cocoa/5 text-cocoa/60 font-bold px-2 py-0.5 rounded-full">
-                  até 6x
-                </span>
-              </div>
+            <div className="flex flex-wrap gap-2.5">
+              {["Pix", "Cartão de crédito", "Cartão de débito", "Dinheiro"].map((m) => (
+                <div key={m} className="flex items-center gap-2 bg-white border border-line rounded-full px-3.5 py-2">
+                  <CreditCard size={15} className="text-rose-brand" />
+                  <span className="text-[13px] font-bold text-ink">{m}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -330,12 +329,12 @@ export function CheckoutForm({
 
       {/* Resumo lateral */}
       <aside className="lg:sticky lg:top-44 lg:self-start">
-        <div className="bg-white rounded-2xl border border-cocoa/10 overflow-hidden">
-          <div className="px-6 py-5 border-b border-cocoa/10">
-            <h2 className="font-display text-xl font-bold text-cocoa">Seu pedido</h2>
+        <div className="bg-white rounded-3xl border border-line overflow-hidden">
+          <div className="px-6 py-5 border-b border-line bg-cream">
+            <h2 className="font-display text-xl font-bold text-ink">Seu pedido</h2>
           </div>
 
-          <div className="px-6 py-4 max-h-[300px] overflow-y-auto space-y-3 border-b border-cocoa/10">
+          <div className="px-6 py-4 max-h-[300px] overflow-y-auto space-y-3 border-b border-line">
             {cart.lines.map((line) => (
               <div key={line.productId} className="flex gap-3 items-center">
                 <div className="w-14 h-14 rounded-lg bg-cream overflow-hidden shrink-0">
@@ -374,11 +373,9 @@ export function CheckoutForm({
                 {quoting ? "calculando…" : cart.shippingCents === 0 ? "Grátis" : centsToBRL(cart.shippingCents)}
               </span>
             </div>
-            <div className="border-t border-cocoa/10 pt-3 flex justify-between items-baseline">
-              <span className="font-bold text-cocoa">Total</span>
-              <span className="font-display text-2xl font-bold text-cocoa">
-                {centsToBRL(cart.totalCents)}
-              </span>
+            <div className="border-t border-line pt-3 flex justify-between items-center">
+              <span className="font-bold text-ink">Total</span>
+              <Price cents={cart.totalCents} className="text-[28px] text-rose-brand" />
             </div>
           </div>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Plus, Minus, Trash2, ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { centsToBRL } from "@/lib/money";
+import { Price } from "./Price";
 import {
   updateCartQuantity,
   removeFromCart,
@@ -59,8 +60,8 @@ export function CartView({ cart }: { cart: CartSummary }) {
           </div>
         ) : null}
 
-        <div className="bg-white rounded-2xl border border-cocoa/10 overflow-hidden">
-          <div className="hidden md:grid grid-cols-[1fr_120px_120px_40px] gap-4 px-6 py-3 border-b border-cocoa/10 text-[11px] uppercase tracking-widest text-cocoa/60 font-bold">
+        <div className="bg-white rounded-3xl border border-line overflow-hidden">
+          <div className="hidden md:grid grid-cols-[1fr_120px_120px_40px] gap-4 px-6 py-3 border-b border-line text-[11px] uppercase tracking-widest text-cocoa/60 font-bold">
             <span>Produto</span>
             <span className="text-center">Quantidade</span>
             <span className="text-right">Total</span>
@@ -157,9 +158,9 @@ export function CartView({ cart }: { cart: CartSummary }) {
 
       {/* Resumo */}
       <aside className="lg:sticky lg:top-44 lg:self-start">
-        <div className="bg-white rounded-2xl border border-cocoa/10 overflow-hidden">
-          <div className="px-6 py-5 border-b border-cocoa/10">
-            <h2 className="font-display text-xl font-bold text-cocoa">Resumo</h2>
+        <div className="bg-white rounded-3xl border border-line overflow-hidden">
+          <div className="px-6 py-5 border-b border-line bg-cream">
+            <h2 className="font-display text-xl font-bold text-ink">Resumo do pedido</h2>
           </div>
 
           <div className="px-6 py-5 space-y-4">
@@ -183,7 +184,7 @@ export function CartView({ cart }: { cart: CartSummary }) {
                 <button
                   onClick={applyZip}
                   disabled={pending || zip.length !== 8}
-                  className="bg-cocoa hover:bg-espresso disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider px-4 rounded-full transition"
+                  className="bg-rose-brand hover:bg-redDeep disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider px-5 rounded-full transition"
                 >
                   OK
                 </button>
@@ -205,16 +206,9 @@ export function CartView({ cart }: { cart: CartSummary }) {
               </div>
             </div>
 
-            <div className="border-t border-cocoa/10 pt-4 flex justify-between items-baseline">
-              <span className="text-cocoa font-bold">Total</span>
-              <div className="text-right">
-                <div className="font-display text-2xl font-bold text-cocoa leading-none">
-                  {centsToBRL(cart.totalCents)}
-                </div>
-                <div className="text-[11px] text-cocoa/60 mt-1">
-                  6x de {centsToBRL(Math.round(cart.totalCents / 6))} sem juros
-                </div>
-              </div>
+            <div className="border-t border-line pt-4 flex justify-between items-center">
+              <span className="text-ink font-bold">Total</span>
+              <Price cents={cart.totalCents} className="text-[30px] text-rose-brand" />
             </div>
 
             <Link
@@ -227,7 +221,7 @@ export function CartView({ cart }: { cart: CartSummary }) {
 
             <div className="flex items-center gap-2 text-xs text-cocoa/60 justify-center pt-2">
               <ShieldCheck size={13} className="text-olive" />
-              <span>Compra 100% segura · Pagamento via Stripe</span>
+              <span>Compra segura · Pix, cartão, dinheiro ou fiado</span>
             </div>
           </div>
         </div>
