@@ -39,7 +39,7 @@ export function CustomerLoginForm({ next }: { next?: string }) {
           value={cpf}
           onChange={(e) => setCpf(formatCpf(e.target.value))}
           placeholder="000.000.000-00"
-          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
+          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
         />
         {fe.cpf && <p className="text-red-600 text-xs mt-1">{fe.cpf[0]}</p>}
       </div>
@@ -51,7 +51,7 @@ export function CustomerLoginForm({ next }: { next?: string }) {
           type="password"
           autoComplete="current-password"
           placeholder="Sua senha"
-          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
+          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
         />
         {fe.password && <p className="text-red-600 text-xs mt-1">{fe.password[0]}</p>}
       </div>

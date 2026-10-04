@@ -26,7 +26,7 @@ export type EditingAnnouncement = {
 };
 
 const field =
-  "w-full px-3 py-2 rounded-lg border border-cocoa/15 text-cocoa text-sm focus:outline-none focus:border-rose-brand";
+  "w-full px-3 py-2 rounded-lg border border-cocoa/15 text-cocoa text-sm focus:outline-hidden focus:border-rose-brand";
 
 export function AnnouncementForm({ editing }: { editing?: EditingAnnouncement }) {
   const [state, action, pending] = useActionState(saveAnnouncement, initial);

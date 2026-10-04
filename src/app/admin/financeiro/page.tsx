@@ -183,7 +183,7 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
       </div>
 
       {/* Rentabilidade real (com base no custo dos produtos) */}
-      <section className="bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream rounded-2xl p-6">
+      <section className="bg-linear-to-br from-brand-900 via-cocoa to-brand-900 text-cream rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-display text-lg font-bold text-gold">Rentabilidade das vendas</h2>
           <span className="text-[11px] text-cream/50">com base no custo cadastrado</span>
@@ -218,8 +218,8 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-display text-lg font-bold text-cocoa">Receita x Despesa (12 meses)</h2>
           <div className="flex items-center gap-4 text-xs">
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-olive" /> Receita</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-400" /> Despesa</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-olive" /> Receita</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-400" /> Despesa</span>
           </div>
         </div>
         <div className="flex items-end gap-2 h-44">
@@ -389,24 +389,24 @@ export default async function FinanceiroPage({ searchParams }: { searchParams: S
                             <>
                               <form action={markEntryPaid}>
                                 <input type="hidden" name="id" value={e.id} />
-                                <button type="submit" title="Liquidar" className="p-1.5 rounded text-olive hover:bg-olive/10"><Check size={15} /></button>
+                                <button type="submit" title="Liquidar" className="p-1.5 rounded-sm text-olive hover:bg-olive/10"><Check size={15} /></button>
                               </form>
                               <form action={cancelEntry}>
                                 <input type="hidden" name="id" value={e.id} />
-                                <button type="submit" title="Cancelar" className="p-1.5 rounded text-cocoa/50 hover:bg-cocoa/5"><Ban size={15} /></button>
+                                <button type="submit" title="Cancelar" className="p-1.5 rounded-sm text-cocoa/50 hover:bg-cocoa/5"><Ban size={15} /></button>
                               </form>
                             </>
                           )}
                           {e.status === "PAID" && e.orderPaymentStatus !== "CONFIRMED" && (
                             <form action={reopenEntry}>
                               <input type="hidden" name="id" value={e.id} />
-                              <button type="submit" title="Desfazer liquidação" className="p-1.5 rounded text-caramel hover:bg-caramel/10"><RotateCcw size={15} /></button>
+                              <button type="submit" title="Desfazer liquidação" className="p-1.5 rounded-sm text-caramel hover:bg-caramel/10"><RotateCcw size={15} /></button>
                             </form>
                           )}
                           {!e.orderId && (
                             <form action={deleteEntry}>
                               <input type="hidden" name="id" value={e.id} />
-                              <button type="submit" title="Excluir" className="p-1.5 rounded text-red-500 hover:bg-red-50"><Trash2 size={15} /></button>
+                              <button type="submit" title="Excluir" className="p-1.5 rounded-sm text-red-500 hover:bg-red-50"><Trash2 size={15} /></button>
                             </form>
                           )}
                         </div>

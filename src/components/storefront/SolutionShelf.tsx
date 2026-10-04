@@ -59,7 +59,7 @@ export function SolutionShelf() {
             <Link
               key={s.title}
               href={s.href}
-              className={`group relative bg-gradient-to-br ${s.bg} rounded-2xl p-6 border border-cocoa/10 hover:border-caramel/40 hover:shadow-[0_20px_40px_-12px_rgba(90,43,23,0.2)] transition-all duration-300 hover:-translate-y-1`}
+              className={`group relative bg-linear-to-br ${s.bg} rounded-2xl p-6 border border-cocoa/10 hover:border-caramel/40 hover:shadow-[0_20px_40px_-12px_rgba(90,43,23,0.2)] transition-all duration-300 hover:-translate-y-1`}
             >
               <div className="text-4xl lg:text-5xl mb-3 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 inline-block">
                 {s.emoji}

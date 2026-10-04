@@ -288,7 +288,7 @@ export function OrderActions({
                   inputMode="decimal"
                   value={refundAmount}
                   onChange={(e) => setRefundAmount(e.target.value)}
-                  className="w-40 px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                  className="w-40 px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
                   placeholder="0,00"
                 />
               </div>
@@ -323,7 +323,7 @@ export function OrderActions({
             onChange={(e) => setCancelReason(e.target.value)}
             rows={2}
             maxLength={500}
-            className="w-full px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+            className="w-full px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
             placeholder="Ex: cliente solicitou, produto sem estoque..."
           />
           <div className="flex gap-2 mt-2">

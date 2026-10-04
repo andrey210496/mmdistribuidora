@@ -125,7 +125,7 @@ export function ProductHotkeysForm({ initial }: { initial: Row[] }) {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Buscar produto por nome ou SKU…"
-                  className="w-full pl-9 pr-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                  className="w-full pl-9 pr-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
                 />
                 {results.length > 0 && (
                   <div className="absolute z-20 mt-1 w-full bg-white rounded-2xl border border-cocoa/15 shadow-lg max-h-64 overflow-auto">
@@ -154,7 +154,7 @@ export function ProductHotkeysForm({ initial }: { initial: Row[] }) {
               onKeyDown={onCapture}
               onBlur={() => setCapturing(false)}
               value="pressione…"
-              className="w-32 px-2 py-2 rounded-full border border-rose-brand text-xs text-rose-brand text-center focus:outline-none"
+              className="w-32 px-2 py-2 rounded-full border border-rose-brand text-xs text-rose-brand text-center focus:outline-hidden"
             />
           ) : (
             <button

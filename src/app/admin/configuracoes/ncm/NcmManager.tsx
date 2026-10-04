@@ -41,7 +41,7 @@ export function NcmManager({
   const [novo, setNovo] = useState({ code: "", description: "", cest: "", taxGroupId: "" });
 
   const inp =
-    "w-full px-2.5 py-2 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-none focus:border-rose-brand";
+    "w-full px-2.5 py-2 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-hidden focus:border-rose-brand";
 
   const doImport = () =>
     start(async () => {

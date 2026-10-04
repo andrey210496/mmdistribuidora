@@ -29,7 +29,7 @@ export default async function CadastroPage({ searchParams }: { searchParams: Sea
               Rápido e simples. Só precisamos do básico para você comprar.
             </p>
           </div>
-          <div className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8 shadow-sm">
+          <div className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8 shadow-xs">
             <CustomerRegisterForm next={next} />
           </div>
         </div>

@@ -99,7 +99,7 @@ export default async function OrderDetailPage({
           <Link
             href={`/admin/pedidos/${order.id}/qr`}
             target="_blank"
-            className="inline-flex items-center gap-2 bg-rose-brand hover:bg-[#A81E1E] text-white px-4 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition"
+            className="inline-flex items-center gap-2 bg-rose-brand hover:bg-redDeep text-white px-4 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider transition"
           >
             <QrCode size={14} />
             QR Separação

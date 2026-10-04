@@ -44,7 +44,7 @@ export function MobileMenu({
       {/* Overlay */}
       <div
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-[90] bg-espresso/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
+        className={`fixed inset-0 z-90 bg-espresso/50 backdrop-blur-xs transition-opacity duration-300 lg:hidden ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         aria-hidden
@@ -52,7 +52,7 @@ export function MobileMenu({
 
       {/* Painel */}
       <aside
-        className={`fixed top-0 left-0 z-[95] h-full w-[85%] max-w-sm bg-cream shadow-2xl flex flex-col transition-transform duration-300 ease-out lg:hidden ${
+        className={`fixed top-0 left-0 z-95 h-full w-[85%] max-w-sm bg-cream shadow-2xl flex flex-col transition-transform duration-300 ease-out lg:hidden ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         role="dialog"
@@ -80,7 +80,7 @@ export function MobileMenu({
                 name="q"
                 placeholder="O que você procura?"
                 maxLength={100}
-                className="w-full pl-11 pr-4 py-3 rounded-full bg-white border border-cocoa/15 text-cocoa text-sm focus:outline-none focus:border-rose-brand"
+                className="w-full pl-11 pr-4 py-3 rounded-full bg-white border border-cocoa/15 text-cocoa text-sm focus:outline-hidden focus:border-rose-brand"
               />
             </div>
           </form>

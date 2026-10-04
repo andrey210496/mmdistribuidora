@@ -26,7 +26,7 @@ const slides: Slide[] = [
     subtitle: "Chocolates, embalagens e ingredientes pra confeitaria com preço de distribuidora.",
     cta: "Ver ofertas",
     href: "/produtos?ofertas=1",
-    bg: "from-espresso via-cocoa to-[#3d1c0e]",
+    bg: "from-espresso via-cocoa to-brand-700",
     image: "https://images.unsplash.com/photo-1481391319762-47dff72954d9?w=1600&q=80",
   },
   {
@@ -37,7 +37,7 @@ const slides: Slide[] = [
     subtitle: "Chocolate nobre, formas de ovo, embalagens, fitas e decoração — tudo num lugar só.",
     cta: "Ver coleção",
     href: "/produtos?categoria=festas",
-    bg: "from-[#8a4a5c] via-[#5a2b17] to-[#3d1c0e]",
+    bg: "from-[#8a4a5c] via-[#5a2b17] to-brand-700",
     image: "https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=1600&q=80",
   },
   {
@@ -96,7 +96,7 @@ export function HeroCarousel() {
               i === current ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             }`}
           >
-            <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg}`} />
+            <div className={`absolute inset-0 bg-linear-to-br ${slide.bg}`} />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={slide.image}
@@ -104,7 +104,7 @@ export function HeroCarousel() {
               className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-overlay"
               loading={i === 0 ? "eager" : "lazy"}
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-espresso/70 via-espresso/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-r from-espresso/70 via-espresso/40 to-transparent" />
 
             {/* Glow */}
             <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full bg-gold/15 blur-[120px] pointer-events-none" />

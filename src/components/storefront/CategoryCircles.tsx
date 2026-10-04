@@ -12,7 +12,7 @@ const circles = [
     label: "Chocolate",
     href: "/produtos?categoria=chocolates",
     image: "https://images.unsplash.com/photo-1623660053975-e30d6e2403da?w=200&q=80",
-    bg: "from-[#3d1c0e] to-cocoa",
+    bg: "from-brand-700 to-cocoa",
   },
   {
     label: "Forminhas",
@@ -48,7 +48,7 @@ const circles = [
     label: "Trufas",
     href: "/produtos?q=trufa",
     image: "https://images.unsplash.com/photo-1548907040-4d42bea7ed94?w=200&q=80",
-    bg: "from-[#5a2b17] to-[#1a0703]",
+    bg: "from-[#5a2b17] to-brand-900",
   },
   {
     label: "Beijinho",
@@ -66,7 +66,7 @@ const circles = [
     label: "Cacau",
     href: "/produtos?q=cacau",
     image: "https://images.unsplash.com/photo-1517093602195-b40af9688b46?w=200&q=80",
-    bg: "from-[#3d1c0e] to-[#1a0703]",
+    bg: "from-brand-700 to-brand-900",
   },
   {
     label: "Páscoa",
@@ -88,7 +88,7 @@ export function CategoryCircles() {
               className="group flex flex-col items-center gap-2 shrink-0 w-[88px] lg:w-[100px]"
             >
               {/* Anel gradiente estilo stories */}
-              <div className="relative p-[3px] rounded-full bg-gradient-to-tr from-caramel via-gold to-rose-brand group-hover:scale-105 transition-transform">
+              <div className="relative p-[3px] rounded-full bg-linear-to-tr from-caramel via-gold to-rose-brand group-hover:scale-105 transition-transform">
                 <div className="rounded-full p-[2px] bg-white">
                   <div className="w-[68px] h-[68px] lg:w-[78px] lg:h-[78px] rounded-full overflow-hidden bg-cream">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

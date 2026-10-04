@@ -178,7 +178,7 @@ export function CartView({ cart }: { cart: CartSummary }) {
                     setZip(e.target.value.replace(/\D/g, "").slice(0, 8))
                   }
                   placeholder="00000-000"
-                  className="flex-1 px-3 py-2 rounded-full border border-cocoa/15 text-cocoa text-sm focus:outline-none focus:border-rose-brand"
+                  className="flex-1 px-3 py-2 rounded-full border border-cocoa/15 text-cocoa text-sm focus:outline-hidden focus:border-rose-brand"
                   maxLength={9}
                 />
                 <button

@@ -47,7 +47,7 @@ export function ProductCard({
             <img
               src={imageUrl}
               alt={name}
-              className="w-full h-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-[1.08]"
+              className="w-full h-full object-cover transition-transform duration-800 ease-out group-hover:scale-[1.08]"
               loading="lazy"
             />
           ) : (
@@ -58,7 +58,7 @@ export function ProductCard({
           {ranking ? (
             <span className="absolute top-3 left-3 w-8 h-8 bg-ink text-white font-display font-extrabold text-[14px] flex items-center justify-center rounded-full shadow-md ring-2 ring-white">{ranking}</span>
           ) : badgeText ? (
-            <span className="absolute top-3 left-3 bg-ink text-white text-[10px] font-extrabold px-3 py-1.5 uppercase tracking-[0.1em] rounded-full shadow">{badgeText}</span>
+            <span className="absolute top-3 left-3 bg-ink text-white text-[10px] font-extrabold px-3 py-1.5 uppercase tracking-widest rounded-full shadow-sm">{badgeText}</span>
           ) : null}
 
           {/* etiqueta de desconto (com ponta) */}

@@ -388,7 +388,7 @@ export function ProductForm({
                   />
                   <span>
                     <strong>Vendido por peso (balança)</strong> — o preço de venda passa a ser <strong>por kg</strong> e,
-                    no PDV, o operador usa a tecla <kbd className="font-mono text-[11px] bg-cocoa/10 rounded px-1">P</kbd> para
+                    no PDV, o operador usa a tecla <kbd className="font-mono text-[11px] bg-cocoa/10 rounded-sm px-1">P</kbd> para
                     informar o peso. O estoque é controlado em kg.
                   </span>
                 </label>

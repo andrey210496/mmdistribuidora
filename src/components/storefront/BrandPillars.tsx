@@ -109,11 +109,11 @@ export function BrandPillars() {
                 key={title}
                 className="bg-cream p-8 lg:p-10 hover:bg-white transition group relative"
               >
-                <div className="absolute top-6 right-6 font-display text-5xl text-cocoa/[0.06] font-bold leading-none transition group-hover:text-cocoa/10">
+                <div className="absolute top-6 right-6 font-display text-5xl text-cocoa/6 font-bold leading-none transition group-hover:text-cocoa/10">
                   {String(i + 1).padStart(2, "0")}
                 </div>
                 <div
-                  className={`w-12 h-12 rounded-xl ${a.iconIdle} ${a.iconHover} text-cocoa flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:rotate-[-6deg]`}
+                  className={`w-12 h-12 rounded-xl ${a.iconIdle} ${a.iconHover} text-cocoa flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6`}
                 >
                   <Icon size={22} strokeWidth={1.5} />
                 </div>

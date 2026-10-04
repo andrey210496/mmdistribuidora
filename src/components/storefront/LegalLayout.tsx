@@ -20,7 +20,7 @@ export function LegalLayout({
     <>
       <Header />
 
-      <section className="bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream py-14 lg:py-16">
+      <section className="bg-linear-to-br from-brand-900 via-cocoa to-brand-900 text-cream py-14 lg:py-16">
         <div className="container-default text-center">
           <h1 className="font-display text-3xl md:text-4xl font-bold text-gold">{title}</h1>
           {subtitle && <p className="text-cream/80 max-w-2xl mx-auto mt-3">{subtitle}</p>}
@@ -35,7 +35,7 @@ export function LegalLayout({
             [&_h3]:font-bold [&_h3]:text-cocoa [&_h3]:mt-5 [&_h3]:mb-1
             [&_p]:mb-3
             [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:space-y-1 [&_ul]:mb-3
-            [&_a]:text-rose-brand [&_a]:font-semibold hover:[&_a]:underline
+            [&_a]:text-rose-brand [&_a]:font-semibold [&_a]:hover:underline
             [&_strong]:text-cocoa"
         >
           {children}

@@ -41,7 +41,7 @@ export default async function TabelaPrecosPage({ searchParams }: { searchParams:
     ]),
   };
 
-  const inp = "px-3 py-2 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-none focus:border-rose-brand bg-white";
+  const inp = "px-3 py-2 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-hidden focus:border-rose-brand bg-white";
 
   return (
     <ReportShell

@@ -43,7 +43,7 @@ export function CustomerRegisterForm({ next }: { next?: string }) {
           name="name"
           autoComplete="name"
           placeholder="Seu nome e sobrenome"
-          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
+          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
         />
         {fe.name && <p className="text-red-600 text-xs mt-1">{fe.name[0]}</p>}
       </div>
@@ -57,7 +57,7 @@ export function CustomerRegisterForm({ next }: { next?: string }) {
           value={phone}
           onChange={(e) => setPhone(formatPhone(e.target.value))}
           placeholder="(12) 99999-9999"
-          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
+          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
         />
         {fe.phone && <p className="text-red-600 text-xs mt-1">{fe.phone[0]}</p>}
       </div>
@@ -70,7 +70,7 @@ export function CustomerRegisterForm({ next }: { next?: string }) {
           value={cpf}
           onChange={(e) => setCpf(formatCpf(e.target.value))}
           placeholder="000.000.000-00"
-          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
+          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
         />
         {fe.cpf && <p className="text-red-600 text-xs mt-1">{fe.cpf[0]}</p>}
       </div>
@@ -82,7 +82,7 @@ export function CustomerRegisterForm({ next }: { next?: string }) {
           type="password"
           autoComplete="new-password"
           placeholder="Mínimo 8 caracteres"
-          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
+          className="w-full px-4 py-3 rounded-xl border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand focus:ring-2 focus:ring-rose-brand/15 transition"
         />
         {fe.password && <p className="text-red-600 text-xs mt-1">{fe.password[0]}</p>}
       </div>

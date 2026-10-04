@@ -37,7 +37,7 @@ export function SettingsForm({ initial }: { initial: Initial }) {
   };
 
   const inputCls =
-    "w-full px-3 py-2.5 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-none focus:border-rose-brand";
+    "w-full px-3 py-2.5 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-hidden focus:border-rose-brand";
 
   return (
     <div className="space-y-6">

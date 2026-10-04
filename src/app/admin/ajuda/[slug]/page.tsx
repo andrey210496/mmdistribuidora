@@ -79,7 +79,7 @@ export default async function CapituloPage({ params }: { params: Promise<{ slug:
             {anterior && (
               <Link
                 href={`/admin/ajuda/${anterior.slug}`}
-                className="flex-1 min-w-[14rem] bg-white rounded-xl border border-cocoa/10 p-3.5 hover:border-rose-brand/40 transition"
+                className="flex-1 min-w-56 bg-white rounded-xl border border-cocoa/10 p-3.5 hover:border-rose-brand/40 transition"
               >
                 <span className="text-[11px] uppercase tracking-wider font-bold text-cocoa/45 flex items-center gap-1">
                   <ArrowLeft size={12} /> Anterior
@@ -90,7 +90,7 @@ export default async function CapituloPage({ params }: { params: Promise<{ slug:
             {proximo && (
               <Link
                 href={`/admin/ajuda/${proximo.slug}`}
-                className="flex-1 min-w-[14rem] bg-white rounded-xl border border-cocoa/10 p-3.5 hover:border-rose-brand/40 transition text-right"
+                className="flex-1 min-w-56 bg-white rounded-xl border border-cocoa/10 p-3.5 hover:border-rose-brand/40 transition text-right"
               >
                 <span className="text-[11px] uppercase tracking-wider font-bold text-cocoa/45 flex items-center gap-1 justify-end">
                   Próximo <ArrowRight size={12} />

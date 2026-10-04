@@ -30,7 +30,7 @@ export function ImportButton() {
       <button
         onClick={() => inputRef.current?.click()}
         disabled={pending}
-        className="inline-flex items-center gap-2 bg-rose-brand hover:bg-[#A81E1E] text-white px-4 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition disabled:opacity-50"
+        className="inline-flex items-center gap-2 bg-rose-brand hover:bg-redDeep text-white px-4 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition disabled:opacity-50"
       >
         {pending ? <Loader2 size={16} className="animate-spin" /> : <FileUp size={16} />}
         {pending ? "Importando…" : "Importar NF-e (XML)"}

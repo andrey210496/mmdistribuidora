@@ -56,7 +56,7 @@ export function ManualEntryForm({ suppliers }: { suppliers: { id: string; name: 
     });
   };
 
-  const inp = "px-2 py-1.5 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand";
+  const inp = "px-2 py-1.5 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand";
 
   return (
     <div className="space-y-4">

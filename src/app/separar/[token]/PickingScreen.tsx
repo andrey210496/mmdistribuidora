@@ -93,7 +93,7 @@ export function PickingScreen({
   return (
     <div className="min-h-screen bg-cream/30 pb-32">
       {/* Header sticky */}
-      <header className="sticky top-0 z-30 bg-white border-b border-cocoa/10 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white border-b border-cocoa/10 shadow-xs">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">

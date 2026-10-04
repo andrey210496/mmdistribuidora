@@ -33,7 +33,7 @@ export function HelpIndex({ isPdv }: { isPdv: boolean }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Buscar no manual: fiado, sangria, atalho, NCM, backup…"
-          className="w-full pl-12 pr-11 py-3.5 rounded-full border border-cocoa/15 text-cocoa focus:outline-none focus:border-rose-brand"
+          className="w-full pl-12 pr-11 py-3.5 rounded-full border border-cocoa/15 text-cocoa focus:outline-hidden focus:border-rose-brand"
           autoFocus
         />
         {q && (

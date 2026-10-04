@@ -73,7 +73,7 @@ export function CustomerPriceList({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar produto por nome/SKU…"
-            className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+            className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
           />
           {results.length > 0 && (
             <div className="absolute z-20 mt-1 w-full bg-white rounded-xl border border-cocoa/15 shadow-lg max-h-56 overflow-auto">
@@ -102,7 +102,7 @@ export function CustomerPriceList({
                 onChange={(e) => setPrice(e.target.value)}
                 inputMode="decimal"
                 placeholder="preço deste cliente"
-                className="w-full px-3 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                className="w-full px-3 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
               />
             </div>
             <button onClick={save} disabled={pending} className="bg-olive hover:bg-[#6b7d3a] text-white px-3 rounded-full text-xs font-bold inline-flex items-center gap-1 disabled:opacity-50">

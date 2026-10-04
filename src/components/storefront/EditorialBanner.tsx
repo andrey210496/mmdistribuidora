@@ -33,7 +33,7 @@ export function EditorialBanner() {
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/40 to-transparent lg:via-transparent" />
+            <div className="absolute inset-0 bg-linear-to-r from-espresso via-espresso/40 to-transparent lg:via-transparent" />
           </div>
         </div>
       </div>

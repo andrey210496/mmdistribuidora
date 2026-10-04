@@ -103,7 +103,7 @@ export function CustomerFiadoModal({
     });
   }
 
-  const inp = "px-3 py-2 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-none focus:border-rose-brand bg-white";
+  const inp = "px-3 py-2 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-hidden focus:border-rose-brand bg-white";
   const dt = (iso: string) => new Date(iso).toLocaleDateString("pt-BR");
 
   return (
@@ -205,7 +205,7 @@ export function CustomerFiadoModal({
                 <div className="rounded-xl bg-cream/40 border border-cocoa/10 p-4 space-y-3">
                   <h3 className="text-sm font-bold text-cocoa">Receber pagamento</h3>
                   <div className="flex flex-wrap gap-2 items-end">
-                    <div className="flex-1 min-w-[8rem]">
+                    <div className="flex-1 min-w-32">
                       <label className="text-[11px] text-cocoa/60 font-bold">Valor (R$)</label>
                       <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0,00" className={`${inp} w-full`} />
                     </div>

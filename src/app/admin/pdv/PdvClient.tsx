@@ -428,7 +428,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onSearchKey}
               placeholder="Buscar por nome, SKU ou bipar código de barras…"
-              className="w-full pl-10 pr-4 py-3 rounded-full border border-cocoa/15 bg-white focus:outline-none focus:border-rose-brand"
+              className="w-full pl-10 pr-4 py-3 rounded-full border border-cocoa/15 bg-white focus:outline-hidden focus:border-rose-brand"
               autoFocus
             />
             {results.length > 0 && (
@@ -514,7 +514,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                       value={l.note ?? ""}
                       onChange={(e) => setNote(l.product.id, e.target.value)}
                       placeholder="Observação p/ entrega (ex.: 3 fardos = 30 pacotes)"
-                      className="mt-2 w-full px-3 py-1.5 rounded-lg border border-cocoa/10 bg-cream/30 text-[12px] focus:outline-none focus:border-rose-brand"
+                      className="mt-2 w-full px-3 py-1.5 rounded-lg border border-cocoa/10 bg-cream/30 text-[12px] focus:outline-hidden focus:border-rose-brand"
                     />
                   </div>
                 ))}
@@ -532,7 +532,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
             title="Abrir cliente / fiado a receber (tecla B)"
           >
             <HandCoins size={16} className="text-rose-brand" /> Cliente / Fiado
-            <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded px-1.5 py-0.5">B</kbd>
+            <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded-sm px-1.5 py-0.5">B</kbd>
           </button>
 
           <button
@@ -542,7 +542,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
             title="Vender por peso / balança (tecla P)"
           >
             <Scale size={16} className="text-rose-brand" /> Vender por peso
-            <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded px-1.5 py-0.5">P</kbd>
+            <kbd className="ml-1 font-mono text-[10px] bg-cocoa/10 text-cocoa/60 rounded-sm px-1.5 py-0.5">P</kbd>
           </button>
 
           <CustomerPicker customer={customer} onChange={setCustomer} />
@@ -601,7 +601,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                 <div key={m} className="flex items-center gap-2">
                   <span className="w-28 text-xs text-cocoa/70 flex items-center gap-1.5">
                     {m === "CASH" ? <Banknote size={14} /> : m === "PIX" ? <Banknote size={14} /> : <CreditCard size={14} />}
-                    <span className="font-mono text-[10px] bg-cocoa/10 rounded px-1">{fkey}</span>
+                    <span className="font-mono text-[10px] bg-cocoa/10 rounded-sm px-1">{fkey}</span>
                     {PAYMENT_METHOD_LABELS[m]}
                   </span>
                   <div className="flex flex-1">
@@ -612,7 +612,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
                       onFocus={() => setPriceMode(priceModeForPay(m))}
                       inputMode="decimal"
                       placeholder="0,00"
-                      className="w-full px-2 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                      className="w-full px-2 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
                     />
                   </div>
                 </div>
@@ -763,8 +763,8 @@ function CashBar({ session, recon }: { session: Session; recon: CashReconciliati
               </button>
             ))}
           </div>
-          <input value={moveAmount} onChange={(e) => setMoveAmount(e.target.value)} inputMode="decimal" placeholder="Valor R$" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand" />
-          <input value={moveReason} onChange={(e) => setMoveReason(e.target.value)} placeholder="Motivo (opcional)" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand" />
+          <input value={moveAmount} onChange={(e) => setMoveAmount(e.target.value)} inputMode="decimal" placeholder="Valor R$" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand" />
+          <input value={moveReason} onChange={(e) => setMoveReason(e.target.value)} placeholder="Motivo (opcional)" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand" />
           <button onClick={doMove} disabled={pending} className="w-full bg-cocoa text-white py-2 rounded-full text-xs font-bold disabled:opacity-50">Registrar</button>
         </div>
       )}
@@ -776,7 +776,7 @@ function CashBar({ session, recon }: { session: Session; recon: CashReconciliati
           <div className="flex justify-between text-cocoa/70"><span>Suprimentos</span><span>+{centsToBRL(recon.suprimentosCents)}</span></div>
           <div className="flex justify-between text-cocoa/70"><span>Sangrias</span><span>−{centsToBRL(recon.sangriasCents)}</span></div>
           <div className="flex justify-between font-bold text-cocoa border-t border-cocoa/10 pt-1"><span>Esperado</span><span>{centsToBRL(recon.expectedCashCents)}</span></div>
-          <input value={counted} onChange={(e) => setCounted(e.target.value)} inputMode="decimal" placeholder="Valor contado na gaveta R$" className="w-full px-3 py-2 rounded-full border border-cocoa/15 focus:outline-none focus:border-rose-brand" />
+          <input value={counted} onChange={(e) => setCounted(e.target.value)} inputMode="decimal" placeholder="Valor contado na gaveta R$" className="w-full px-3 py-2 rounded-full border border-cocoa/15 focus:outline-hidden focus:border-rose-brand" />
           <button onClick={doClose} disabled={pending} className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-full text-xs font-bold uppercase tracking-wider disabled:opacity-50">
             {pending ? "Fechando…" : "Fechar caixa"}
           </button>
@@ -852,7 +852,7 @@ function CustomerPicker({ customer, onChange }: { customer: PdvCustomer | null; 
         <div className="mt-3 space-y-2">
           {!creating ? (
             <>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nome, telefone ou CPF…" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand" autoFocus />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Nome, telefone ou CPF…" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand" autoFocus />
               {results.map((c) => (
                 <button key={c.id} onClick={() => { onChange(c); setOpen(false); setQuery(""); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-cream/50 text-sm border border-cocoa/5">
                   <div className="text-cocoa font-medium">{c.name}</div>
@@ -863,8 +863,8 @@ function CustomerPicker({ customer, onChange }: { customer: PdvCustomer | null; 
             </>
           ) : (
             <>
-              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nome *" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand" autoFocus />
-              <input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="Telefone" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand" />
+              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nome *" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand" autoFocus />
+              <input value={newPhone} onChange={(e) => setNewPhone(e.target.value)} placeholder="Telefone" className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand" />
               <div className="flex gap-2">
                 <button onClick={create} disabled={pending} className="flex-1 bg-cocoa text-white py-2 rounded-full text-xs font-bold disabled:opacity-50">Salvar</button>
                 <button onClick={() => setCreating(false)} className="text-cocoa/50 text-xs px-3">voltar</button>

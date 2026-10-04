@@ -52,7 +52,7 @@ export function TestimonialsRef() {
             {testimonials.map((t) => (
               <article
                 key={t.name}
-                className="bg-white rounded-2xl p-6 relative shadow-sm hover:shadow-md transition"
+                className="bg-white rounded-2xl p-6 relative shadow-xs hover:shadow-md transition"
               >
                 <Quote
                   size={28}
@@ -72,7 +72,7 @@ export function TestimonialsRef() {
 
                 <div className="flex items-center gap-3 pt-4 border-t border-cocoa/10">
                   <div
-                    className={`w-10 h-10 rounded-full bg-gradient-to-br ${t.color} text-white flex items-center justify-center font-display font-bold text-sm shadow`}
+                    className={`w-10 h-10 rounded-full bg-linear-to-br ${t.color} text-white flex items-center justify-center font-display font-bold text-sm shadow-sm`}
                   >
                     {t.avatar}
                   </div>

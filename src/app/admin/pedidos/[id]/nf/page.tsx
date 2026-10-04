@@ -97,7 +97,7 @@ export default async function NfPage({
               </div>
             </div>
             <div className="text-right">
-              <div className="bg-cocoa text-cream px-3 py-1.5 inline-block rounded">
+              <div className="bg-cocoa text-cream px-3 py-1.5 inline-block rounded-sm">
                 <div className="text-[8pt] uppercase tracking-widest opacity-90">
                   Comprovante de venda
                 </div>

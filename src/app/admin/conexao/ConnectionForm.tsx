@@ -36,7 +36,7 @@ export function ConnectionForm({
     setSaving(false);
   }
 
-  const field = "w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-cocoa focus:outline-none";
+  const field = "w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-cocoa focus:outline-hidden";
 
   return (
     <div className="max-w-xl space-y-5">

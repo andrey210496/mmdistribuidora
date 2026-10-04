@@ -177,7 +177,7 @@ export default async function PrintOrderPage({
                 {order.items.map((item) => (
                   <tr key={item.id} className="border-b border-cocoa/10">
                     <td className="py-2.5">
-                      <span className="inline-block w-5 h-5 border-2 border-cocoa/40 rounded" />
+                      <span className="inline-block w-5 h-5 border-2 border-cocoa/40 rounded-sm" />
                     </td>
                     <td className="py-2.5 font-mono text-[9pt]">
                       {item.productSkuSnapshot}
@@ -228,7 +228,7 @@ export default async function PrintOrderPage({
             <div className="text-[8pt] font-bold uppercase tracking-wider text-cocoa/60 mb-1">
               Observações da separação
             </div>
-            <div className="border border-cocoa/20 rounded h-16" />
+            <div className="border border-cocoa/20 rounded-sm h-16" />
           </section>
 
           {/* Assinaturas */}

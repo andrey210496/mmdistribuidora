@@ -16,7 +16,7 @@ function RichText({ text }: { text: string }) {
         }
         if (p.startsWith("`") && p.endsWith("`")) {
           return (
-            <code key={i} className="font-mono text-[0.9em] bg-cocoa/8 text-cocoa px-1.5 py-0.5 rounded">
+            <code key={i} className="font-mono text-[0.9em] bg-cocoa/8 text-cocoa px-1.5 py-0.5 rounded-sm">
               {p.slice(1, -1)}
             </code>
           );
@@ -125,7 +125,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
           case "table":
             return (
               <div key={i} className="overflow-x-auto rounded-xl border border-cocoa/10">
-                <table className="w-full text-sm min-w-[30rem]">
+                <table className="w-full text-sm min-w-120">
                   <thead className="bg-cream/50 border-b border-cocoa/10">
                     <tr className="text-left text-cocoa/70">
                       {b.head.map((h, j) => (
@@ -155,7 +155,7 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
               <div key={i} className="rounded-xl border border-cocoa/10 divide-y divide-cocoa/8">
                 {b.rows.map(([key, action], j) => (
                   <div key={j} className="flex items-center gap-4 px-4 py-2.5">
-                    <kbd className="shrink-0 min-w-[3.5rem] text-center font-mono text-sm font-bold bg-cocoa text-white rounded-md px-2.5 py-1.5">
+                    <kbd className="shrink-0 min-w-14 text-center font-mono text-sm font-bold bg-cocoa text-white rounded-md px-2.5 py-1.5">
                       {key}
                     </kbd>
                     <span className="text-cocoa/80 text-sm">{action}</span>

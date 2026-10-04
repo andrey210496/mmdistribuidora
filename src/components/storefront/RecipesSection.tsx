@@ -61,7 +61,7 @@ export function RecipesSection() {
               href={r.href}
               className="group bg-white rounded-2xl overflow-hidden border border-cocoa/10 hover:border-caramel/40 hover:shadow-[0_20px_40px_-12px_rgba(90,43,23,0.2)] transition-all duration-300 flex flex-col"
             >
-              <div className="relative aspect-[16/10] overflow-hidden">
+              <div className="relative aspect-16/10 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={r.image}
@@ -74,7 +74,7 @@ export function RecipesSection() {
                 >
                   {r.tag}
                 </span>
-                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">
                   <Clock size={10} />
                   {r.time}
                 </div>

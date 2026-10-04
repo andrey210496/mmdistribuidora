@@ -7,7 +7,7 @@ export function Manifesto() {
     <section className="py-28 lg:py-36 bg-cocoa-gradient text-cream relative overflow-hidden">
       <GoldCurveTopLeft className="absolute top-0 right-0 w-[400px] h-auto opacity-50 pointer-events-none rotate-180" />
 
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-gold/40 to-transparent" />
 
       {/* Decorações flutuantes */}
       <Bonbon color="caramel" className="absolute top-20 right-[10%] w-16 h-16 anim-float-medium opacity-70 hidden md:block" />
@@ -31,7 +31,7 @@ export function Manifesto() {
           </blockquote>
 
           <div className="flex flex-wrap items-center gap-4 pt-8 border-t border-cream/10">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-caramel to-cocoa ring-2 ring-gold/30 flex items-center justify-center font-display font-bold text-cream">
+            <div className="w-14 h-14 rounded-full bg-linear-to-br from-caramel to-cocoa ring-2 ring-gold/30 flex items-center justify-center font-display font-bold text-cream">
               DE
             </div>
             <div>

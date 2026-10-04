@@ -57,18 +57,18 @@ export async function CategoryTiles() {
               >
                 {/* textura + scrim */}
                 <div className="absolute inset-0 tex-diag opacity-70" />
-                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/45 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/45 to-transparent" />
 
                 {/* icone */}
                 <Icon className="absolute top-4 left-4 text-white/90 group-hover:scale-110 transition-transform" size={30} strokeWidth={1.8} />
                 {/* contagem */}
-                <span className="absolute top-4 right-4 bg-white/95 text-ink text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-sm">
+                <span className="absolute top-4 right-4 bg-white/95 text-ink text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-xs">
                   {c.productCount} {c.productCount === 1 ? "item" : "itens"}
                 </span>
 
                 {/* rotulo */}
                 <div className="absolute inset-x-0 bottom-0 p-4 flex items-end justify-between gap-2">
-                  <div className="font-display font-extrabold text-white text-[19px] lg:text-[21px] leading-tight drop-shadow">
+                  <div className="font-display font-extrabold text-white text-[19px] lg:text-[21px] leading-tight drop-shadow-sm">
                     {c.name}
                   </div>
                   <span className="shrink-0 w-8 h-8 rounded-full bg-white text-rose-brand flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-1 transition-all">

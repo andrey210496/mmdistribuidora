@@ -35,7 +35,7 @@ export function DeleteProductButton({
           onClick={handleDelete}
           disabled={pending}
           title="Confirmar exclusão"
-          className="text-red-600 hover:text-white hover:bg-red-600 border border-red-300 rounded p-1 transition disabled:opacity-50"
+          className="text-red-600 hover:text-white hover:bg-red-600 border border-red-300 rounded-sm p-1 transition disabled:opacity-50"
         >
           <Check size={14} />
         </button>
@@ -43,7 +43,7 @@ export function DeleteProductButton({
           onClick={() => setConfirming(false)}
           disabled={pending}
           title="Cancelar"
-          className="text-cocoa/50 hover:text-cocoa border border-cocoa/20 rounded p-1 transition"
+          className="text-cocoa/50 hover:text-cocoa border border-cocoa/20 rounded-sm p-1 transition"
         >
           <X size={14} />
         </button>

@@ -98,7 +98,7 @@ export function CategoriesManager({ categories }: { categories: Category[] }) {
                       <input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 px-3 py-1.5 rounded-lg border border-cocoa/20 text-sm focus:outline-none focus:border-rose-brand"
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-cocoa/20 text-sm focus:outline-hidden focus:border-rose-brand"
                         autoFocus
                       />
                       <button

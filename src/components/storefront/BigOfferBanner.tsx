@@ -5,7 +5,7 @@ export function BigOfferBanner() {
   return (
     <section className="py-8 lg:py-12 bg-cream/40">
       <div className="container-default">
-        <div className="relative bg-gradient-to-r from-espresso via-cocoa to-[#3d1c0e] rounded-3xl overflow-hidden">
+        <div className="relative bg-linear-to-r from-espresso via-cocoa to-brand-700 rounded-3xl overflow-hidden">
           {/* Imagem de fundo */}
           <div className="absolute inset-0 opacity-40">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -16,7 +16,7 @@ export function BigOfferBanner() {
               loading="lazy"
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-espresso via-espresso/80 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-r from-espresso via-espresso/80 to-transparent" />
 
           {/* Sprinkles decorativos */}
           <div className="absolute top-0 right-1/3 anim-sprinkle pointer-events-none">

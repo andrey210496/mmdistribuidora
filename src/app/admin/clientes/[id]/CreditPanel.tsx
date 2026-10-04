@@ -96,7 +96,7 @@ export function CreditPanel({
               onChange={(e) => setLimitInput(e.target.value)}
               inputMode="decimal"
               placeholder="0,00"
-              className="w-full px-3 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+              className="w-full px-3 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
             />
           </div>
           <button
@@ -140,13 +140,13 @@ export function CreditPanel({
                   onChange={(e) => setPayAmount(e.target.value)}
                   inputMode="decimal"
                   placeholder={`máx ${centsToBRL(owedCents)}`}
-                  className="w-full px-3 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                  className="w-full px-3 py-2 rounded-r-full border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
                 />
               </div>
               <select
                 value={payMethod}
                 onChange={(e) => setPayMethod(e.target.value)}
-                className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm bg-white focus:outline-none focus:border-rose-brand"
+                className="w-full px-3 py-2 rounded-full border border-cocoa/15 text-sm bg-white focus:outline-hidden focus:border-rose-brand"
               >
                 {RECEIVE_METHODS.map((m) => (
                   <option key={m} value={m}>

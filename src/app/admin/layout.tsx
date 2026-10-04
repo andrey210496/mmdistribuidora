@@ -105,7 +105,7 @@ export default async function AdminLayout({
       <aside className="w-64 bg-espresso text-cream flex flex-col shrink-0 sticky top-0 h-screen">
         <div className="p-5 border-b border-cream/10">
           <Link href={firstAllowedPath(user)} className="flex items-center gap-3">
-            <span className="bg-white rounded-lg px-2.5 py-1.5 shrink-0 shadow-sm">
+            <span className="bg-white rounded-lg px-2.5 py-1.5 shrink-0 shadow-xs">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="MM Distribuidora" className="h-7 w-auto object-contain" />
             </span>

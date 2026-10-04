@@ -38,7 +38,7 @@ export function PeriodFilter() {
   }
 
   const inp =
-    "px-2.5 py-1.5 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-none focus:border-rose-brand bg-white";
+    "px-2.5 py-1.5 rounded-lg border border-cocoa/15 text-sm text-cocoa focus:outline-hidden focus:border-rose-brand bg-white";
 
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">

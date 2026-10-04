@@ -33,7 +33,7 @@ export async function Header() {
       </div>
 
       {/* Barra principal */}
-      <div className="bg-paper/95 backdrop-blur border-b border-line">
+      <div className="bg-paper/95 backdrop-blur-sm border-b border-line">
         <div className="container-wide flex items-center justify-between gap-5 lg:gap-8 h-[84px]">
           <Link href="/" className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -49,7 +49,7 @@ export async function Header() {
                 name="q"
                 placeholder="Buscar produto, marca ou categoria…"
                 maxLength={100}
-                className="w-full pl-11 pr-4 h-11 rounded-full bg-white border border-line text-ink placeholder-clay/80 text-[14px] focus:outline-none focus:border-rose-brand/50 focus:ring-2 focus:ring-rose-brand/15 transition"
+                className="w-full pl-11 pr-4 h-11 rounded-full bg-white border border-line text-ink placeholder-clay/80 text-[14px] focus:outline-hidden focus:border-rose-brand/50 focus:ring-2 focus:ring-rose-brand/15 transition"
               />
             </form>
           </div>

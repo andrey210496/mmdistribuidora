@@ -29,7 +29,7 @@ export default async function EntrarPage({ searchParams }: { searchParams: Searc
               Acesse com seu CPF e senha para comprar e aproveitar o Clube.
             </p>
           </div>
-          <div className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8 shadow-sm">
+          <div className="bg-white rounded-2xl border border-cocoa/10 p-6 lg:p-8 shadow-xs">
             <CustomerLoginForm next={next} />
           </div>
         </div>

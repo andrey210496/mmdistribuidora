@@ -19,7 +19,7 @@ const promos = [
     cta: "Comprar",
     href: "/produtos?categoria=embalagens",
     image: "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=900&q=80",
-    bg: "from-[#a5aa66] to-[#6b7340]",
+    bg: "from-olive to-[#6b7340]",
     accent: "text-cream",
   },
   {
@@ -55,7 +55,7 @@ export function PromoGrid() {
             <Link
               key={promo.title}
               href={promo.href}
-              className={`group relative aspect-[4/5] md:aspect-[4/3] rounded-3xl overflow-hidden bg-gradient-to-br ${promo.bg} ${
+              className={`group relative aspect-4/5 md:aspect-4/3 rounded-3xl overflow-hidden bg-linear-to-br ${promo.bg} ${
                 i === 0 ? "md:row-span-1" : ""
               } hover:shadow-[0_24px_60px_-16px_rgba(90,43,23,0.4)] transition-all duration-500 hover:-translate-y-1`}
             >
@@ -71,7 +71,7 @@ export function PromoGrid() {
               </div>
 
               {/* Overlay gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
 
               {/* Conteúdo */}
               <div className="relative h-full p-6 lg:p-7 flex flex-col justify-end text-white">

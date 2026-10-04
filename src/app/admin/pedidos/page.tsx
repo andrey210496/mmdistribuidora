@@ -86,7 +86,7 @@ export default async function AdminPedidosPage({
               name="q"
               defaultValue={search}
               placeholder="Buscar por número, cliente ou e-mail"
-              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-cocoa/15 text-cocoa text-sm focus:outline-none focus:border-rose-brand"
+              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-cocoa/15 text-cocoa text-sm focus:outline-hidden focus:border-rose-brand"
             />
           </div>
           <button type="submit" className="btn-primary">

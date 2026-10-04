@@ -158,7 +158,7 @@ function ItemRow({ item, confirmed }: { item: Item; confirmed: boolean }) {
             <input
               autoFocus value={query} onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar produto…"
-              className="w-full px-2.5 py-1.5 rounded-full border border-cocoa/15 text-xs focus:outline-none focus:border-rose-brand"
+              className="w-full px-2.5 py-1.5 rounded-full border border-cocoa/15 text-xs focus:outline-hidden focus:border-rose-brand"
             />
             {results.length > 0 && (
               <div className="absolute z-20 mt-1 w-full bg-white rounded-xl border border-cocoa/15 shadow-lg max-h-48 overflow-auto">
@@ -185,7 +185,7 @@ function ItemRow({ item, confirmed }: { item: Item; confirmed: boolean }) {
           <input
             type="number" min={1} value={factor}
             onChange={(e) => saveFactor(e.target.value)}
-            className="w-14 px-2 py-1 rounded-lg border border-cocoa/15 text-xs text-center focus:outline-none focus:border-rose-brand"
+            className="w-14 px-2 py-1 rounded-lg border border-cocoa/15 text-xs text-center focus:outline-hidden focus:border-rose-brand"
             title="Quantas unidades de estoque cada item da nota representa (ex.: 1 fardo = 10)"
           />
         )}

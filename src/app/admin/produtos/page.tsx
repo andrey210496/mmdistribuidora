@@ -85,7 +85,7 @@ export default async function AdminProdutosPage({
               name="q"
               defaultValue={q}
               placeholder="Buscar por nome, SKU ou descrição"
-              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-cocoa/15 text-cocoa text-sm focus:outline-none focus:border-rose-brand"
+              className="w-full pl-11 pr-4 py-2.5 rounded-full border border-cocoa/15 text-cocoa text-sm focus:outline-hidden focus:border-rose-brand"
             />
           </div>
           <button type="submit" className="btn-primary">Buscar</button>

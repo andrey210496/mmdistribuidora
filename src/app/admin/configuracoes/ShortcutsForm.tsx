@@ -60,7 +60,7 @@ export function ShortcutsForm({ initial }: { initial: ShortcutMap }) {
                   onKeyDown={(e) => onCapture(a.key, e)}
                   onBlur={() => setCapturing(null)}
                   value="pressione…"
-                  className="w-28 px-2 py-1 rounded-full border border-rose-brand text-xs text-rose-brand text-center focus:outline-none"
+                  className="w-28 px-2 py-1 rounded-full border border-rose-brand text-xs text-rose-brand text-center focus:outline-hidden"
                 />
               ) : (
                 <button

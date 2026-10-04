@@ -42,12 +42,12 @@ export function SupplierManager({ initial }: { initial: Supplier[] }) {
 
   const toggle = (id: string) => start(async () => { await toggleSupplierActive(id); });
 
-  const field = "w-full px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand";
+  const field = "w-full px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand";
 
   return (
     <div className="space-y-4">
       {editing === null && (
-        <button onClick={openNew} className="inline-flex items-center gap-2 bg-rose-brand hover:bg-[#A81E1E] text-white px-4 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition">
+        <button onClick={openNew} className="inline-flex items-center gap-2 bg-rose-brand hover:bg-redDeep text-white px-4 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition">
           <Plus size={16} /> Novo fornecedor
         </button>
       )}

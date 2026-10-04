@@ -104,14 +104,14 @@ export function AnnouncementPopup() {
 
   return (
     <div
-      className={`fixed inset-0 z-[80] flex items-center justify-center p-4 transition-opacity duration-300 ${
+      className={`fixed inset-0 z-80 flex items-center justify-center p-4 transition-opacity duration-300 ${
         visible ? "opacity-100" : "opacity-0 pointer-events-none"
       }`}
     >
       {/* Overlay */}
       <div
         onClick={() => setVisible(false)}
-        className="absolute inset-0 bg-espresso/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-espresso/60 backdrop-blur-xs"
         aria-hidden
       />
 
@@ -126,7 +126,7 @@ export function AnnouncementPopup() {
         <button
           onClick={() => setVisible(false)}
           aria-label="Fechar"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-cocoa flex items-center justify-center shadow"
+          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-cocoa flex items-center justify-center shadow-sm"
         >
           <X size={18} />
         </button>
@@ -135,7 +135,7 @@ export function AnnouncementPopup() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={current.imageUrl} alt="" className="w-full h-44 object-cover" />
         ) : (
-          <div className="h-24 bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] flex items-center justify-center">
+          <div className="h-24 bg-linear-to-br from-brand-900 via-cocoa to-brand-900 flex items-center justify-center">
             <Crown size={36} className="text-gold" fill="currentColor" />
           </div>
         )}
@@ -149,7 +149,7 @@ export function AnnouncementPopup() {
           {current.ctaHref && (
             <a
               href={current.ctaHref}
-              className="mt-5 inline-flex items-center justify-center gap-2 bg-gradient-to-br from-[#f4d8a8] via-[#d4a574] to-[#a07640] text-[#1a0703] font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 transition-all w-full"
+              className="mt-5 inline-flex items-center justify-center gap-2 bg-linear-to-br from-[#f4d8a8] via-brand-300 to-[#a07640] text-brand-900 font-bold px-6 py-3 rounded-full shadow-md hover:-translate-y-0.5 transition-all w-full"
             >
               {current.ctaText || "Saiba mais"}
               <ArrowRight size={16} />

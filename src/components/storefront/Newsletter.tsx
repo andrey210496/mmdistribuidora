@@ -20,7 +20,7 @@ export function Newsletter() {
             type="email"
             required
             placeholder="seu@email.com"
-            className="flex-1 bg-transparent border-0 text-cream placeholder-cream/40 focus:outline-none text-base"
+            className="flex-1 bg-transparent border-0 text-cream placeholder-cream/40 focus:outline-hidden text-base"
           />
           <button
             type="submit"

@@ -121,7 +121,7 @@ export default async function ProdutosPage({
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold transition ${
                     filters.ofertas === "1"
                       ? "bg-gold text-espressoDark"
-                      : "text-[#b7893c] hover:bg-gold/15"
+                      : "text-brass hover:bg-gold/15"
                   }`}
                 >
                   <span aria-hidden>★</span> Ofertas

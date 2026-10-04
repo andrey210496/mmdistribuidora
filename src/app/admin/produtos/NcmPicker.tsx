@@ -140,7 +140,7 @@ export function NcmPicker({
               value={q}
               onChange={(e) => { setQ(e.target.value); setCreating(false); setErr(""); }}
               placeholder="Código (1905) ou descrição (biscoito)"
-              className="w-full pl-9 pr-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+              className="w-full pl-9 pr-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
             />
           </div>
 
@@ -191,7 +191,7 @@ export function NcmPicker({
                 value={novoDesc}
                 onChange={(e) => setNovoDesc(e.target.value)}
                 placeholder={`Descrição do NCM ${fmt(digitsOnly)}`}
-                className="w-full px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand"
+                className="w-full px-3 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand"
               />
               <div className="flex gap-2">
                 <button

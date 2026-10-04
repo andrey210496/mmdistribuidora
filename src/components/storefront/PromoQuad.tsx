@@ -31,7 +31,7 @@ export function PromoQuad() {
           </p>
           <Link
             href="/produtos"
-            className="mt-7 inline-flex items-center gap-2 bg-gold hover:bg-[#e2a32e] text-espressoDark text-[14px] font-bold uppercase tracking-[0.05em] px-8 py-4 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lg"
+            className="mt-7 inline-flex items-center gap-2 bg-gold hover:bg-[#e2a32e] text-espressoDark text-[14px] font-bold uppercase tracking-wider px-8 py-4 rounded-full transition-all hover:-translate-y-0.5 hover:shadow-lg"
           >
             Montar meu pedido <ArrowRight size={18} />
           </Link>
@@ -39,7 +39,7 @@ export function PromoQuad() {
 
         <div className="lg:col-span-7 grid sm:grid-cols-3 gap-5">
           {STEPS.map((s) => (
-            <div key={s.n} className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/15 p-5">
+            <div key={s.n} className="bg-white/10 backdrop-blur-xs rounded-2xl border border-white/15 p-5">
               <div className="flex items-center gap-3">
                 <span className="w-10 h-10 rounded-full bg-gold text-espressoDark font-display font-extrabold text-[17px] flex items-center justify-center">{s.n}</span>
                 <s.Icon size={22} className="text-gold" strokeWidth={2} />

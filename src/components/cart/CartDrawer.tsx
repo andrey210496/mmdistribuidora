@@ -40,7 +40,7 @@ export function CartDrawer() {
       {/* Overlay */}
       <div
         onClick={close}
-        className={`fixed inset-0 z-[60] bg-espresso/40 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`fixed inset-0 z-60 bg-espresso/40 backdrop-blur-xs transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         aria-hidden
@@ -48,7 +48,7 @@ export function CartDrawer() {
 
       {/* Gaveta */}
       <aside
-        className={`fixed top-0 right-0 z-[70] h-full w-full max-w-md bg-cream shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+        className={`fixed top-0 right-0 z-70 h-full w-full max-w-md bg-cream shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"

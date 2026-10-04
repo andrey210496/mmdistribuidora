@@ -55,7 +55,7 @@ export function TaxGroupManager({ initial }: { initial: TaxGroup[] }) {
     });
   };
 
-  const inp = "w-full px-2.5 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-none focus:border-rose-brand";
+  const inp = "w-full px-2.5 py-2 rounded-lg border border-cocoa/15 text-sm focus:outline-hidden focus:border-rose-brand";
 
   return (
     <section className="bg-white rounded-2xl border border-cocoa/10 p-6">

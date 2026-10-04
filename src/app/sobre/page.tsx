@@ -20,7 +20,7 @@ export default function SobrePage() {
     <>
       <Header />
 
-      <section className="bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream py-16 lg:py-20">
+      <section className="bg-linear-to-br from-brand-900 via-cocoa to-brand-900 text-cream py-16 lg:py-20">
         <div className="container-default text-center">
           <span className="eyebrow text-gold">Quem somos</span>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-gold mt-3 mb-4">
@@ -63,7 +63,7 @@ export default function SobrePage() {
           ))}
         </div>
 
-        <div className="max-w-4xl mx-auto mt-12 rounded-2xl bg-gradient-to-br from-[#1a0703] via-cocoa to-[#1a0703] text-cream p-8 text-center">
+        <div className="max-w-4xl mx-auto mt-12 rounded-2xl bg-linear-to-br from-brand-900 via-cocoa to-brand-900 text-cream p-8 text-center">
           <Crown className="inline-block text-gold mb-2" size={28} fill="currentColor" />
           <h2 className="font-display text-2xl font-bold text-gold mb-2">Vamos fazer doces juntos?</h2>
           <p className="text-cream/80 mb-5">Conheça o catálogo ou fale com a gente.</p>

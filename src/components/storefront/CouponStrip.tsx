@@ -52,7 +52,7 @@ export function CouponStrip() {
           {coupons.map((c) => (
             <div
               key={c.code}
-              className={`relative bg-gradient-to-r ${c.color} text-white rounded-xl p-4 overflow-hidden flex items-center gap-4 shadow-md hover:shadow-lg transition`}
+              className={`relative bg-linear-to-r ${c.color} text-white rounded-xl p-4 overflow-hidden flex items-center gap-4 shadow-md hover:shadow-lg transition`}
             >
               <Tag size={28} className="text-white/40 shrink-0" />
               <div className="flex-1 min-w-0">
@@ -63,7 +63,7 @@ export function CouponStrip() {
               </div>
               <button
                 onClick={() => copy(c.code)}
-                className="bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/20 rounded-lg px-3 py-2 flex items-center gap-1.5 text-xs font-bold transition shrink-0"
+                className="bg-white/15 hover:bg-white/25 backdrop-blur-xs border border-white/20 rounded-lg px-3 py-2 flex items-center gap-1.5 text-xs font-bold transition shrink-0"
                 aria-label={`Copiar cupom ${c.code}`}
               >
                 {copied === c.code ? (

@@ -98,7 +98,7 @@ export function OccasionsBand() {
                 <Link
                   key={o.name}
                   href={o.href}
-                  className={`group bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white hover:bg-white transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(138,74,92,0.3)] ${
+                  className={`group bg-white/80 backdrop-blur-xs rounded-3xl p-6 border border-white hover:bg-white transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(138,74,92,0.3)] ${
                     i % 2 === 1 ? "lg:translate-y-8" : ""
                   }`}
                 >

@@ -16,7 +16,7 @@ export function B2BBanner() {
               className="absolute inset-0 w-full h-full object-cover"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-espresso/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-espresso/40 to-transparent" />
           </div>
 
           {/* Lado conteúdo */}

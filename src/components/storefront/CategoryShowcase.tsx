@@ -63,7 +63,7 @@ export function CategoryShowcase({ categories }: { categories: Category[] }) {
                 href={`/produtos?categoria=${cat.slug}`}
                 className="group relative bg-white rounded-2xl overflow-hidden border border-cocoa/10 hover:border-caramel/40 hover:shadow-[0_12px_30px_-8px_rgba(90,43,23,0.2)] transition-all duration-300"
               >
-                <div className="aspect-[4/3] overflow-hidden">
+                <div className="aspect-4/3 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={data.image}
@@ -71,7 +71,7 @@ export function CategoryShowcase({ categories }: { categories: Category[] }) {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-espresso/80 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-espresso/80 via-transparent to-transparent" />
                   <span className="absolute top-2.5 left-2.5 bg-white/95 text-cocoa text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
                     {data.tag}
                   </span>

@@ -203,7 +203,7 @@ export default async function AdminDashboard() {
                     <td className="py-3 font-mono text-cocoa">{o.orderNumber}</td>
                     <td className="py-3 text-cocoa">{o.customerNameSnapshot}</td>
                     <td className="py-3">
-                      <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-caramel/10 text-caramel">
+                      <span className="inline-block px-2 py-0.5 rounded-sm text-xs font-semibold bg-caramel/10 text-caramel">
                         {o.status}
                       </span>
                     </td>

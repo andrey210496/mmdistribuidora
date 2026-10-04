@@ -51,10 +51,10 @@ export function CollectionsEditorial() {
                 <img
                   src={c.image}
                   alt={c.title}
-                  className="w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-1500 ease-out group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-espresso/90 via-espresso/40 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-espresso/90 via-espresso/40 to-transparent" />
               </div>
 
               <div className="relative h-full p-8 lg:p-10 flex flex-col justify-end text-cream">

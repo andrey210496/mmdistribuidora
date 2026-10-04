@@ -86,7 +86,7 @@ export function Testimonials() {
 
               <div className="flex items-center gap-3 pt-5 border-t border-cocoa/10 relative">
                 <div
-                  className={`w-11 h-11 rounded-full bg-gradient-to-br ${t.color} text-white flex items-center justify-center font-display font-bold shadow-lg ring-2 ring-white`}
+                  className={`w-11 h-11 rounded-full bg-linear-to-br ${t.color} text-white flex items-center justify-center font-display font-bold shadow-lg ring-2 ring-white`}
                 >
                   {t.avatar}
                 </div>
@@ -108,8 +108,8 @@ export function Testimonials() {
             Trabalhamos com as melhores marcas
           </p>
           <div className="overflow-hidden relative">
-            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-cream to-transparent z-10 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-cream to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 left-0 w-32 bg-linear-to-r from-cream to-transparent z-10 pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-32 bg-linear-to-l from-cream to-transparent z-10 pointer-events-none" />
             <div className="anim-marquee marquee-track opacity-60">
               {[...Array(2)].map((_, dup) => (
                 <div key={dup} className="flex items-center gap-12 shrink-0">

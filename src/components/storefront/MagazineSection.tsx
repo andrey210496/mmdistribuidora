@@ -54,13 +54,13 @@ export function MagazineSection() {
               className={`group flex flex-col bg-cream-soft ${a.span}`}
             >
               <div
-                className={`relative overflow-hidden ${a.isLarge ? "aspect-[16/12]" : "aspect-[16/10]"}`}
+                className={`relative overflow-hidden ${a.isLarge ? "aspect-16/12" : "aspect-16/10"}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={a.image}
                   alt={a.title}
-                  className="w-full h-full object-cover transition-transform duration-[1500ms] ease-out group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-1500 ease-out group-hover:scale-105"
                   loading="lazy"
                 />
               </div>
