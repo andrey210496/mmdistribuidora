@@ -11,7 +11,7 @@ import { centsToBRL, brlToCents } from "@/lib/money";
 import { resolveUnitPrice } from "@/lib/pricing";
 import { computePaymentBreakdown, type PaymentInput } from "@/lib/pos";
 import { PAYMENT_METHOD_LABELS } from "@/lib/orders";
-import { matchAction, eventToKey, alwaysFires, type ShortcutMap } from "@/lib/pdv-shortcuts";
+import { matchAction, eventToKey, alwaysFires, keyLabel, type ShortcutMap } from "@/lib/pdv-shortcuts";
 import type { CashReconciliation } from "@/lib/cash";
 import {
   searchProducts, searchCustomers, quickCreateCustomer, finalizeSale,
@@ -121,9 +121,17 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
   const [results, setResults] = useState<PdvProduct[]>([]);
   const [searching, setSearching] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  // Navegação por teclado: linha destacada na lista de resultados e no carrinho.
+  const [resSel, setResSel] = useState(0);
+  const [cartSel, setCartSel] = useState(0);
 
   // Carrinho
   const [cart, setCart] = useState<CartLine[]>([]);
+
+  const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(n, max));
+  const cyclePriceMode = () =>
+    setPriceMode((m) => (m === "CASH" ? "PIX" : m === "PIX" ? "CARD" : "CASH"));
 
   // Cliente
   const [customer, setCustomer] = useState<PdvCustomer | null>(null);
@@ -171,6 +179,15 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     return () => clearTimeout(t);
   }, [query]);
 
+  // Seleção por teclado: volta ao topo quando a lista de resultados muda.
+  useEffect(() => { setResSel(0); }, [results]);
+  // Mantém a linha destacada do carrinho dentro dos limites.
+  useEffect(() => { setCartSel((s) => (cart.length === 0 ? 0 : clamp(s, 0, cart.length - 1))); }, [cart.length]);
+  // Rola o resultado destacado para dentro da visão.
+  useEffect(() => {
+    resultsRef.current?.querySelector<HTMLElement>(`[data-ri="${resSel}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [resSel, results]);
+
   const addToCart = (p: PdvProduct) => {
     // Produto por peso vai pelo popup de balança (tecla P), não pela busca.
     if (p.soldByWeight) {
@@ -179,6 +196,9 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
       setResults([]);
       return;
     }
+    // Destaca a linha do produto recém-adicionado (p/ ajustar qtd pelo teclado).
+    const existing = cart.findIndex((l) => l.product.id === p.id);
+    setCartSel(existing >= 0 ? existing : cart.length);
     setCart((prev) => {
       const i = prev.findIndex((l) => l.product.id === p.id);
       if (i >= 0) {
@@ -207,14 +227,37 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     });
   };
 
-  const onSearchKey = (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
+  // Enter na busca: bipe de código de barras (match exato) tem prioridade;
+  // senão adiciona o resultado destacado pelas setas.
+  const confirmResult = () => {
+    if (results.length === 0) return;
     const q = query.trim();
-    if (!q) return;
-    const exact = results.find((p) => p.barcode === q || p.sku.toLowerCase() === q.toLowerCase());
-    if (exact) addToCart(exact);
-    else if (results.length === 1) addToCart(results[0]!);
+    const exact = q
+      ? results.find((p) => p.barcode === q || p.sku.toLowerCase() === q.toLowerCase())
+      : null;
+    const chosen = exact ?? results[resSel] ?? results[0];
+    if (chosen) addToCart(chosen);
+  };
+
+  // Move a seleção na lista ativa (resultados se abertos; senão, carrinho).
+  const moveSel = (dir: number) => {
+    if (results.length > 0) setResSel((s) => clamp(s + dir, 0, results.length - 1));
+    else if (cart.length > 0) setCartSel((s) => clamp(s + dir, 0, cart.length - 1));
+  };
+
+  // +/- na linha destacada do carrinho (item por peso reabre a balança).
+  const bumpSelQty = (delta: number) => {
+    const line = cart[cartSel];
+    if (!line) return;
+    if (line.product.soldByWeight) { setWeightOpen(true); return; }
+    setQty(line.product.id, line.qty + delta);
+  };
+
+  const removeSelLine = () => {
+    const line = cart[cartSel];
+    if (!line) return;
+    removeLine(line.product.id);
+    setCartSel((s) => clamp(s, 0, Math.max(0, cart.length - 2)));
   };
 
   const setQty = (id: string, qty: number) =>
@@ -356,8 +399,8 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
   // pedido do cliente); demais ações vêm da config (/admin/configuracoes).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Com um modal aberto, o PDV não reage a teclas (o modal cuida).
-      if (fiadoOpen || weightOpen) return;
+      // Com um modal aberto (fiado/peso/cupom), o PDV não reage a teclas.
+      if (fiadoOpen || weightOpen || receipt) return;
       // F1 dinheiro · F2 débito · F3 crédito · F4 Pix (preenche o restante)
       const fixed: Record<string, PayKey> = {
         F1: "CASH",
@@ -371,21 +414,43 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
         return;
       }
       const el = document.activeElement as HTMLElement | null;
+      const inSearch = el === searchRef.current;
       const isTyping =
         !!el &&
         (el.tagName === "INPUT" ||
           el.tagName === "TEXTAREA" ||
           el.tagName === "SELECT" ||
           el.isContentEditable);
-      const action = matchAction(e, shortcuts, isTyping);
+      const resultsOpen = results.length > 0;
+
+      const action = matchAction(e, shortcuts, { isTyping, inSearch });
       if (action) {
-        e.preventDefault();
-        if (action === "focusSearch") searchRef.current?.focus();
-        else if (action === "finalize") submit(false);
-        else if (action === "credit") submit(true);
-        else if (action === "clearSale") resetSale();
-        else if (action === "openCustomer") setFiadoOpen(true);
-        else if (action === "openWeight") setWeightOpen(true);
+        switch (action) {
+          case "focusSearch": e.preventDefault(); searchRef.current?.focus(); break;
+          case "finalize": e.preventDefault(); submit(false); break;
+          case "credit": e.preventDefault(); submit(true); break;
+          case "clearSale": e.preventDefault(); resetSale(); break;
+          case "openCustomer": e.preventDefault(); setFiadoOpen(true); break;
+          case "openWeight": e.preventDefault(); setWeightOpen(true); break;
+          case "cyclePrice": e.preventDefault(); cyclePriceMode(); break;
+          case "toggleFiscal": e.preventDefault(); setFiscal((f) => !f); break;
+          case "reprintLast": e.preventDefault(); if (lastSale) setReceipt(lastSale); break;
+          case "navDown": e.preventDefault(); moveSel(1); break;
+          case "navUp": e.preventDefault(); moveSel(-1); break;
+          case "confirm":
+            if (resultsOpen) { e.preventDefault(); confirmResult(); }
+            break;
+          // qtd/remover agem na linha destacada do carrinho (lista de produto fechada)
+          case "qtyPlus":
+            if (!resultsOpen && cart.length > 0) { e.preventDefault(); bumpSelQty(1); }
+            break;
+          case "qtyMinus":
+            if (!resultsOpen && cart.length > 0) { e.preventDefault(); bumpSelQty(-1); }
+            break;
+          case "removeItem":
+            if (!resultsOpen && cart.length > 0) { e.preventDefault(); removeSelLine(); }
+            break;
+        }
         return;
       }
 
@@ -406,7 +471,7 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [shortcuts, submit, resetSale, quickPay, productHotkeys, fiadoOpen, weightOpen]);
+  }, [shortcuts, submit, resetSale, quickPay, productHotkeys, fiadoOpen, weightOpen, receipt, results, cart, resSel, cartSel, query, lastSale]);
 
   return (
     <div className="p-4 lg:p-6">
@@ -426,19 +491,22 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onSearchKey}
               placeholder="Buscar por nome, SKU ou bipar código de barras…"
               className="w-full pl-10 pr-4 py-3 rounded-full border border-cocoa/15 bg-white focus:outline-hidden focus:border-rose-brand"
               autoFocus
             />
             {results.length > 0 && (
-              <div className="absolute z-20 mt-1 w-full bg-white rounded-2xl border border-cocoa/15 shadow-lg max-h-80 overflow-auto">
-                {results.map((p) => (
+              <div ref={resultsRef} className="absolute z-20 mt-1 w-full bg-white rounded-2xl border border-cocoa/15 shadow-lg max-h-80 overflow-auto">
+                {results.map((p, i) => (
                   <button
                     key={p.id}
+                    data-ri={i}
                     onClick={() => addToCart(p)}
+                    onMouseEnter={() => setResSel(i)}
                     disabled={p.stock <= 0}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-cream/50 text-left disabled:opacity-40 border-b border-cocoa/5 last:border-0"
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left disabled:opacity-40 border-b border-cocoa/5 last:border-0 ${
+                      i === resSel ? "bg-rose-brand/10" : "hover:bg-cream/50"
+                    }`}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-cocoa font-medium truncate">{p.name}</div>
@@ -458,6 +526,15 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
             )}
           </div>
 
+          {/* Dica de navegação por teclado */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-cocoa/45">
+            <span><kbd className="font-mono text-cocoa/70">{keyLabel(shortcuts.navUp)}</kbd>/<kbd className="font-mono text-cocoa/70">{keyLabel(shortcuts.navDown)}</kbd> navegar</span>
+            <span><kbd className="font-mono text-cocoa/70">{keyLabel(shortcuts.confirm)}</kbd> adicionar</span>
+            <span><kbd className="font-mono text-cocoa/70">{keyLabel(shortcuts.qtyPlus)}</kbd>/<kbd className="font-mono text-cocoa/70">{keyLabel(shortcuts.qtyMinus)}</kbd> qtd</span>
+            <span><kbd className="font-mono text-cocoa/70">{keyLabel(shortcuts.removeItem)}</kbd> remover</span>
+            <a href="/admin/configuracoes" className="text-rose-brand hover:underline ml-auto">configurar teclas</a>
+          </div>
+
           {/* Carrinho */}
           <div className="bg-white rounded-2xl border border-cocoa/10 overflow-hidden">
             {priced.lines.length === 0 ? (
@@ -466,8 +543,14 @@ function Pos({ storeName, session, recon, shortcuts, productHotkeys }: { storeNa
               </div>
             ) : (
               <div className="divide-y divide-cocoa/8">
-                {priced.lines.map((l) => (
-                  <div key={l.product.id} className="px-4 py-3">
+                {priced.lines.map((l, i) => (
+                  <div
+                    key={l.product.id}
+                    onClick={() => setCartSel(i)}
+                    className={`px-4 py-3 transition-colors ${
+                      results.length === 0 && i === cartSel ? "bg-rose-brand/5 ring-1 ring-inset ring-rose-brand/25" : ""
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm text-cocoa font-medium truncate">{l.product.name}</div>

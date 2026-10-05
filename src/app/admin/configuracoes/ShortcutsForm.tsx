@@ -5,6 +5,7 @@ import { Keyboard, Check } from "lucide-react";
 import {
   PDV_ACTIONS,
   eventToKey,
+  keyLabel,
   DEFAULT_SHORTCUTS,
   type ShortcutMap,
 } from "@/lib/pdv-shortcuts";
@@ -41,40 +42,49 @@ export function ShortcutsForm({ initial }: { initial: ShortcutMap }) {
         <Keyboard size={18} className="text-rose-brand" /> Atalhos de teclado do PDV
       </h2>
       <p className="text-cocoa/55 text-sm mb-4">
-        Clique em <strong>capturar</strong> e pressione a tecla. Dica: use F2–F12 para que o
-        atalho funcione mesmo enquanto você digita na busca.
+        Clique em <strong>capturar</strong> e pressione a tecla. As teclas de{" "}
+        <strong>navegação</strong> (setas, Enter, +, −, Del) funcionam direto na busca, pra
+        operar a venda inteira sem o mouse. As de <strong>ação</strong> em letra só valem fora
+        dos campos — prefira F5–F12 pra funcionarem sempre.
       </p>
 
-      <div className="space-y-2">
-        {PDV_ACTIONS.map((a) => (
-          <div key={a.key} className="flex items-center justify-between gap-3">
-            <span className="text-sm text-cocoa">{a.label}</span>
-            <div className="flex items-center gap-2">
-              <kbd className="font-mono text-xs px-2.5 py-1 rounded-md bg-cocoa/5 border border-cocoa/15 text-cocoa min-w-[60px] text-center">
-                {map[a.key]}
-              </kbd>
-              {capturing === a.key ? (
-                <input
-                  autoFocus
-                  readOnly
-                  onKeyDown={(e) => onCapture(a.key, e)}
-                  onBlur={() => setCapturing(null)}
-                  value="pressione…"
-                  className="w-28 px-2 py-1 rounded-full border border-rose-brand text-xs text-rose-brand text-center focus:outline-hidden"
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setCapturing(a.key)}
-                  className="text-rose-brand hover:text-cocoa text-xs font-bold underline"
-                >
-                  capturar
-                </button>
-              )}
-            </div>
+      {(["nav", "acao"] as const).map((grupo) => (
+        <div key={grupo} className="mb-4 last:mb-0">
+          <h3 className="text-[11px] font-bold uppercase tracking-wider text-cocoa/50 mb-2">
+            {grupo === "nav" ? "Navegação (durante a venda)" : "Ações da venda"}
+          </h3>
+          <div className="space-y-2">
+            {PDV_ACTIONS.filter((a) => a.group === grupo).map((a) => (
+              <div key={a.key} className="flex items-center justify-between gap-3">
+                <span className="text-sm text-cocoa">{a.label}</span>
+                <div className="flex items-center gap-2">
+                  <kbd className="font-mono text-xs px-2.5 py-1 rounded-md bg-cocoa/5 border border-cocoa/15 text-cocoa min-w-[60px] text-center">
+                    {keyLabel(map[a.key])}
+                  </kbd>
+                  {capturing === a.key ? (
+                    <input
+                      autoFocus
+                      readOnly
+                      onKeyDown={(e) => onCapture(a.key, e)}
+                      onBlur={() => setCapturing(null)}
+                      value="pressione…"
+                      className="w-28 px-2 py-1 rounded-full border border-rose-brand text-xs text-rose-brand text-center focus:outline-hidden"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCapturing(a.key)}
+                      className="text-rose-brand hover:text-cocoa text-xs font-bold underline"
+                    >
+                      capturar
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
 
       <div className="flex items-center gap-3 mt-5">
         <button
