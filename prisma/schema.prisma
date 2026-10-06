@@ -145,8 +145,8 @@ model Product {
   taxGroupId          String?
   active              Boolean   @default(true)
   featured            Boolean   @default(false)
-  // Validade do produto (uso interno). Alimenta a seção "Destaque do Clube",
-  // que destaca produtos com validade próxima — sem revelar isso ao cliente.
+  // Validade do produto (uso interno). Alimenta os alertas de validade próxima
+  // no admin (inventário) — sem revelar isso ao cliente.
   expiryDate          DateTime?
   categoryId          String?
   createdAt           DateTime  @default(now())
@@ -507,8 +507,8 @@ enum AnnouncementPlacement {
 
 enum AnnouncementAudience {
   ALL // todos os visitantes
-  NON_MEMBERS // só quem NÃO é membro do clube
-  MEMBERS // só membros do clube
+  NON_MEMBERS // legado (clube removido) — tratado como "todos"
+  MEMBERS // legado (clube removido) — nunca casa
 }
 
 model Announcement {
@@ -517,7 +517,7 @@ model Announcement {
   body           String                @db.Text
   imageUrl       String?
   ctaText        String?
-  ctaHref        String?               @default("/clube")
+  ctaHref        String?               @default("/produtos")
   active         Boolean               @default(true)
   // Onde e para quem aparece
   placement      AnnouncementPlacement @default(STOREFRONT)

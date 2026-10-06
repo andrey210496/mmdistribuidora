@@ -47,7 +47,7 @@ export default function PoliticaPrivacidadePage() {
       <h2>3. Para que usamos os seus dados</h2>
       <ul>
         <li>Processar e entregar os seus pedidos;</li>
-        <li>Identificar você na sua conta e aplicar os preços do Clube (quando for membro);</li>
+        <li>Identificar você na sua conta e aplicar os preços corretos nas suas compras;</li>
         <li>Prestar atendimento e suporte;</li>
         <li>Cumprir obrigações legais e fiscais (ex.: emissão de nota fiscal);</li>
         <li>Prevenir fraudes e garantir a segurança das transações.</li>

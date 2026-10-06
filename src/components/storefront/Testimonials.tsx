@@ -27,7 +27,7 @@ const testimonials = [
   {
     name: "Carla Vieira",
     role: "Encantos da Carla · Belo Horizonte, MG",
-    quote: "O Clube Ouro pagou o investimento no primeiro mês. Frete grátis sempre + 15% off = economia absurda. Recomendo demais.",
+    quote: "Preço de atacado de verdade e entrega rápida. Economizei bastante no reabastecimento da loja. Recomendo demais.",
     rating: 5,
     avatar: "CV",
     color: "from-olive to-[#6b7340]",

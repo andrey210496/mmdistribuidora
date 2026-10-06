@@ -4,7 +4,6 @@ import { Footer } from "@/components/storefront/Footer";
 import { CheckoutForm } from "@/components/storefront/CheckoutForm";
 import { getCart } from "@/lib/cart";
 import { requireCustomer } from "@/lib/customer";
-import { fetchCheckoutUpsell } from "@/app/actions/announcements";
 
 export const metadata = { title: "Finalizar compra" };
 export const dynamic = "force-dynamic";
@@ -17,9 +16,6 @@ export default async function CheckoutPage() {
   if (cart.lines.length === 0) {
     redirect("/carrinho");
   }
-
-  // Card promocional no checkout (interstitial), se houver anúncio ativo.
-  const checkoutUpsell = await fetchCheckoutUpsell();
 
   return (
     <>
@@ -37,7 +33,6 @@ export default async function CheckoutPage() {
             cpfCnpj: customer.cpfCnpj,
             phone: customer.phone,
           }}
-          checkoutUpsell={checkoutUpsell}
         />
       </main>
       <Footer />

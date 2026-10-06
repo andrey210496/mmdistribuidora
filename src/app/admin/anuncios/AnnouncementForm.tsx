@@ -49,7 +49,7 @@ export function AnnouncementForm({ editing }: { editing?: EditingAnnouncement })
 
       <div>
         <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Título *</label>
-        <input name="title" defaultValue={e?.title} className={field} placeholder="Entre para o Clube!" />
+        <input name="title" defaultValue={e?.title} className={field} placeholder="Frete grátis neste fim de semana!" />
       </div>
 
       <div>
@@ -68,7 +68,7 @@ export function AnnouncementForm({ editing }: { editing?: EditingAnnouncement })
         </div>
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Texto do botão</label>
-          <input name="ctaText" defaultValue={e?.ctaText} className={field} placeholder="Quero ser membro" />
+          <input name="ctaText" defaultValue={e?.ctaText} className={field} placeholder="Ver ofertas" />
         </div>
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Prioridade</label>
@@ -84,21 +84,13 @@ export function AnnouncementForm({ editing }: { editing?: EditingAnnouncement })
             <option value="STOREFRONT">Em toda a loja (pop-up)</option>
             <option value="HOME">Só na página inicial</option>
             <option value="CATALOG">Catálogo / página de produto</option>
-            <option value="CHECKOUT">Ao finalizar a compra</option>
           </select>
-          <p className="text-[10px] text-cocoa/50 mt-1">
-            &ldquo;Ao finalizar a compra&rdquo; mostra o card quando o cliente clica em
-            &ldquo;Ir para o pagamento&rdquo; e inclui a economia daquela compra.
-          </p>
         </div>
         <div>
           <label className="block text-xs font-bold text-cocoa/70 uppercase mb-1">Público</label>
-          <select name="audience" defaultValue={e?.audience ?? "ALL"} className={`${field} bg-white`}>
+          <select name="audience" defaultValue="ALL" className={`${field} bg-white`}>
             <option value="ALL">Todos</option>
-            <option value="NON_MEMBERS">Só quem NÃO é do clube</option>
-            <option value="MEMBERS">Só membros do clube</option>
           </select>
-          <p className="text-[10px] text-cocoa/50 mt-1">Para o card de checkout do clube, escolha &ldquo;Só quem não é do clube&rdquo;.</p>
         </div>
       </div>
 

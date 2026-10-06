@@ -54,7 +54,7 @@ export default async function AdminAnunciosPage({ searchParams }: { searchParams
         <div>
           <h1 className="font-display text-3xl font-bold text-cocoa">Anúncios / Pop-ups</h1>
           <p className="text-cocoa/60 text-sm">
-            Divulgue o Clube e campanhas. Controle quantas vezes e com que frequência aparecem.
+            Divulgue promoções e campanhas. Controle quantas vezes e com que frequência aparecem.
           </p>
         </div>
       </header>

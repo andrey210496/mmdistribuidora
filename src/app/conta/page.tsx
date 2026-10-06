@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Crown, Package, LogOut, ArrowRight, CheckCircle2, Clock } from "lucide-react";
+import { Package, LogOut, ArrowRight, CheckCircle2, Clock } from "lucide-react";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { prisma } from "@/lib/prisma";

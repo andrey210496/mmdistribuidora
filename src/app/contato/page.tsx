@@ -76,7 +76,7 @@ export default function ContatoPage() {
             </div>
             <div className="border-t border-cocoa/10 pt-5">
               <p className="text-cocoa/70 text-sm mb-3">
-                Já tem conta? Acompanhe seus pedidos e o status do Clube.
+                Já tem conta? Acompanhe seus pedidos.
               </p>
               <Link href="/conta" className="btn-primary w-full">
                 Minha conta

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Crown, Truck, ShieldCheck, Heart, ArrowRight } from "lucide-react";
+import { Truck, ShieldCheck, Heart, ArrowRight } from "lucide-react";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 
@@ -64,7 +64,6 @@ export default function SobrePage() {
         </div>
 
         <div className="max-w-4xl mx-auto mt-12 rounded-2xl bg-linear-to-br from-brand-900 via-cocoa to-brand-900 text-cream p-8 text-center">
-          <Crown className="inline-block text-gold mb-2" size={28} fill="currentColor" />
           <h2 className="font-display text-2xl font-bold text-gold mb-2">Vamos fazer doces juntos?</h2>
           <p className="text-cream/80 mb-5">Conheça o catálogo ou fale com a gente.</p>
           <div className="flex flex-wrap gap-3 justify-center">

@@ -43,7 +43,7 @@ export async function submitCheckout(
     return { error: `Muitas tentativas. Tente novamente em ${rl.resetInSeconds}s.` };
   }
 
-  // EXIGE LOGIN — checkout só para cliente autenticado (validação de membro do clube).
+  // EXIGE LOGIN — checkout só para cliente autenticado.
   // Backend não confia no frontend: revalida a sessão aqui.
   const customer = await getCurrentCustomer();
   if (!customer) {

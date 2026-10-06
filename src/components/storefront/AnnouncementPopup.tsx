@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Crown, ArrowRight } from "lucide-react";
+import { X, Megaphone, ArrowRight } from "lucide-react";
 import {
   fetchActiveAnnouncements,
   type PublicAnnouncement,
@@ -40,7 +40,7 @@ function isEligible(a: PublicAnnouncement, now: number): boolean {
   return elapsedHours >= a.frequencyHours;
 }
 
-// Pop-up de anúncio (ex.: divulgação do Clube). Conteúdo e regras vêm do admin;
+// Pop-up de anúncio (promoções, avisos). Conteúdo e regras vêm do admin;
 // a frequência/limite por visitante é controlada via localStorage.
 export function AnnouncementPopup() {
   const [current, setCurrent] = useState<PublicAnnouncement | null>(null);
@@ -135,8 +135,8 @@ export function AnnouncementPopup() {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={current.imageUrl} alt="" className="w-full h-44 object-cover" />
         ) : (
-          <div className="h-24 bg-linear-to-br from-brand-900 via-cocoa to-brand-900 flex items-center justify-center">
-            <Crown size={36} className="text-gold" fill="currentColor" />
+          <div className="h-24 flex items-center justify-center" style={{ background: "linear-gradient(135deg,#D12B2B,#A81E1E)" }}>
+            <Megaphone size={34} className="text-gold" />
           </div>
         )}
 
