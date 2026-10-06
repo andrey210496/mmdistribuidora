@@ -104,7 +104,7 @@ export const pedidos: Chapter = {
     {
       t: "tip",
       title: "Pagou mas não confirmou?",
-      text: "Se o cliente pagou e o pedido continua pendente, use **Sincronizar com Stripe** na tela do pedido: o sistema consulta o pagamento e corrige o status.",
+      text: "Se o cliente pagou e o pedido continua pendente, use **Sincronizar com Asaas** na tela do pedido: o sistema consulta o pagamento e corrige o status.",
     },
 
     { t: "h", text: "Encontrar um pedido" },

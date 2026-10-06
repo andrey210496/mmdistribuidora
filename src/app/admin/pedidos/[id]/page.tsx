@@ -117,7 +117,7 @@ export default async function OrderDetailPage({
             paymentStatus={order.paymentStatus}
             nfIssuedAt={order.nfIssuedAt}
             nfNumber={order.nfNumber}
-            hasStripePayment={!!order.stripePaymentIntentId}
+            hasAsaasPayment={!!order.asaasPaymentId}
           />
 
           {/* Avisar cliente sobre o estorno */}
@@ -306,7 +306,7 @@ export default async function OrderDetailPage({
               <div className="font-bold">
                 {order.paymentMethod
                   ? PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod
-                  : "Cartão ou PIX (Stripe)"}
+                  : "Pix ou cartão"}
               </div>
               <div className={`text-xs font-bold mt-1 ${payMeta.color}`}>{payMeta.label}</div>
               {order.paidAt && (
@@ -314,9 +314,9 @@ export default async function OrderDetailPage({
                   Pago em {order.paidAt.toLocaleString("pt-BR")}
                 </div>
               )}
-              {order.stripePaymentIntentId && (
+              {order.asaasPaymentId && (
                 <div className="text-xs text-cocoa/55 font-mono pt-2 border-t border-cocoa/10 mt-2 break-all">
-                  Stripe: {order.stripePaymentIntentId}
+                  Asaas: {order.asaasPaymentId}
                 </div>
               )}
             </div>

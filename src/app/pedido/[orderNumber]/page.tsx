@@ -16,7 +16,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { DevPaymentSimulator } from "@/components/storefront/DevPaymentSimulator";
 import { prisma } from "@/lib/prisma";
 import { centsToBRL } from "@/lib/money";
-import { stripe } from "@/lib/stripe";
+import { asaas } from "@/lib/asaas";
 import { getCurrentCustomer } from "@/lib/customer";
 import { getAdminSession } from "@/lib/session";
 
@@ -37,6 +37,8 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 const paymentMethodLabels: Record<string, string> = {
   PIX: "PIX",
   CREDIT_CARD: "Cartão de crédito",
+  DEBIT_CARD: "Cartão de débito",
+  BOLETO: "Boleto",
 };
 
 export default async function OrderPage({
@@ -75,7 +77,7 @@ export default async function OrderPage({
 
   const status = statusLabels[order.status] ?? { label: order.status, color: "bg-cocoa/10 text-cocoa" };
   const isPending = order.paymentStatus === "PENDING";
-  const stripeReady = stripe.isConfigured() && !!order.paymentUrl;
+  const payReady = asaas.isConfigured() && !!order.paymentUrl;
 
   return (
     <>
@@ -129,14 +131,14 @@ export default async function OrderPage({
                 </div>
               </div>
 
-              {stripeReady ? (
+              {payReady ? (
                 <Link
                   href={order.paymentUrl!}
                   target="_blank"
                   className="btn-pink"
                 >
                   <CreditCard size={16} />
-                  Ir para o pagamento
+                  Pagar agora (Pix ou cartão)
                   <ExternalLink size={14} />
                 </Link>
               ) : process.env.NODE_ENV !== "production" ? (
@@ -145,7 +147,7 @@ export default async function OrderPage({
                     <div className="flex items-start gap-2">
                       <AlertTriangle size={16} className="text-yellow-700 shrink-0 mt-0.5" />
                       <div className="text-sm text-yellow-900">
-                        <strong>Modo desenvolvimento:</strong> Stripe não configurado. Use o botão abaixo para simular o pagamento manualmente.
+                        <strong>Modo desenvolvimento:</strong> Asaas não configurado. Use o botão abaixo para simular o pagamento manualmente.
                       </div>
                     </div>
                   </div>
@@ -305,11 +307,11 @@ export default async function OrderPage({
                   <CreditCard size={16} className="text-rose-brand" />
                   {order.paymentMethod
                     ? paymentMethodLabels[order.paymentMethod] ?? order.paymentMethod
-                    : "Cartão de crédito"}
+                    : "Pix ou cartão"}
                 </div>
                 <div className="text-xs text-cocoa/60 mt-1 flex items-center gap-1.5">
                   <ShieldCheck size={12} className="text-olive" />
-                  Processado de forma segura via Stripe
+                  Processado de forma segura via Asaas
                 </div>
               </div>
             </div>

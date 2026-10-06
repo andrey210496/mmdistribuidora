@@ -10,7 +10,7 @@ import { checkoutSchema } from "@/lib/validations";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { env } from "@/lib/env";
 import { logAudit } from "@/lib/audit";
-import { stripe } from "@/lib/stripe";
+import { asaas } from "@/lib/asaas";
 import { generateOrderNumber } from "@/lib/utils";
 import { getCurrentCustomer } from "@/lib/customer";
 import { resolveShipping } from "@/lib/shipping";
@@ -27,7 +27,7 @@ export type CheckoutState = {
 /**
  * Recebe os dados do formulário de checkout, valida tudo no servidor,
  * cria/atualiza Customer, cria Order com snapshot dos preços do banco
- * (NUNCA confia em valores enviados pelo cliente), e abre o Stripe Checkout.
+ * (NUNCA confia em valores enviados pelo cliente), e abre o pagamento no Asaas.
  */
 export async function submitCheckout(
   _prev: CheckoutState,
@@ -212,14 +212,51 @@ export async function submitCheckout(
     userAgent,
   });
 
+  // Asaas configurado: cria a cobrança e manda o cliente para a página de
+  // pagamento do Asaas (Pix + cartão de crédito/débito). Sem Asaas (dev),
+  // cai na página do pedido (com simulador de pagamento).
+  let payUrl: string | null = null;
+  if (asaas.isConfigured()) {
+    try {
+      const asaasCustomerId = await asaas.ensureCustomer({
+        externalReference: customer.id,
+        name: order.customerNameSnapshot,
+        cpfCnpj: order.customerCpfSnapshot,
+        email: snapshotEmail || undefined,
+        phone: order.customerPhoneSnapshot,
+      });
+      const charge = await asaas.createPayment({
+        customerId: asaasCustomerId,
+        amountCents: totalCents,
+        externalReference: order.id,
+        description: `Pedido ${orderNumber}`,
+        callbackUrl: `${env.APP_URL}/pedido/${orderNumber}?pago=1`,
+      });
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          asaasCustomerId,
+          asaasPaymentId: charge.id,
+          paymentUrl: charge.invoiceUrl ?? null,
+        },
+      });
+      // Liga o cliente do Asaas ao nosso cadastro (reaproveita na próxima compra).
+      await prisma.customer
+        .update({ where: { id: customer.id }, data: { asaasCustomerId } })
+        .catch(() => {});
+      payUrl = charge.invoiceUrl ?? null;
+    } catch (err) {
+      console.error("[checkout] falha ao criar cobrança no Asaas:", err);
+      return {
+        error: "Não foi possível iniciar o pagamento agora. Tente novamente em instantes.",
+      };
+    }
+  }
+
   await clearCart();
   revalidatePath("/", "layout");
 
-  // Stripe configurado: o cliente paga DENTRO do site (checkout embutido).
-  // A sessão do Stripe é criada na página de pagamento. Sem Stripe (dev),
-  // vai direto pra página do pedido (com simulador de pagamento).
-  if (stripe.isConfigured()) {
-    redirect(`/checkout/pagamento/${order.orderNumber}`);
-  }
+  // redirect() precisa ficar FORA do try/catch (ele sinaliza via exceção).
+  if (payUrl) redirect(payUrl);
   redirect(`/pedido/${order.orderNumber}`);
 }

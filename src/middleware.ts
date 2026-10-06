@@ -13,18 +13,16 @@ function buildCsp(nonce: string): string {
   const directives = [
     `default-src 'self'`,
     // Em dev o Next precisa de eval para HMR. Em prod, restringir.
-    // js.stripe.com/checkout.stripe.com: necessários para o Checkout EMBUTIDO.
-    `script-src 'self' 'nonce-${nonce}' https://js.stripe.com https://checkout.stripe.com${PROD ? "" : " 'unsafe-eval' 'unsafe-inline'"}`,
+    `script-src 'self' 'nonce-${nonce}'${PROD ? "" : " 'unsafe-eval' 'unsafe-inline'"}`,
     // Tailwind injeta estilos no build; permitimos 'unsafe-inline' apenas em estilos
     `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     `font-src 'self' https://fonts.gstatic.com data:`,
     `img-src 'self' data: blob: https:`,
-    `connect-src 'self' https://api.stripe.com https://checkout.stripe.com`,
-    // iframe do Stripe (Checkout embutido + autenticação 3DS)
-    `frame-src 'self' https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com`,
+    `connect-src 'self'`,
+    `frame-src 'self'`,
     `frame-ancestors 'none'`,
-    // Permite o redirect do checkout para o Stripe
-    `form-action 'self' https://checkout.stripe.com`,
+    // Pagamento é no site do Asaas (redirect): libera o destino do checkout.
+    `form-action 'self' https://www.asaas.com https://asaas.com https://sandbox.asaas.com`,
     `base-uri 'self'`,
     `object-src 'none'`,
     `upgrade-insecure-requests`,

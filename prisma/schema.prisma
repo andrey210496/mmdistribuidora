@@ -63,6 +63,8 @@ model Customer {
   isWholesale      Boolean   @default(false)
   // Crediário: limite de fiado em centavos (0 = sem crédito liberado).
   creditLimitCents Int       @default(0)
+  // Id do cliente no Asaas (gateway de pagamento) — evita recadastrar a cada compra.
+  asaasCustomerId  String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -259,11 +261,16 @@ model Order {
   customerCpfSnapshot   String?
   customerPhoneSnapshot String?
 
-  // Pagamento (via Stripe Checkout — método só é conhecido após o pagamento)
+  // Pagamento. O método só é conhecido após o pagamento. paymentUrl guarda a
+  // URL de pagamento do gateway (Asaas invoiceUrl). Os campos stripe* são legados
+  // (gateway anterior) e ficam apenas por compatibilidade de dados.
   paymentMethod         PaymentMethod?
   paymentStatus         PaymentStatus  @default(PENDING)
   stripeSessionId       String?        @unique
   stripePaymentIntentId String?
+  // Asaas (gateway atual): id da cobrança e do cliente no Asaas.
+  asaasPaymentId        String?        @unique
+  asaasCustomerId       String?
   paymentUrl            String?        @db.Text
   paidAt                DateTime?
   // Valor efetivamente devolvido no estorno (total ou parcial). Em centavos.

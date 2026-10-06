@@ -54,7 +54,7 @@ export default function TrocasReembolsosPage() {
       <h2>5. Como e quando o reembolso é feito</h2>
       <p>
         O reembolso é devolvido pelo <strong>mesmo meio de pagamento</strong> usado na compra (estorno
-        no cartão ou no PIX, via Stripe). O valor costuma aparecer na sua fatura ou conta em até{" "}
+        no cartão ou no PIX, via Asaas). O valor costuma aparecer na sua fatura ou conta em até{" "}
         <strong>5 a 10 dias úteis</strong>, podendo variar conforme o seu banco ou a operadora do cartão
         (em alguns casos, na fatura seguinte).
       </p>

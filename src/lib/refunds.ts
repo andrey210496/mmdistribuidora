@@ -1,5 +1,71 @@
 import { prisma } from "./prisma";
 import { centsToBRL } from "./money";
+import type { OrderStatus, PaymentMethod } from "@prisma/client";
+
+// ============================================================
+// Confirma o pagamento de um pedido (fonte única da verdade).
+// Chamado pelo webhook do Asaas e pela sincronização manual do gestor.
+// IDEMPOTENTE e à prova de concorrência: só a primeira execução que vira
+// o pagamento para CONFIRMED prossegue (updateMany atômico), baixa o estoque
+// e lança a receita no financeiro.
+// ============================================================
+export async function markOrderPaid(
+  orderId: string,
+  opts: { method?: PaymentMethod; asaasPaymentId?: string } = {}
+): Promise<boolean> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: true },
+  });
+  if (!order || order.paymentStatus === "CONFIRMED") return false;
+
+  // Trava atômica: apenas UMA execução consegue confirmar o pagamento.
+  const flipped = await prisma.order.updateMany({
+    where: { id: orderId, paymentStatus: { not: "CONFIRMED" } },
+    data: {
+      paymentStatus: "CONFIRMED",
+      status: "PAID",
+      paidAt: new Date(),
+      paymentMethod: opts.method ?? undefined,
+      asaasPaymentId: opts.asaasPaymentId ?? order.asaasPaymentId ?? undefined,
+    },
+  });
+  if (flipped.count === 0) return false; // já confirmado por outra via
+
+  await prisma.$transaction([
+    // Baixa o estoque dos itens (só acontece nesta confirmação).
+    ...order.items.map((it) =>
+      prisma.product.update({
+        where: { id: it.productId },
+        data: { stock: { decrement: it.quantity } },
+      })
+    ),
+    prisma.orderStatusHistory.create({
+      data: {
+        orderId: order.id,
+        fromStatus: order.status,
+        toStatus: "PAID" as OrderStatus,
+        notes: `Pagamento confirmado${opts.method ? ` (${opts.method})` : ""}`,
+      },
+    }),
+    prisma.financialEntry.upsert({
+      where: { orderId: order.id },
+      update: { status: "PAID", paidAt: new Date() },
+      create: {
+        type: "RECEIVABLE",
+        status: "PAID",
+        category: "venda",
+        description: `Venda — Pedido ${order.orderNumber}`,
+        amountCents: order.totalCents,
+        dueDate: new Date(),
+        paidAt: new Date(),
+        orderId: order.id,
+      },
+    }),
+  ]);
+
+  return true;
+}
 
 // ============================================================
 // Aplica o ESTORNO de um pedido no sistema (fonte única da verdade).

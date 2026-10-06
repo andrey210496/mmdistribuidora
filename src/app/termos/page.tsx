@@ -43,8 +43,8 @@ export default function TermosPage() {
 
       <h2>4. Pedidos e pagamento</h2>
       <p>
-        O pagamento é processado de forma segura pela <strong>Stripe</strong> (cartão de crédito ou
-        PIX). O pedido é confirmado somente após a aprovação do pagamento. Por segurança, todos os
+        O pagamento é processado de forma segura pela <strong>Asaas</strong> (Pix ou cartão de
+        crédito/débito). O pedido é confirmado somente após a aprovação do pagamento. Por segurança, todos os
         valores são recalculados e validados no nosso servidor — nenhum preço é aceito a partir do
         navegador. Reservamo-nos o direito de cancelar pedidos com suspeita de fraude ou erro evidente de preço.
       </p>

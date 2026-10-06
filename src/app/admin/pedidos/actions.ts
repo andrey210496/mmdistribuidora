@@ -8,8 +8,8 @@ import { requireArea } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { canCancel, nextStatusOf } from "@/lib/orders";
-import { stripe } from "@/lib/stripe";
-import { applyRefundToOrder } from "@/lib/refunds";
+import { asaas } from "@/lib/asaas";
+import { applyRefundToOrder, markOrderPaid } from "@/lib/refunds";
 import type { OrderStatus } from "@prisma/client";
 
 export type ActionResult = { ok: boolean; error?: string };
@@ -17,15 +17,15 @@ export type ActionResult = { ok: boolean; error?: string };
 const idSchema = z.string().min(1).max(100);
 
 // ============================================================
-// Sugestão de estorno: total pago, taxa retida pelo Stripe na venda e o
-// "líquido" (total − taxa). Estornar o líquido evita o prejuízo, já que o
-// Stripe não devolve a taxa da venda original. Só leitura — usado pela tela.
+// Sugestão de estorno: total pago do pedido. (A taxa do gateway não é
+// deduzida automaticamente — o gestor pode ajustar o valor na tela.)
+// Só leitura — usado pela tela de estorno.
 // ============================================================
 export type RefundSuggestion = {
   paidCents: number;
   feeCents: number;
   suggestedNetCents: number;
-  hasStripe: boolean;
+  hasGateway: boolean;
 };
 
 export async function getRefundSuggestion(orderId: string): Promise<RefundSuggestion | null> {
@@ -37,19 +37,9 @@ export async function getRefundSuggestion(orderId: string): Promise<RefundSugges
   if (!order) return null;
 
   const paidCents = order.totalCents;
-  let feeCents = 0;
-  const hasStripe = Boolean(order.stripePaymentIntentId) && stripe.isConfigured();
+  const hasGateway = Boolean(order.asaasPaymentId) && asaas.isConfigured();
 
-  if (hasStripe && order.stripePaymentIntentId) {
-    try {
-      const fee = await stripe.getPaymentFee(order.stripePaymentIntentId);
-      if (fee) feeCents = Math.max(0, Math.min(fee.feeCents, paidCents));
-    } catch (err) {
-      console.error("[refund] erro ao buscar taxa do Stripe:", err);
-    }
-  }
-
-  return { paidCents, feeCents, suggestedNetCents: Math.max(0, paidCents - feeCents), hasStripe };
+  return { paidCents, feeCents: 0, suggestedNetCents: paidCents, hasGateway };
 }
 
 // ============================================================
@@ -88,13 +78,13 @@ export async function refundOrder(orderId: string, amountCents?: number): Promis
     if (amount >= order.totalCents) amount = undefined;
   }
 
-  // Estorna no Stripe (quando há pagamento real vinculado)
-  if (order.stripePaymentIntentId && stripe.isConfigured()) {
+  // Estorna no Asaas (quando há cobrança real vinculada)
+  if (order.asaasPaymentId && asaas.isConfigured()) {
     try {
-      await stripe.createRefund(order.stripePaymentIntentId, amount);
+      await asaas.refund(order.asaasPaymentId, amount);
     } catch (err) {
-      console.error("[refund] erro ao estornar no Stripe:", err);
-      return { ok: false, error: "Falha ao estornar no Stripe. Tente novamente." };
+      console.error("[refund] erro ao estornar no Asaas:", err);
+      return { ok: false, error: "Falha ao estornar no Asaas. Tente novamente." };
     }
   }
 
@@ -125,55 +115,42 @@ export async function refundOrder(orderId: string, amountCents?: number): Promis
 }
 
 // ============================================================
-// Sincroniza o status do pedido com o estado REAL no Stripe.
-// Útil para reconciliar pedidos que ficaram dessincronizados (ex.: estorno
-// feito no painel do Stripe sem o webhook ativo). NÃO cria novo estorno —
-// apenas lê o Stripe e ajusta o sistema (estoque/receita) de forma idempotente.
+// Sincroniza o status do pedido com o estado REAL no Asaas.
+// Reconcilia pedidos que ficaram dessincronizados (ex.: webhook perdido):
+// se a cobrança foi paga, confirma o pedido; se foi estornada/devolvida,
+// reflete o estorno. Idempotente — não cria novas cobranças/estornos.
 // ============================================================
-export async function syncOrderWithStripe(orderId: string): Promise<ActionResult & { message?: string }> {
+export async function syncOrderWithAsaas(orderId: string): Promise<ActionResult & { message?: string }> {
   const user = await requireArea("pedidos");
   const id = idSchema.safeParse(orderId);
   if (!id.success) return { ok: false, error: "Pedido inválido" };
 
   const order = await prisma.order.findUnique({ where: { id: id.data } });
   if (!order) return { ok: false, error: "Pedido não encontrado" };
-  if (!order.stripePaymentIntentId || !stripe.isConfigured()) {
-    return { ok: false, error: "Pedido sem pagamento do Stripe vinculado." };
+  if (!order.asaasPaymentId || !asaas.isConfigured()) {
+    return { ok: false, error: "Pedido sem cobrança do Asaas vinculada." };
   }
 
-  let st: Awaited<ReturnType<typeof stripe.getPaymentStatus>>;
+  let pay: Awaited<ReturnType<typeof asaas.getPayment>>;
   try {
-    st = await stripe.getPaymentStatus(order.stripePaymentIntentId);
+    pay = await asaas.getPayment(order.asaasPaymentId);
   } catch (err) {
-    console.error("[sync] erro ao consultar Stripe:", err);
-    return { ok: false, error: "Falha ao consultar o Stripe. Tente novamente." };
+    console.error("[sync] erro ao consultar Asaas:", err);
+    return { ok: false, error: "Falha ao consultar o Asaas. Tente novamente." };
   }
-  if (!st) return { ok: false, error: "Não foi possível ler o status no Stripe." };
 
-  let message = "Pagamento confirmado no Stripe — nada a alterar.";
+  let message = "Status do Asaas igual ao do sistema — nada a alterar.";
 
-  if (st.refunded) {
-    // Estornado no Stripe → reflete aqui (idempotente: só age se ainda CONFIRMED)
-    const applied = await applyRefundToOrder(order.id, st.amountRefundedCents);
+  if (pay.status === "REFUNDED" || pay.status === "REFUND_REQUESTED") {
+    const applied = await applyRefundToOrder(order.id);
     message = applied
       ? "Estorno sincronizado: pedido marcado como Estornado e receita revertida."
       : "Este pedido já estava como estornado no sistema.";
-  } else if (st.status === "canceled" && order.paymentStatus !== "CONFIRMED" && order.status !== "CANCELED") {
-    await prisma.$transaction([
-      prisma.order.update({
-        where: { id: order.id },
-        data: { paymentStatus: "FAILED", status: "CANCELED" },
-      }),
-      prisma.orderStatusHistory.create({
-        data: {
-          orderId: order.id,
-          fromStatus: order.status,
-          toStatus: "CANCELED",
-          notes: "Cancelamento sincronizado com o Stripe",
-        },
-      }),
-    ]);
-    message = "Cancelamento sincronizado: pedido marcado como Cancelado.";
+  } else if (asaas.isPaidStatus(pay.status) && order.paymentStatus !== "CONFIRMED") {
+    const confirmed = await markOrderPaid(order.id, { asaasPaymentId: order.asaasPaymentId });
+    message = confirmed
+      ? "Pagamento sincronizado: pedido confirmado e baixa de estoque aplicada."
+      : "Este pedido já estava confirmado no sistema.";
   }
 
   const h = await headers();
@@ -182,7 +159,7 @@ export async function syncOrderWithStripe(orderId: string): Promise<ActionResult
     action: "order.synced",
     entityType: "Order",
     entityId: order.id,
-    afterJson: { stripeStatus: st.status, refunded: st.refunded, amountRefundedCents: st.amountRefundedCents },
+    afterJson: { asaasStatus: pay.status },
     ip: clientIp(h),
     userAgent: h.get("user-agent") ?? undefined,
   });

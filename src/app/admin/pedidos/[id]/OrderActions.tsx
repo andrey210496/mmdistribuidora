@@ -8,7 +8,7 @@ import {
   issueNf,
   refundOrder,
   getRefundSuggestion,
-  syncOrderWithStripe,
+  syncOrderWithAsaas,
   type RefundSuggestion,
 } from "../actions";
 import { ORDER_STATUS_META, nextStatusOf, canCancel } from "@/lib/orders";
@@ -24,7 +24,7 @@ type Props = {
   paymentStatus: PaymentStatus;
   nfIssuedAt: Date | null;
   nfNumber: string | null;
-  hasStripePayment: boolean;
+  hasAsaasPayment: boolean;
 };
 
 export function OrderActions({
@@ -32,7 +32,7 @@ export function OrderActions({
   status,
   paymentStatus,
   nfIssuedAt,
-  hasStripePayment,
+  hasAsaasPayment,
 }: Props) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -52,9 +52,9 @@ export function OrderActions({
     setError(null);
     setInfo(null);
     startTransition(async () => {
-      const r = await syncOrderWithStripe(orderId);
+      const r = await syncOrderWithAsaas(orderId);
       if (!r.ok) setError(r.error ?? "Erro ao sincronizar");
-      else setInfo(r.message ?? "Sincronizado com o Stripe.");
+      else setInfo(r.message ?? "Sincronizado com o Asaas.");
     });
   };
 
@@ -203,15 +203,15 @@ export function OrderActions({
           </button>
         )}
 
-        {hasStripePayment && (
+        {hasAsaasPayment && (
           <button
             onClick={handleSync}
             disabled={pending}
-            title="Conferir o status real no Stripe e atualizar o sistema"
+            title="Conferir o status real no Asaas e atualizar o sistema"
             className="inline-flex items-center gap-2 text-cocoa/70 hover:text-cocoa font-bold text-xs uppercase tracking-wider"
           >
             <RefreshCw size={14} />
-            Sincronizar com Stripe
+            Sincronizar com Asaas
           </button>
         )}
 
@@ -235,7 +235,7 @@ export function OrderActions({
             <>
               <div className="text-sm text-cocoa mb-3">
                 <strong>Estornar este pagamento.</strong> O valor é devolvido ao
-                cliente pelo Stripe, o pedido fica como <strong>Estornado</strong>,
+                cliente pelo Asaas, o pedido fica como <strong>Estornado</strong>,
                 o estoque retorna e a receita é revertida no financeiro. Esta ação
                 não pode ser desfeita.
               </div>
@@ -246,9 +246,9 @@ export function OrderActions({
                     <span className="text-cocoa/70">Total pago</span>
                     <span className="font-semibold text-cocoa">{centsToBRL(suggestion.paidCents)}</span>
                   </div>
-                  {suggestion.hasStripe && (
+                  {suggestion.feeCents > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-cocoa/70">Taxa do Stripe (não devolvida)</span>
+                      <span className="text-cocoa/70">Taxa do gateway (não devolvida)</span>
                       <span className="font-semibold text-caramel">− {centsToBRL(suggestion.feeCents)}</span>
                     </div>
                   )}

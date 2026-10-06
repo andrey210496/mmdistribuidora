@@ -13,10 +13,13 @@ const envSchema = z.object({
     .min(32, "SESSION_SECRET precisa ter no mínimo 32 caracteres"),
   SESSION_COOKIE_NAME: z.string().default("doce_session"),
 
-  // Stripe — chave secreta (server), publicável (client) e segredo do webhook
-  STRIPE_SECRET_KEY: z.string().optional().default(""),
-  STRIPE_PUBLISHABLE_KEY: z.string().optional().default(""),
-  STRIPE_WEBHOOK_SECRET: z.string().optional().default(""),
+  // Asaas — gateway de pagamento (Pix + cartão). ASAAS_API_KEY autentica a API;
+  // ASAAS_WEBHOOK_TOKEN é o token que configuramos no painel e que o Asaas
+  // reenvia no header de cada webhook (validação de origem). ASAAS_ENV escolhe
+  // a base da API (sandbox p/ testes, production p/ valer).
+  ASAAS_API_KEY: z.string().optional().default(""),
+  ASAAS_WEBHOOK_TOKEN: z.string().optional().default(""),
+  ASAAS_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
 
   RATE_LIMIT_LOGIN_PER_MIN: z.coerce.number().int().positive().default(5),
   RATE_LIMIT_CHECKOUT_PER_MIN: z.coerce.number().int().positive().default(10),

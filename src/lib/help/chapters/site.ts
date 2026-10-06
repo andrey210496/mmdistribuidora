@@ -5,7 +5,7 @@ export const site: Chapter = {
   title: "Loja online (site)",
   summary: "O que cadastrar para preencher a home, e como o pedido do site chega até você.",
   icon: "Globe",
-  keywords: ["vitrine", "ecommerce", "home", "banner", "popup", "frete", "carrinho", "checkout", "stripe", "pix"],
+  keywords: ["vitrine", "ecommerce", "home", "banner", "popup", "frete", "carrinho", "checkout", "asaas", "pix", "cartao"],
   scope: "online",
   blocks: [
     { t: "h", text: "O que você controla na página inicial" },
@@ -86,12 +86,7 @@ export const site: Chapter = {
     { t: "h", text: "Pagamento online" },
     {
       t: "p",
-      text: "O pagamento do site é processado pelo **Stripe**. As formas disponíveis (cartão, Pix) são as que estiverem ativadas na conta do Stripe — isso se configura no painel do Stripe, não aqui.",
-    },
-    {
-      t: "warn",
-      title: "Venda online é somente à vista",
-      text: "O parcelamento está **desativado** no pagamento. Porém a página do produto e o carrinho ainda exibem um texto ilustrativo de '6x sem juros'. Isso pode gerar reclamação de cliente — vale corrigir.",
+      text: "O pagamento do site é processado pelo **Asaas**. As formas disponíveis (Pix, cartão de crédito/débito) são as que estiverem ativadas na conta do Asaas — isso se configura no painel do Asaas, não aqui.",
     },
     {
       t: "p",
@@ -99,7 +94,7 @@ export const site: Chapter = {
     },
     {
       t: "tip",
-      text: "Se um cliente disser que pagou e o pedido continuar pendente, abra o pedido e use **Sincronizar com Stripe**.",
+      text: "Se um cliente disser que pagou e o pedido continuar pendente, abra o pedido e use **Sincronizar com Asaas**.",
     },
 
     { t: "h", text: "A conta do cliente" },

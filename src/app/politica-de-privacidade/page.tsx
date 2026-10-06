@@ -40,8 +40,8 @@ export default function PoliticaPrivacidadePage() {
       </ul>
       <p>
         <strong>Não armazenamos dados de cartão de crédito.</strong> O pagamento é processado
-        diretamente pela <strong>Stripe</strong>, uma plataforma de pagamento segura — os dados
-        do cartão são digitados em ambiente da própria Stripe e nunca passam pelos nossos servidores.
+        diretamente pela <strong>Asaas</strong>, uma plataforma de pagamento segura — os dados
+        do cartão são digitados em ambiente da própria Asaas e nunca passam pelos nossos servidores.
       </p>
 
       <h2>3. Para que usamos os seus dados</h2>
@@ -61,7 +61,7 @@ export default function PoliticaPrivacidadePage() {
       <h2>4. Com quem compartilhamos</h2>
       <p>Compartilhamos o mínimo necessário, apenas com:</p>
       <ul>
-        <li><strong>Stripe</strong> — para processar o pagamento;</li>
+        <li><strong>Asaas</strong> — para processar o pagamento;</li>
         <li><strong>Transportadoras/entregadores</strong> — para entregar o pedido;</li>
         <li><strong>Autoridades</strong> — quando exigido por lei ou ordem judicial.</li>
       </ul>
