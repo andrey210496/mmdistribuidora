@@ -781,3 +781,51 @@ model Setting {
   encrypted Boolean  @default(false)
   updatedAt DateTime @updatedAt
 }
+
+// ============================================================
+// LICENÇA — controle central pela Gestao USAI (control plane).
+// Singleton: sempre uma linha com id="singleton". Status ACTIVE/SUSPENDED/CANCELLED
+// determina se o admin + PDV conseguem operar. A loja pública permanece aberta.
+// ============================================================
+model License {
+  id              String    @id @default("singleton")
+  // ACTIVE: operação normal. SUSPENDED: admin/PDV bloqueados. CANCELLED: cancelado
+  // em definitivo (idêntico a SUSPENDED pra o guard, mas sinaliza fim do contrato).
+  status          String    @default("ACTIVE")
+  // Plano contratado (nome livre, ex.: "basico", "pro"). Opcional.
+  plan            String?
+  // Features liberadas no plano: JSON {"whatsapp": true, "nfe": false, ...}.
+  features        Json      @default("{}")
+  // Motivo humano do estado atual (ex.: "Pagamento vencido 05/11").
+  reason          String?
+  // Janela de graça (opcional): status pode ser SUSPENDED mas guard respeita até aqui.
+  graceUntil      DateTime?
+  suspendedAt     DateTime?
+  // Último apply vindo da Gestao USAI; usado p/ detectar instância órfã.
+  lastHandshakeAt DateTime?
+  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+
+  events LicenseEvent[]
+}
+
+// Histórico de ações da licença (apply, check, bloqueio detectado etc).
+model LicenseEvent {
+  id        String   @id @default(cuid())
+  action    String // APPLY | CHECK | BLOCK | UNBLOCK
+  result    String // OK | ERROR
+  // Snapshot do status aplicado neste evento.
+  status    String?
+  plan      String?
+  reason    String?
+  // IP/UA de quem bateu no endpoint (gestao-usai), p/ auditoria.
+  ip        String?
+  userAgent String?  @db.Text
+  createdAt DateTime @default(now())
+
+  license   License @relation(fields: [licenseId], references: [id])
+  licenseId String  @default("singleton")
+
+  @@index([createdAt])
+  @@index([action])
+}

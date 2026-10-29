@@ -25,6 +25,7 @@ import { prisma } from "@/lib/prisma";
 import { hasArea, isSuperAdmin, firstAllowedPath, type AreaKey } from "@/lib/permissions";
 import { readInstalledUpdateStatus } from "@/lib/updates";
 import { IS_PDV, stationLabel } from "@/lib/mode";
+import { checkGuard } from "@/lib/license";
 import { UpdateBanner } from "./_components/UpdateBanner";
 import { SyncIndicator } from "./_components/SyncIndicator";
 import { logoutAction } from "./login/actions";
@@ -71,6 +72,13 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Guard de licença: SUSPENDED/CANCELLED bloqueia tudo em /admin (loja pública
+  // continua online). Loop evitado porque /bloqueado está fora de /admin.
+  const guard = await checkGuard();
+  if (guard.blocked) {
+    redirect("/bloqueado");
+  }
+
   const session = await getAdminSession();
 
   // Páginas dentro de /admin que não exigem autenticação completa

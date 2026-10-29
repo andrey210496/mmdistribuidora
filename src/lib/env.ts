@@ -46,6 +46,12 @@ const envSchema = z.object({
   STATION_ID: z.string().optional().default(""),
   // Intervalo (segundos) do loop de sincronizacao no PDV. Curto = mais "realtime".
   SYNC_INTERVAL_SECONDS: z.coerce.number().int().min(5).max(3600).default(20),
+
+  // Licenca (controle central pela Gestao USAI). LICENSE_SECRET: segredo compartilhado
+  // com a Gestao USAI para HMAC do payload de apply/status. GESTAO_URL: base da Gestao
+  // USAI, usada por telemetria/logs (opcional).
+  LICENSE_SECRET: z.string().optional().default(""),
+  GESTAO_URL: z.string().optional().default(""),
 });
 
 const parsed = envSchema.safeParse(process.env);

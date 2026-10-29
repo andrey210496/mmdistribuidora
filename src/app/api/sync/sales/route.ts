@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isSyncAuthorized, touchStation } from "@/lib/sync";
+import { touchStation } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 import { applySalesPush, type SalesPushRequest } from "@/lib/sync-sales";
 
 export const runtime = "nodejs";
@@ -9,9 +10,8 @@ export const maxDuration = 120;
 // POST /api/sync/sales  (PDV envia as vendas do balcao; a gestao online aplica)
 // Auth: header x-sync-token. Idempotente por order.id.
 export async function POST(req: NextRequest) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
   await touchStation(req);
   let body: SalesPushRequest;
   try {

@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { createHash } from "crypto";
-import { isSyncAuthorized } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 import { releasesDir, type ReleaseMeta } from "@/lib/updates";
 
 export const runtime = "nodejs";
@@ -15,9 +15,8 @@ export const maxDuration = 300;
 //   x-app-version, x-file-name, x-notes(base64), x-chunk-index (0..), x-chunk-total
 // Auth: header x-sync-token == SYNC_TOKEN.
 export async function POST(req: NextRequest) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
 
   const version = req.headers.get("x-app-version") ?? "";
   const file = req.headers.get("x-file-name") ?? "";

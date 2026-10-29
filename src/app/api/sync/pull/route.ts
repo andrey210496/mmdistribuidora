@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { isSyncAuthorized, touchStation } from "@/lib/sync";
+import { touchStation } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 import { buildPullPayload } from "@/lib/sync-pull";
 
 export const runtime = "nodejs";
@@ -9,9 +10,8 @@ export const dynamic = "force-dynamic";
 // A gestao online devolve o que mudou desde `since` (catalogo, precos, clientes,
 // usuarios, config) para o PDV aplicar offline. Auth: header x-sync-token.
 export async function GET(req: NextRequest) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
   await touchStation(req);
   const sinceRaw = req.nextUrl.searchParams.get("since");
   let since: Date | null = null;

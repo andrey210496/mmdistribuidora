@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { isSyncAuthorized } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 import { releasesDir } from "@/lib/updates";
 
 export const runtime = "nodejs";
@@ -13,9 +13,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ file: string }> }
 ) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
   const { file } = await params;
   if (!/^[A-Za-z0-9._-]+\.zip$/.test(file)) {
     return NextResponse.json({ ok: false, error: "invalid file" }, { status: 400 });

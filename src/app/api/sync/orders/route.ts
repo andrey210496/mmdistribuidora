@@ -1,14 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isSyncAuthorized, type SyncOrder } from "@/lib/sync";
+import { type SyncOrder } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 
 // GET /api/sync/orders  (retaguarda puxa pedidos online novos)
 // Retorna pedidos do canal ONLINE, com pagamento confirmado, ainda nao
 // baixados pela retaguarda (syncedToLocal=false). Limite por chamada.
 export async function GET(req: NextRequest) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
 
   const orders = await prisma.order.findMany({
     where: {

@@ -1,13 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isSyncAuthorized } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 
 // POST /api/sync/orders/ack  { orderIds: string[] }
 // A retaguarda confirma que baixou os pedidos -> marca syncedToLocal.
 export async function POST(req: NextRequest) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
 
   let body: { orderIds?: string[] };
   try {

@@ -1,13 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isSyncAuthorized, type CatalogPayload } from "@/lib/sync";
+import { type CatalogPayload } from "@/lib/sync";
+import { assertSyncAllowed } from "@/lib/license-guard";
 
 // POST /api/sync/catalog  (vitrine online recebe o catálogo da retaguarda)
 // Auth: header x-sync-token == SYNC_TOKEN. Upsert idempotente por id.
 export async function POST(req: NextRequest) {
-  if (!isSyncAuthorized(req)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const blocked = await assertSyncAllowed(req);
+  if (blocked) return blocked;
 
   let payload: CatalogPayload;
   try {
